@@ -91,7 +91,9 @@ function CasesInner() {
   const [adding, setAdding] = useState(false);
   const urlQ = params.get('q') ?? '';
   const [f, setF] = useState<CaseFilter>({ q: urlQ });
-  useEffect(() => setF((prev) => ({ ...prev, q: urlQ })), [urlQ]);
+  useEffect(() => {
+    setF((prev) => ({ ...prev, q: urlQ }));
+  }, [urlQ]);
 
   const data = useData(async () => ({ rows: await listCases(f), courts: await listCourts(), clients: await listClients() }), [f.q, f.status, f.category, f.courtId]);
 

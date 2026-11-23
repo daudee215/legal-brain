@@ -11,7 +11,9 @@ import { useData } from '../../../lib/useData';
 
 export default function CauseListPage() {
   const [day, setDay] = useState<string | null>(null);
-  useEffect(() => setDay(todayKey()), []);
+  useEffect(() => {
+    setDay(todayKey());
+  }, []);
   const rows = useData(async () => (day ? hearingsOn(day) : []), [day]);
 
   if (!day || !rows) return <Loading />;

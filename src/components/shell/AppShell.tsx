@@ -33,7 +33,9 @@ function MobileRoleSwitch() {
 function Shell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[260px_1fr]">
