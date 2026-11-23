@@ -39,6 +39,10 @@ const empty: Db = {
   books: [],
   docs: [],
   fees: [],
+  tasks: [],
+  deadlines: [],
+  precedents: [],
+  expenses: [],
 };
 
 const db: Db = {

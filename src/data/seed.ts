@@ -465,4 +465,22 @@ export const seed: Db = {
   books,
   docs,
   fees,
+  tasks: [
+    { id: 't1', title: 'Apply for certified copy of order dated last week', caseId: 'k6', assigneeId: 'm3', due: k(1), done: false, createdAt: d(-2) },
+    { id: 't2', title: 'Prepare written arguments', caseId: 'k3', assigneeId: 'm2', due: k(3), done: false, createdAt: d(-4) },
+    { id: 't3', title: 'Collect brief from photocopy shop (3 sets)', caseId: 'k4', assigneeId: 'm3', due: k(0), done: false, createdAt: d(-1) },
+    { id: 't4', title: 'Call client for salary slips', caseId: 'k2', assigneeId: 'm2', due: k(-1), done: true, createdAt: d(-5) },
+  ],
+  deadlines: [
+    { id: 'dl1', caseId: 'k9', remedyId: 'crim-appeal-hc', orderDate: k(-40), copyAppliedOn: k(-38), copyReadyOn: k(-30), note: 'Appeal against conviction u/s 489-F' },
+  ],
+  precedents: [
+    { id: 'p1', citation: 'Illustrative: SC bail principle', title: 'Bail in non-prohibitory offences is the rule', court: 'Supreme Court', year: 2026, tags: ['bail', '497 CrPC'], note: 'Use for post-arrest bail where offence is outside the prohibitory clause.', caseIds: ['k1'] },
+    { id: 'p2', citation: 'Illustrative: LHC 489-F security cheque', title: 'Security cheque does not attract 489-F', court: 'Lahore High Court', year: 2026, tags: ['489-F', 'cheque'], note: 'Distinguish where cheque was given as guarantee.', caseIds: ['k9'] },
+  ],
+  expenses: [
+    { id: 'e1', caseId: 'k5', date: k(-60), amount: 15000, kind: 'Court fee', reimbursed: true },
+    { id: 'e2', caseId: 'k8', date: k(-20), amount: 4500, kind: 'Photocopies', note: 'Paper books, 6 sets', reimbursed: false },
+    { id: 'e3', caseId: 'k1', date: k(-8), amount: 1200, kind: 'Certified copy', reimbursed: false },
+  ],
 };

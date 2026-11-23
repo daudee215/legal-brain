@@ -7,13 +7,13 @@ import { NAV } from '../../src/components/shell/nav';
 vi.mock('next/navigation', () => ({ usePathname: () => '/app/' }));
 
 describe('Sidebar', () => {
-  it('shows all 13 items to a senior', () => {
+  it('shows every nav item to a senior', () => {
     render(
       <RoleProvider initialRole="senior">
         <Sidebar />
       </RoleProvider>,
     );
-    expect(NAV).toHaveLength(13);
+    expect(NAV).toHaveLength(20);
     for (const n of NAV) expect(screen.getByText(n.label)).toBeInTheDocument();
   });
   it('hides AI Assistant and Legal Drafting from a clerk', () => {

@@ -95,7 +95,7 @@ export function KanbanBoard({
                         <div className="flex items-start gap-2">
                           <div className="min-w-0 flex-1">
                             <p className="font-mono text-[10.5px] text-ink-soft">{c.caseNo}</p>
-                            <Link href={`/app/cases/${c.id}/`} className="mt-0.5 block text-sm font-medium leading-snug hover:text-bronze">
+                            <Link href={`/app/case/?id=${c.id}`} className="mt-0.5 block text-sm font-medium leading-snug hover:text-bronze">
                               {c.title}
                             </Link>
                           </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { can, ROLE_LABEL } from '../../lib/permissions';
@@ -96,6 +96,14 @@ export function Sidebar({
         })}
       </div>
 
+      <Link
+        href="/"
+        title={collapsed ? 'Website' : undefined}
+        className={`relative mx-3 mb-1 flex items-center gap-2 rounded-lg py-2 text-xs text-ivory/60 transition hover:bg-white/[0.07] hover:text-ivory ${collapsed ? 'justify-center' : 'px-3'}`}
+      >
+        <Globe className="h-4 w-4" aria-hidden />
+        <span className={collapsed ? 'sr-only' : ''}>Legal Brain website</span>
+      </Link>
       {onToggleCollapse && (
         <button
           onClick={onToggleCollapse}

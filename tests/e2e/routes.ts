@@ -21,4 +21,12 @@ export const ROUTES = [
   '/app/documents/',
   '/app/chamber/',
   '/app/tools/',
+  '/app/case/?id=k1',
+  '/app/today/',
+  '/app/deadlines/',
+  '/app/tasks/',
+  '/app/precedents/',
+  '/app/paper-book/',
+  '/app/munshi/',
+  '/app/settings/',
 ];

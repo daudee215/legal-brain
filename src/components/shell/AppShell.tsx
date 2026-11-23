@@ -8,6 +8,7 @@ import { ROLE_LABEL } from '../../lib/permissions';
 import type { Role } from '../../types';
 import { Loading } from '../ui/Loading';
 import { CommandPalette } from './CommandPalette';
+import { DemoBanner } from './DemoBanner';
 import { RoleProvider, useRole } from './RoleProvider';
 import { Sidebar } from './Sidebar';
 import { ThemeProvider } from './ThemeProvider';
@@ -126,6 +127,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar onMenu={() => setOpen(true)} onSearch={() => setPalette(true)} />
+        <DemoBanner />
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 lg:px-8 lg:py-8">
           <motion.div
             key={pathname}

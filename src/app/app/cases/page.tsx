@@ -198,7 +198,7 @@ function CasesInner() {
               header: 'Title',
               cell: (c) => (
                 <div>
-                  <Link href={`/app/cases/${c.id}/`} className="font-medium hover:text-bronze">
+                  <Link href={`/app/case/?id=${c.id}`} className="font-medium hover:text-bronze">
                     {c.title}
                   </Link>
                   <p className="text-xs text-ink-soft">{data.clients.find((x) => x.id === c.clientId)?.name}</p>

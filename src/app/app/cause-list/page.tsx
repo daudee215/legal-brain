@@ -78,7 +78,7 @@ export default function CauseListPage() {
                         <span className="font-serif text-xl font-bold">{entry?.srNo ?? '—'}</span>
                       </p>
                       <div className="min-w-0">
-                        <Link href={`/app/cases/${c.id}/`} className="font-medium hover:text-bronze">
+                        <Link href={`/app/case/?id=${c.id}`} className="font-medium hover:text-bronze">
                           {c.title}
                         </Link>
                         <p className="text-xs text-ink-soft">

@@ -45,7 +45,7 @@ export default function ClientsPage() {
                 <ul className="mt-4 space-y-2 border-t border-line pt-3">
                   {cs.map((c) => (
                     <li key={c.id} className="flex items-start justify-between gap-2 text-sm">
-                      <Link href={`/app/cases/${c.id}/`} className="min-w-0 hover:text-bronze">
+                      <Link href={`/app/case/?id=${c.id}`} className="min-w-0 hover:text-bronze">
                         {c.title}
                       </Link>
                       <StatusBadge status={c.status} />

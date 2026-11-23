@@ -160,6 +160,9 @@ export interface DocFile {
   sizeKb: number;
   uploadedOn: string;
   uploadedBy: string;
+  /** Key of the file bytes in on-device storage (IndexedDB), when the user uploaded a real file. */
+  blobKey?: string;
+  mime?: string;
 }
 export interface CaseStats {
   total: number;
@@ -184,6 +187,10 @@ export interface Db {
   books: Book[];
   docs: DocFile[];
   fees: FeeLedger[];
+  tasks: Task[];
+  deadlines: Deadline[];
+  precedents: Precedent[];
+  expenses: Expense[];
 }
 
 export interface FeePayment {
@@ -204,4 +211,47 @@ export interface ActivityItem {
   title: string;
   detail: string;
   href?: string;
+}
+
+/** A to-do for someone in the chamber (e.g. "collect certified copy"), optionally tied to a case. */
+export interface Task {
+  id: string;
+  title: string;
+  caseId?: string;
+  assigneeId: string;
+  due?: string; // day key
+  done: boolean;
+  createdAt: string;
+}
+/** A limitation countdown started when an order/judgment is passed. Copy dates extend it (s.12 Limitation Act). */
+export interface Deadline {
+  id: string;
+  caseId: string;
+  remedyId: string;
+  orderDate: string; // day key
+  copyAppliedOn?: string;
+  copyReadyOn?: string;
+  filedOn?: string;
+  note?: string;
+}
+/** A citation the lawyer relies on, tagged by legal issue — her own notes, not reporter text. */
+export interface Precedent {
+  id: string;
+  citation: string;
+  title: string;
+  court?: string;
+  year?: number;
+  tags: string[];
+  note: string;
+  caseIds: string[];
+}
+/** Money spent on a case (court fee, stamp paper, photocopies, munshi) — reimbursable from the client. */
+export interface Expense {
+  id: string;
+  caseId: string;
+  date: string;
+  amount: number;
+  kind: 'Court fee' | 'Stamp paper' | 'Photocopies' | 'Certified copy' | 'Travel' | 'Munshi' | 'Other';
+  note?: string;
+  reimbursed: boolean;
 }

@@ -98,7 +98,7 @@ export function WelcomeHero({
               </span>
               Next up
             </p>
-            <Link href={`/app/cases/${next.case.id}/`} className="mt-2 block font-serif text-lg font-semibold leading-snug text-ivory hover:underline">
+            <Link href={`/app/case/?id=${next.case.id}`} className="mt-2 block font-serif text-lg font-semibold leading-snug text-ivory hover:underline">
               {next.case.title}
             </Link>
             <p className="mt-1 text-xs text-ivory/65">
@@ -181,7 +181,7 @@ export function TodayHearings({ rows }: { rows: HearingRow[] }) {
               </div>
               <span className="absolute left-[4.6rem] top-4 h-2.5 w-2.5 -translate-x-1/2 rounded-full border-2 border-paper bg-bronze ring-2 ring-bronze/30" aria-hidden />
               <div className="min-w-0 pl-2">
-                <Link href={`/app/cases/${c.id}/`} className="font-medium leading-snug hover:text-bronze">
+                <Link href={`/app/case/?id=${c.id}`} className="font-medium leading-snug hover:text-bronze">
                   {c.title}
                 </Link>
                 <p className="text-xs text-ink-soft">
@@ -217,7 +217,7 @@ export function UpcomingList({ cases, courts }: { cases: Case[]; courts: Court[]
             const [day, mon] = formatPk(c.nextHearing!).split(' ');
             return (
               <li key={c.id}>
-                <Link href={`/app/cases/${c.id}/`} className="group flex items-start gap-3 rounded-xl p-1.5 transition hover:bg-cream/70">
+                <Link href={`/app/case/?id=${c.id}`} className="group flex items-start gap-3 rounded-xl p-1.5 transition hover:bg-cream/70">
                   <div className="w-12 shrink-0 rounded-lg border border-line bg-cream py-1 text-center transition group-hover:border-bronze/40">
                     <p className="text-[10px] uppercase text-ink-soft">{mon}</p>
                     <p className="font-serif text-lg font-bold leading-none">{day}</p>
@@ -316,7 +316,7 @@ export function FeesCard({ agreed, received, outstanding, rows }: { agreed: numb
           <ul className="divide-y divide-line">
             {due.map((r) => (
               <li key={r.caseId}>
-                <Link href={`/app/cases/${r.caseId}/?tab=fees`} className="flex items-center justify-between gap-3 py-2 text-sm hover:text-bronze">
+                <Link href={`/app/case/?id=${r.caseId}&tab=fees`} className="flex items-center justify-between gap-3 py-2 text-sm hover:text-bronze">
                   <span className="min-w-0 truncate">{r.case.title}</span>
                   <span className="shrink-0 font-medium tabular-nums">{pkr(r.outstanding)}</span>
                 </Link>
@@ -388,7 +388,7 @@ export function AttentionCard({ cases }: { cases: Case[] }) {
         <ul className="space-y-2">
           {items.map(({ c, icon: Icon, why }) => (
             <li key={c.id}>
-              <Link href={`/app/cases/${c.id}/`} className="group flex items-start gap-3 rounded-xl border border-line p-3 transition hover:border-bronze/40 hover:bg-cream/60">
+              <Link href={`/app/case/?id=${c.id}`} className="group flex items-start gap-3 rounded-xl border border-line p-3 transition hover:border-bronze/40 hover:bg-cream/60">
                 <Icon className="mt-0.5 h-4 w-4 shrink-0 text-bronze" aria-hidden />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{c.title}</span>

@@ -94,7 +94,7 @@ export function CommandPalette({ open, setOpen }: { open: boolean; setOpen: (v: 
                   <>
                     <Command.Group heading="Cases" className={groupCls}>
                       {db.cases.map((c) => (
-                        <Command.Item key={c.id} value={`case ${c.caseNo} ${c.title} ${c.category}`} onSelect={() => go(`/app/cases/${c.id}/`)} className={itemCls}>
+                        <Command.Item key={c.id} value={`case ${c.caseNo} ${c.title} ${c.category}`} onSelect={() => go(`/app/case/?id=${c.id}`)} className={itemCls}>
                           <Briefcase className="h-4 w-4 text-bronze" aria-hidden />
                           <span className="min-w-0 flex-1 truncate">{c.title}</span>
                           <span className="shrink-0 font-mono text-[11px] text-ink-soft">{c.caseNo}</span>

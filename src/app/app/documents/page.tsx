@@ -104,7 +104,7 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
                 cell: (d) => {
                   const c = db.cases.find((x) => x.id === d.caseId);
                   return c ? (
-                    <Link href={`/app/cases/${c.id}/`} className="text-ink-soft hover:text-bronze">
+                    <Link href={`/app/case/?id=${c.id}`} className="text-ink-soft hover:text-bronze">
                       {c.title}
                     </Link>
                   ) : (

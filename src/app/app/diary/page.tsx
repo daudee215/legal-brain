@@ -123,7 +123,7 @@ function DiaryPageBody({ db }: { db: Snapshot }) {
                   <li key={c.id} className="flex items-center gap-2 text-sm">
                     <Gavel className="h-4 w-4 text-bronze" />
                     <span className="w-16 text-ink-soft">{formatTime(c.nextHearing!)}</span>
-                    <Link href={`/app/cases/${c.id}/`} className="min-w-0 truncate hover:text-bronze">
+                    <Link href={`/app/case/?id=${c.id}`} className="min-w-0 truncate hover:text-bronze">
                       {c.title}
                     </Link>
                   </li>
@@ -146,7 +146,7 @@ function DiaryPageBody({ db }: { db: Snapshot }) {
                         {c && (
                           <>
                             {' · '}
-                            <Link href={`/app/cases/${c.id}/`} className="text-bronze hover:underline">
+                            <Link href={`/app/case/?id=${c.id}`} className="text-bronze hover:underline">
                               {c.title}
                             </Link>
                           </>

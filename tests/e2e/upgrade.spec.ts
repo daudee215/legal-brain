@@ -8,7 +8,7 @@ test('Ctrl+K opens the command palette and navigates to a case', async ({ page }
   await expect(dialog).toBeVisible();
   await dialog.getByRole('combobox').fill('Zahid Traders v. Federation');
   await page.keyboard.press('Enter');
-  await expect(page).toHaveURL(/\/app\/cases\/k3\/$/);
+  await expect(page).toHaveURL(//app/case/?id=k3$/);
   await expect(page.getByRole('heading', { level: 1, name: /Zahid Traders v\. Federation/ })).toBeVisible();
 });
 
