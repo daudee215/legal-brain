@@ -1,0 +1,72 @@
+@import 'tailwindcss';
+
+:root {
+  --cream: #f4eee4;
+  --paper: #fbf8f3;
+  --ink: #3a2a1d;
+  --ink-soft: #6b5a4a;
+  --bronze: #8c5e34;
+  --bronze-soft: #c9a27a;
+  --line: #e3d8c8;
+  --danger: #a23b2a;
+  --ok: #3f6b45;
+}
+
+@theme inline {
+  --color-cream: var(--cream);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-bronze: var(--bronze);
+  --color-bronze-soft: var(--bronze-soft);
+  --color-line: var(--line);
+  --color-danger: var(--danger);
+  --color-ok: var(--ok);
+  --font-serif: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+:focus-visible {
+  outline: 2px solid var(--bronze);
+  outline-offset: 2px;
+}
+
+.legal-sheet {
+  font-family: var(--font-serif);
+  white-space: pre-wrap;
+  line-height: 1.7;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    inset: 0;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+}
