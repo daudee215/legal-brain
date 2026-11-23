@@ -86,10 +86,15 @@ function isDb(x: unknown): x is Db {
   return !!d && Array.isArray(d.cases) && Array.isArray(d.clients) && Array.isArray(d.courts) && !!d.chamber;
 }
 
-/** Older saves lack collections added later — fill them so reads never crash. */
+/**
+ * Older saves lack collections added later — fill them so reads never crash.
+ * Courts are reference data shipped with the app: courts added in a later release are appended.
+ */
 function upgrade(db: Db): Db {
+  const courts = db.courts ?? [];
   return {
     ...db,
+    courts: [...courts, ...seed.courts.filter((sc) => !courts.some((c) => c.id === sc.id))],
     fees: db.fees ?? [],
     tasks: db.tasks ?? [],
     deadlines: db.deadlines ?? [],

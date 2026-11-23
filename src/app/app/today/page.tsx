@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { AlertTriangle, CalendarClock, CheckCircle2, ClipboardCheck, ExternalLink, MessageCircle, Siren, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { AutoCauseListAlert } from '../../../components/causelist/AutoCauseListPanel';
+import { useAutoCauseLists } from '../../../components/causelist/useAutoCauseLists';
 import { OutcomeDialog } from '../../../components/outcome/OutcomeDialog';
 import { ClientReminders } from '../../../components/reminders/ClientReminders';
 import { useRole } from '../../../components/shell/RoleProvider';
@@ -80,6 +82,7 @@ export default function TodayPage() {
   const toast = useToast();
   const canEdit = can(role, 'cases.edit');
   const [recording, setRecording] = useState<string | null>(null);
+  const auto = useAutoCauseLists();
 
   const data = useData(async () => {
     const t = todayKey();
@@ -157,6 +160,8 @@ export default function TodayPage() {
           </a>
         </div>
       </section>
+
+      <AutoCauseListAlert auto={auto} />
 
       {remindFirst && remindCard}
 

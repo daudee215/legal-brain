@@ -4,11 +4,23 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Refresh the published cause lists (times are UTC; Pakistan is UTC+5):
+  #   13:30 / 16:30 UTC = 18:30 / 21:30 PKT — the next court day's lists, once the courts publish them
+  #   02:00 UTC (Mon–Fri) = 07:00 PKT — same-day supplementary lists
+  schedule:
+    - cron: '30 13 * * *'
+    - cron: '30 16 * * *'
+    - cron: '0 2 * * 1-5'
+  # Pick up Lahore / Punjab lists as soon as the Pakistan runner has fetched them.
+  workflow_run:
+    workflows: ['Cause lists (Pakistan runner)']
+    types: [completed]
 
 permissions:
   contents: read
   pages: write
   id-token: write
+  actions: read # to download the Pakistan runner's cause-list artifact
 
 concurrency:
   group: pages
@@ -16,7 +28,13 @@ concurrency:
 
 jobs:
   build:
+    # After a Pakistan-runner run, only rebuild if it actually produced lists.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    env:
+      # Scheduled / cause-list-only runs rebuild the same commit that was already tested when it was pushed,
+      # so they skip the unit tests and only refresh the data.
+      DATA_ONLY: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_run' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,6 +43,36 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+        if: env.DATA_ONLY != 'true'
+
+      # ---- cause lists: never allowed to fail the deploy ----
+      - name: Restore the cause lists already published
+        continue-on-error: true
+        timeout-minutes: 5
+        run: node scripts/causelists/restore.mjs --site https://wakeelpropk.com --out public/cause-lists
+      - name: Download the Pakistan runner's latest cause lists (if any)
+        continue-on-error: true
+        timeout-minutes: 3
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.id || '' }}
+        run: |
+          id="$RUN_ID"
+          if [ -z "$id" ]; then
+            id=$(gh run list -R "$GITHUB_REPOSITORY" --workflow causelists-pk.yml --status success --limit 1 --json databaseId -q '.[0].databaseId' 2>/dev/null || true)
+          fi
+          if [ -n "$id" ]; then
+            gh run download "$id" -R "$GITHUB_REPOSITORY" -n causelists-pk -D .pk-causelists 2>/dev/null || echo "no Pakistan cause-list artifact in run $id"
+          else
+            echo "no Pakistan runner results yet"
+          fi
+      - name: Fetch cause lists
+        continue-on-error: true
+        timeout-minutes: 15
+        env:
+          SHC_ADVOCATE: ${{ secrets.SHC_ADVOCATE }}
+        run: node scripts/causelists/fetch.mjs --out public/cause-lists --merge-from .pk-causelists
+
       - run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}

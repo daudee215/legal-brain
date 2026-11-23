@@ -47,6 +47,11 @@ export async function listClients(db: Db = getDb()) {
   return db.clients;
 }
 
+/** Cause-list entries saved for the chamber (court room / serial number per case and day). */
+export async function listCauseList(db: Db = getDb()): Promise<CauseListEntry[]> {
+  return db.causeList;
+}
+
 export interface HearingRow {
   case: Case;
   entry?: CauseListEntry;

@@ -13,11 +13,11 @@ import type { Case, CauseListEntry } from '../types';
 const ALIASES: [string, string[]][] = (
   [
     ['wp', ['wp', 'writpetition', 'writpet', 'writpetn']],
-    ['crlmisc', ['crlmisc', 'crlm', 'crlmiscellaneous', 'criminalmisc', 'criminalmiscellaneous', 'crlmiscapplication']],
+    ['crlmisc', ['crlmisc', 'crlm', 'crlmiscellaneous', 'criminalmisc', 'criminalmiscellaneous', 'crlmiscapplication', 'crm', 'crmisc']],
     ['cpla', ['cpla', 'civilpetitionforleavetoappeal', 'civilpetition', 'civpet', 'cpl']],
     ['const', ['constp', 'constpet', 'constpetition', 'constitutionpetition', 'constitutionalpetition']],
-    ['crlappeal', ['crlappeal', 'crla', 'crlapp', 'criminalappeal']],
-    ['crlrev', ['crlrev', 'crlrevision', 'criminalrevision', 'crlr']],
+    ['crlappeal', ['crlappeal', 'crla', 'crlapp', 'criminalappeal', 'cra']],
+    ['crlrev', ['crlrev', 'crlrevision', 'criminalrevision', 'crlr', 'crr']],
     ['crlpet', ['crlpet', 'crlpetition', 'criminalpetition', 'crlp']],
     ['civilrev', ['cr', 'civilrevision', 'civilrev', 'civrev']],
     ['suit', ['suit', 'civilsuit', 'cs']],
@@ -37,6 +37,9 @@ const ALIASES: [string, string[]][] = (
   .flatMap(([family, spellings]) => spellings.map((s) => [s, [family]] as [string, string[]]))
   // "C.P." is a civil petition (leave to appeal) in the Supreme Court and a constitutional petition in Sindh.
   .concat([['cp', ['cpla', 'const']]])
+  // Bail, bail-cancellation, quashment and transfer applications are criminal miscellaneous cases
+  // ("Cr.M(BA)", "Cr.M(BCA)", "Cr.M/Q", "Cr.M(TA)" in Peshawar; "Crl. Misc. B.A." elsewhere).
+  .concat((['crmba', 'crlmba', 'crmiscba', 'crlmiscba', 'bailapplication', 'bailpetition', 'crmbba', 'crmbca', 'crmq', 'crmta'] as string[]).map((s) => [s, ['crlmisc']] as [string, string[]]))
   .sort((a, b) => b[0].length - a[0].length);
 
 export interface CaseNo {
@@ -187,6 +190,51 @@ export function matchCauseList(text: string | string[], cases: CaseLike[]): Caus
   });
 
   return [...strong.values(), ...possible.values()];
+}
+
+/** One row of a cause list the court publishes as data (see scripts/causelists): fields are already split out. */
+export interface ListEntry {
+  bench?: string;
+  courtRoom?: string;
+  srNo?: number;
+  caseNo: string;
+  title?: string;
+  stage?: string;
+}
+
+/** The entry written as one line (case number and parties), for showing where a case was found. */
+export function entryLine(e: ListEntry): string {
+  return [e.caseNo, e.title ?? ''].filter(Boolean).join(' ');
+}
+
+/**
+ * Like matchCauseList, for a list already split into entries: a case number match is 'matched',
+ * a case whose first party's distinctive words all appear in an entry's title is 'possible'.
+ */
+export function matchEntries(entries: ListEntry[], cases: CaseLike[]): CauseListHit[] {
+  const rows = entries.map((e) => ({ e, no: parseCaseNo(e.caseNo), words: new Set(words(e.title ?? '')) }));
+  const hits: CauseListHit[] = [];
+  const hitOf = (c: CaseLike, kind: CauseListHit['kind'], e: ListEntry): CauseListHit => ({
+    caseId: c.id,
+    kind,
+    page: 0,
+    line: entryLine(e),
+    srNo: e.srNo,
+    courtRoom: e.courtRoom,
+    bench: e.bench,
+  });
+  for (const c of cases) {
+    const no = parseCaseNo(c.caseNo);
+    const strong = no ? rows.find((r) => sameCaseNo(r.no, no)) : undefined;
+    if (strong) {
+      hits.push(hitOf(c, 'matched', strong.e));
+      continue;
+    }
+    const tokens = partyTokens(c.title);
+    const weak = tokens.length ? rows.find((r) => tokens.every((t) => r.words.has(t))) : undefined;
+    if (weak) hits.push(hitOf(c, 'possible', weak.e));
+  }
+  return [...hits.filter((h) => h.kind === 'matched'), ...hits.filter((h) => h.kind === 'possible')];
 }
 
 /**

@@ -45,3 +45,8 @@ docs/reference/
 .superpowers/
 test-results/
 playwright-report/
+
+# cause lists: fetched at deploy time (scripts/causelists), never committed
+/public/cause-lists/
+/.pk-causelists/
+/pk-out/

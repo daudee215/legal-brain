@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { CheckCircle2, ExternalLink, FileSearch, HelpCircle, Loader2, Save, UploadCloud } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { AutoCauseListPanel } from '../../../components/causelist/AutoCauseListPanel';
+import { useAutoCauseLists } from '../../../components/causelist/useAutoCauseLists';
 import { Badge, btn, Card, CardTitle, EmptyState, inputCls, Notice, PageHeader } from '../../../components/ui';
 import { Loading } from '../../../components/ui/Loading';
 import { useToast } from '../../../components/ui/Toast';
@@ -211,6 +213,7 @@ export default function CauseListPage() {
   }, []);
   const rows = useData(async () => (day ? hearingsOn(day) : []), [day]);
   const lib = useData(async () => ({ cases: await listCases({}), courts: await listCourts() }));
+  const auto = useAutoCauseLists();
 
   if (!day || !rows || !lib) return <Loading />;
   const t = todayKey();
@@ -232,8 +235,8 @@ export default function CauseListPage() {
     <>
       <PageHeader title="Daily Cause List" subtitle={`${weekday(day)}, ${formatPk(day)} — ${rows.length} of your cases fixed`} />
       <Notice>
-        Upload the court&apos;s published cause list below to find your cases with serial number and court room. Always double-check against the
-        official list.
+        Lists for the Islamabad and Peshawar High Courts are fetched automatically. For other courts, upload the court&apos;s published cause list
+        below to find your cases with serial number and court room. Always double-check against the official list.
       </Notice>
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <div className="flex gap-1 rounded-xl border border-line bg-paper p-1">
@@ -242,6 +245,8 @@ export default function CauseListPage() {
         </div>
         <input type="date" className={`${inputCls} w-auto`} value={day} onChange={(e) => e.target.value && setDay(e.target.value)} aria-label="Pick a date" />
       </div>
+
+      <AutoCauseListPanel day={day} auto={auto} />
 
       <CauseListUpload day={day} cases={lib.cases} courts={lib.courts} />
 

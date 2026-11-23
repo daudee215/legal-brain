@@ -1,0 +1,44 @@
+name: Cause lists (Pakistan runner)
+
+# Lahore High Court and Punjab district court websites only answer connections from inside Pakistan,
+# so these lists are fetched on a self-hosted runner in Pakistan (labels: self-hosted, pakistan).
+# Setup: docs/causelists-pakistan-runner.md. The deploy workflow picks up the artifact when this finishes.
+#
+# The schedule only runs once the repository variable PK_RUNNER is set to "on" (Settings → Secrets and
+# variables → Actions → Variables), so nothing queues up waiting for a runner that does not exist yet.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 13 * * *' # 18:00 PKT
+    - cron: '0 16 * * *' # 21:00 PKT
+    - cron: '30 1 * * 1-5' # 06:30 PKT
+
+permissions:
+  contents: read
+
+concurrency:
+  group: causelists-pk
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    if: github.event_name == 'workflow_dispatch' || vars.PK_RUNNER == 'on'
+    runs-on: [self-hosted, pakistan]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --no-audit --no-fund
+      - name: Fetch Pakistan-only cause lists
+        env:
+          PK_NETWORK: '1'
+        run: node scripts/causelists/fetch.mjs --pk --out pk-out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: causelists-pk
+          path: pk-out/
+          retention-days: 3
+          if-no-files-found: ignore
