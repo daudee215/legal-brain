@@ -13,12 +13,12 @@ import { Topbar } from './Topbar';
 function MobileRoleSwitch() {
   const { role, setRole } = useRole();
   return (
-    <label className="flex items-center justify-between gap-2 border-t border-white/10 bg-ink px-5 py-3 text-xs text-cream/70">
+    <label className="flex items-center justify-between gap-2 border-t border-white/10 bg-night px-5 py-3 text-xs text-ivory/70">
       Preview as
       <select
         value={role}
         onChange={(e) => setRole(e.target.value as Role)}
-        className="rounded-md bg-white/10 px-2 py-1 text-sm text-cream"
+        className="rounded-md bg-white/10 px-2 py-1 text-sm text-ivory"
         aria-label="Preview as (mobile)"
       >
         {(['senior', 'junior', 'clerk'] as Role[]).map((r) => (
@@ -44,7 +44,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   if (!ready) {
     return (
       <div className="min-h-dvh lg:grid lg:grid-cols-[260px_1fr]">
-        <aside className="hidden bg-ink lg:block" />
+        <aside className="hidden bg-night lg:block" />
         <main className="mx-auto w-full max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
           <Loading />
         </main>
@@ -60,11 +60,11 @@ function Shell({ children }: { children: React.ReactNode }) {
 
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-          <button className="absolute inset-0 bg-ink/50" aria-label="Close menu" onClick={() => setOpen(false)} />
+          <button className="absolute inset-0 bg-night/50" aria-label="Close menu" onClick={() => setOpen(false)} />
           <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col shadow-2xl">
             <button
               onClick={() => setOpen(false)}
-              className="absolute right-3 top-4 z-10 rounded-md p-1.5 text-cream/80 hover:bg-white/10"
+              className="absolute right-3 top-4 z-10 rounded-md p-1.5 text-ivory/80 hover:bg-white/10"
               aria-label="Close menu"
             >
               <X className="h-5 w-5" />

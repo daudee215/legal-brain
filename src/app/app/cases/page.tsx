@@ -17,7 +17,7 @@ import { CASE_CATEGORIES, CASE_STATUSES, type CaseCategory, type CaseStatus } fr
 function Tabs() {
   return (
     <div className="mb-5 flex gap-1 rounded-xl border border-line bg-paper p-1 text-sm sm:w-fit">
-      <span className="flex-1 rounded-lg bg-ink px-4 py-1.5 text-center text-cream">Cases</span>
+      <span className="flex-1 rounded-lg bg-night px-4 py-1.5 text-center text-ivory">Cases</span>
       <Link href="/app/clients/" className="flex-1 rounded-lg px-4 py-1.5 text-center hover:bg-line/50">
         Clients
       </Link>
@@ -27,7 +27,7 @@ function Tabs() {
 
 function AddCaseModal({ onClose, onSave }: { onClose: () => void; onSave: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-ink/50 p-4" role="dialog" aria-modal="true" aria-label="Add case">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-night/50 p-4" role="dialog" aria-modal="true" aria-label="Add case">
       <form
         className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-2xl bg-paper p-6"
         onSubmit={(e) => {

@@ -45,7 +45,7 @@ const TONES: Record<Tone, string> = {
   bronze: 'bg-bronze/15 text-bronze',
   ok: 'bg-ok/15 text-ok',
   danger: 'bg-danger/15 text-danger',
-  ink: 'bg-ink text-cream',
+  ink: 'bg-night text-ivory',
 };
 
 export function Badge({ tone = 'neutral', children }: { tone?: Tone; children: React.ReactNode }) {
@@ -93,9 +93,9 @@ export function Notice({ children }: { children: React.ReactNode }) {
 
 export const btn = {
   primary:
-    'inline-flex items-center justify-center gap-2 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-cream hover:bg-ink/90 disabled:opacity-50',
+    'inline-flex items-center justify-center gap-2 rounded-lg bg-night px-4 py-2 text-sm font-medium text-ivory hover:bg-night/90 disabled:opacity-50',
   bronze:
-    'inline-flex items-center justify-center gap-2 rounded-lg bg-bronze px-4 py-2 text-sm font-medium text-cream hover:bg-bronze/90 disabled:opacity-50',
+    'inline-flex items-center justify-center gap-2 rounded-lg bg-bronze px-4 py-2 text-sm font-medium text-ivory hover:bg-bronze/90 disabled:opacity-50',
   ghost:
     'inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-paper px-4 py-2 text-sm font-medium text-ink hover:bg-line/50 disabled:opacity-50',
 };

@@ -10,24 +10,24 @@ export function WelcomeHero({ name, todayCount, weekCount }: { name: string; tod
   const todayText =
     todayCount === 0 ? 'You have no hearings today' : `You have ${todayCount} hearing${todayCount === 1 ? '' : 's'} today`;
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-ink p-6 text-cream sm:p-8">
+    <section className="relative overflow-hidden rounded-3xl bg-night p-6 text-ivory sm:p-8">
       <Landmark className="pointer-events-none absolute -bottom-6 -right-4 h-48 w-48 text-white/[0.06] sm:h-64 sm:w-64" aria-hidden />
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-cream/80">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-ivory/80">
         <span className="h-1.5 w-1.5 rounded-full bg-bronze-soft" /> Legal Brain · Demo
       </span>
-      <h1 className="mt-4 text-3xl font-bold leading-tight text-cream sm:text-4xl">
+      <h1 className="mt-4 text-3xl font-bold leading-tight text-ivory sm:text-4xl">
         Welcome back,
         <br />
         Advocate {first}
       </h1>
-      <p className="mt-3 max-w-xl text-cream/75">
+      <p className="mt-3 max-w-xl text-ivory/75">
         {todayText} and {weekCount} more coming up this week. Your chamber has drafts waiting and new case-law updates relevant to your matters.
       </p>
       <div className="mt-6 flex flex-wrap gap-3">
-        <Link href="/app/cause-list/" className="inline-flex items-center gap-2 rounded-lg bg-cream px-4 py-2 text-sm font-medium text-ink hover:bg-white">
+        <Link href="/app/cause-list/" className="inline-flex items-center gap-2 rounded-lg bg-ivory px-4 py-2 text-sm font-medium text-night hover:bg-white">
           Open today&apos;s cause list <ArrowRight className="h-4 w-4" />
         </Link>
-        <Link href="/app/assistant/" className="inline-flex items-center gap-2 rounded-lg border border-white/25 px-4 py-2 text-sm font-medium text-cream hover:bg-white/10">
+        <Link href="/app/assistant/" className="inline-flex items-center gap-2 rounded-lg border border-white/25 px-4 py-2 text-sm font-medium text-ivory hover:bg-white/10">
           Ask AI Assistant
         </Link>
       </div>

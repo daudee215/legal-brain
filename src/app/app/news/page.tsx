@@ -32,7 +32,7 @@ function NewsInnerBody({ db }: { db: Snapshot }) {
       <PageHeader title="Legal News & Notifications" subtitle="Hearing reminders, new judgments and what's happening in the profession." />
       <div className="mb-6 flex gap-1 rounded-xl border border-line bg-paper p-1 text-sm sm:w-fit">
         {(['news', 'notifications'] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)} aria-pressed={tab === t} className={`flex-1 rounded-lg px-4 py-1.5 ${tab === t ? 'bg-ink text-cream' : 'hover:bg-line/50'}`}>
+          <button key={t} onClick={() => setTab(t)} aria-pressed={tab === t} className={`flex-1 rounded-lg px-4 py-1.5 ${tab === t ? 'bg-night text-ivory' : 'hover:bg-line/50'}`}>
             {t === 'news' ? 'News' : `Notifications${unread ? ` (${unread})` : ''}`}
           </button>
         ))}

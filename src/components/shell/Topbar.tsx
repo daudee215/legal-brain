@@ -78,7 +78,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
           )}
         </Link>
         <span
-          className="grid h-9 w-9 place-items-center rounded-full bg-bronze text-sm font-semibold text-cream"
+          className="grid h-9 w-9 place-items-center rounded-full bg-bronze text-sm font-semibold text-ivory"
           title={member.name}
         >
           {initials}

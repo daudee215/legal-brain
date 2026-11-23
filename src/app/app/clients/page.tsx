@@ -22,7 +22,7 @@ export default function ClientsPage() {
         <Link href="/app/cases/" className="flex-1 rounded-lg px-4 py-1.5 text-center hover:bg-line/50">
           Cases
         </Link>
-        <span className="flex-1 rounded-lg bg-ink px-4 py-1.5 text-center text-cream">Clients</span>
+        <span className="flex-1 rounded-lg bg-night px-4 py-1.5 text-center text-ivory">Clients</span>
       </div>
       <input className={`${inputCls} mb-5 sm:max-w-sm`} placeholder="Search clients…" aria-label="Search clients" value={q} onChange={(e) => setQ(e.target.value)} />
       {!data ? (

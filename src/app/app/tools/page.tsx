@@ -55,13 +55,13 @@ export default function ToolsPage() {
           </label>
         </div>
         {result && (
-          <div className="mt-6 rounded-2xl bg-ink p-6 text-cream">
-            <p className="text-sm text-cream/70">Last date to file</p>
-            <p className="mt-1 font-serif text-4xl font-bold text-cream">{formatPk(result.deadlineKey)}</p>
-            <p className="mt-1 text-sm text-cream/70">
+          <div className="mt-6 rounded-2xl bg-night p-6 text-ivory">
+            <p className="text-sm text-ivory/70">Last date to file</p>
+            <p className="mt-1 font-serif text-4xl font-bold text-ivory">{formatPk(result.deadlineKey)}</p>
+            <p className="mt-1 text-sm text-ivory/70">
               {weekday(result.deadlineKey)} · {result.daysTotal} days from {formatPk(order)}
             </p>
-            <p className="mt-3 text-xs text-cream/60">If the last day falls on a court holiday, it may be filed on the next working day (s.4 Limitation Act).</p>
+            <p className="mt-3 text-xs text-ivory/60">If the last day falls on a court holiday, it may be filed on the next working day (s.4 Limitation Act).</p>
             <button className={`${btn.bronze} mt-4`} onClick={() => toast.show('Added to diary in demo only')}>
               <CalendarPlus className="h-4 w-4" /> Add to diary
             </button>

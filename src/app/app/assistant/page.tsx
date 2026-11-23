@@ -59,7 +59,7 @@ export default function AssistantPage() {
         <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-6">
           {msgs.length === 0 && (
             <div className="mx-auto max-w-2xl py-6 text-center">
-              <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-ink">
+              <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-night">
                 <Sparkles className="h-6 w-6 text-bronze-soft" />
               </span>
               <h2 className="mt-3 text-xl font-semibold">How can I help with your cases today?</h2>
@@ -75,7 +75,7 @@ export default function AssistantPage() {
           )}
           {msgs.map((m, i) =>
             m.from === 'me' ? (
-              <div key={i} className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-ink px-4 py-3 text-sm text-cream">
+              <div key={i} className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-night px-4 py-3 text-sm text-ivory">
                 {m.text}
               </div>
             ) : (
@@ -104,7 +104,7 @@ export default function AssistantPage() {
           }}
         >
           <input className={inputCls} placeholder="Ask about a law, a judgment or one of your cases…" aria-label="Ask the assistant" value={q} onChange={(e) => setQ(e.target.value)} />
-          <button type="submit" className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-ink text-cream disabled:opacity-40" disabled={!q.trim() || thinking} aria-label="Send">
+          <button type="submit" className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-night text-ivory disabled:opacity-40" disabled={!q.trim() || thinking} aria-label="Send">
             <ArrowUp className="h-4 w-4" />
           </button>
         </form>

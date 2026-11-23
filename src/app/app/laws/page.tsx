@@ -39,7 +39,7 @@ function LawsPageBody({ db }: { db: Snapshot }) {
             key={x || 'all'}
             onClick={() => setJ(x)}
             aria-pressed={j === x}
-            className={`rounded-full border px-3 py-1 text-sm ${j === x ? 'border-ink bg-ink text-cream' : 'border-line bg-paper hover:bg-line/50'}`}
+            className={`rounded-full border px-3 py-1 text-sm ${j === x ? 'border-night bg-night text-ivory' : 'border-line bg-paper hover:bg-line/50'}`}
           >
             {x || 'All'}
           </button>

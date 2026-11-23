@@ -4,17 +4,17 @@ import { Logo } from '../shell/Logo';
 export function AuthCard({ title, subtitle, children, footer }: { title: string; subtitle: string; children: React.ReactNode; footer: React.ReactNode }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
-      <div className="relative hidden overflow-hidden bg-ink p-12 text-cream lg:flex lg:flex-col lg:justify-between">
+      <div className="relative hidden overflow-hidden bg-night p-12 text-ivory lg:flex lg:flex-col lg:justify-between">
         <Link href="/">
           <Logo light />
         </Link>
         <div>
-          <p className="font-serif text-4xl font-bold leading-tight text-cream">
+          <p className="font-serif text-4xl font-bold leading-tight text-ivory">
             &ldquo;Every date, every document, every precedent — one search away.&rdquo;
           </p>
-          <p className="mt-4 text-cream/60">Legal Brain for Pakistani advocates and chambers.</p>
+          <p className="mt-4 text-ivory/60">Legal Brain for Pakistani advocates and chambers.</p>
         </div>
-        <p className="text-xs text-cream/40">Draft preview</p>
+        <p className="text-xs text-ivory/40">Draft preview</p>
       </div>
       <div className="flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">

@@ -26,7 +26,7 @@ export default function CauseListPage() {
       key={label}
       onClick={() => setDay(key)}
       aria-pressed={day === key}
-      className={`rounded-lg px-4 py-1.5 text-sm ${day === key ? 'bg-ink text-cream' : 'hover:bg-line/50'}`}
+      className={`rounded-lg px-4 py-1.5 text-sm ${day === key ? 'bg-night text-ivory' : 'hover:bg-line/50'}`}
     >
       {label}
     </button>

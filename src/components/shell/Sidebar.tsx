@@ -13,7 +13,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const items = NAV.filter((n) => !n.action || can(role, n.action));
 
   return (
-    <nav aria-label="Main" className="flex h-full flex-col bg-ink text-cream">
+    <nav aria-label="Main" className="flex h-full flex-col bg-night text-ivory">
       <div className="px-5 pb-4 pt-5">
         <Link href="/app/" onClick={onNavigate}>
           <Logo light />
@@ -31,7 +31,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                 onClick={onNavigate}
                 aria-current={active ? 'page' : undefined}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                  active ? 'bg-cream font-semibold text-ink' : 'text-cream/80 hover:bg-white/10 hover:text-cream'
+                  active ? 'bg-ivory font-semibold text-night' : 'text-ivory/80 hover:bg-white/10 hover:text-ivory'
                 }`}
               >
                 <Icon className={`h-4 w-4 shrink-0 ${active ? 'text-bronze' : ''}`} aria-hidden />
@@ -43,7 +43,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </ul>
       <div className="border-t border-white/10 px-5 py-4 text-sm">
         <p className="font-medium">Adv. {member.name}</p>
-        <p className="text-xs text-cream/60">
+        <p className="text-xs text-ivory/60">
           {ROLE_LABEL[role]} · Khan &amp; Associates
         </p>
       </div>

@@ -39,7 +39,7 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
                 key={f}
                 onClick={() => setFolder(f)}
                 aria-pressed={folder === f}
-                className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm ${folder === f ? 'bg-ink text-cream' : 'bg-paper hover:bg-line/50'}`}
+                className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm ${folder === f ? 'bg-night text-ivory' : 'bg-paper hover:bg-line/50'}`}
               >
                 <Folder className="h-4 w-4" />
                 <span className="flex-1 text-left">{f}</span>

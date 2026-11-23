@@ -31,28 +31,28 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
         <ArrowLeft className="h-4 w-4" /> All cases
       </Link>
 
-      <section className="rounded-3xl bg-ink p-6 text-cream sm:p-8">
+      <section className="rounded-3xl bg-night p-6 text-ivory sm:p-8">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={c.status} />
           <Badge tone="bronze">{c.category}</Badge>
-          <span className="text-sm text-cream/60">{c.caseNo}</span>
+          <span className="text-sm text-ivory/60">{c.caseNo}</span>
         </div>
-        <h1 className="mt-3 text-2xl font-bold text-cream sm:text-3xl">{c.title}</h1>
+        <h1 className="mt-3 text-2xl font-bold text-ivory sm:text-3xl">{c.title}</h1>
         <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <dt className="text-cream/50">Court</dt>
+            <dt className="text-ivory/50">Court</dt>
             <dd>{court?.name}</dd>
           </div>
           <div>
-            <dt className="text-cream/50">Judge / Bench</dt>
+            <dt className="text-ivory/50">Judge / Bench</dt>
             <dd>{c.judge}</dd>
           </div>
           <div>
-            <dt className="text-cream/50">Stage</dt>
+            <dt className="text-ivory/50">Stage</dt>
             <dd>{c.stage}</dd>
           </div>
           <div>
-            <dt className="text-cream/50">Next hearing</dt>
+            <dt className="text-ivory/50">Next hearing</dt>
             <dd className="font-semibold text-bronze-soft">{c.nextHearing ? `${formatPk(c.nextHearing)}, ${formatTime(c.nextHearing)}` : 'Not fixed'}</dd>
           </div>
         </dl>
@@ -61,7 +61,7 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
             href={court.statusUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-cream px-4 py-2 text-sm font-medium text-ink hover:bg-white"
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-ivory px-4 py-2 text-sm font-medium text-night hover:bg-white"
           >
             Check status on {court.shortName} website <ExternalLink className="h-4 w-4" />
           </a>

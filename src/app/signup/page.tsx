@@ -71,7 +71,7 @@ export default function SignupPage() {
                 type="button"
                 onClick={() => setMode(m)}
                 aria-pressed={mode === m}
-                className={`flex-1 rounded-lg px-3 py-2 text-sm ${mode === m ? 'bg-ink text-cream' : 'bg-paper text-ink hover:bg-line/50'}`}
+                className={`flex-1 rounded-lg px-3 py-2 text-sm ${mode === m ? 'bg-night text-ivory' : 'bg-paper text-ink hover:bg-line/50'}`}
               >
                 {m === 'create' ? 'Create a chamber' : 'Join with invite code'}
               </button>

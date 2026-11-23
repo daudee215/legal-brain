@@ -85,13 +85,13 @@ function DiaryPageBody({ db }: { db: Snapshot }) {
                   aria-pressed={sel === k}
                   aria-label={formatPk(k)}
                   className={`relative aspect-square rounded-lg text-sm ${
-                    sel === k ? 'bg-ink text-cream' : k === today ? 'border border-bronze text-ink' : 'text-ink hover:bg-line/60'
+                    sel === k ? 'bg-night text-ivory' : k === today ? 'border border-bronze text-ink' : 'text-ink hover:bg-line/60'
                   }`}
                 >
                   {Number(k.slice(8))}
                   <span className="absolute bottom-1 left-1/2 flex -translate-x-1/2 gap-0.5">
                     {hearingDays.has(k) && <span className="h-1 w-1 rounded-full bg-bronze" />}
-                    {noteDays.has(k) && <span className={`h-1 w-1 rounded-full ${sel === k ? 'bg-cream' : 'bg-ink-soft'}`} />}
+                    {noteDays.has(k) && <span className={`h-1 w-1 rounded-full ${sel === k ? 'bg-cream' : 'bg-night-soft'}`} />}
                   </span>
                 </button>
               ) : (
@@ -104,7 +104,7 @@ function DiaryPageBody({ db }: { db: Snapshot }) {
               <span className="h-1.5 w-1.5 rounded-full bg-bronze" /> Hearing
             </span>
             <span className="inline-flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-ink-soft" /> Note
+              <span className="h-1.5 w-1.5 rounded-full bg-night-soft" /> Note
             </span>
           </p>
         </Card>
