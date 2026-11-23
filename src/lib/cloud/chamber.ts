@@ -47,6 +47,19 @@ export async function signUp(name: string, email: string, password: string) {
   if (!data.session) throw new Error('Account created — please confirm your email, then log in.');
 }
 
+/** Email a password-reset link. Supabase answers the same whether or not the account exists. */
+export async function sendPasswordReset(email: string) {
+  const redirectTo = `${window.location.origin}/reset/`;
+  const { error } = await supabase().auth.resetPasswordForEmail(email.trim(), { redirectTo });
+  if (error) throw error;
+}
+
+/** Set a new password for the signed-in user (the reset link signs them in first). */
+export async function setNewPassword(password: string) {
+  const { error } = await supabase().auth.updateUser({ password });
+  if (error) throw error;
+}
+
 /** Push anything pending, stop syncing, sign out and forget the chosen chamber. */
 export async function signOut(): Promise<void> {
   if (hasUnsyncedChanges()) {

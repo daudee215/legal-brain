@@ -3,6 +3,8 @@ export const ROUTES = [
   '/login/',
   '/signup/',
   '/join/',
+  '/forgot/',
+  '/reset/',
   '/app/',
   '/app/laws/',
   '/app/laws/crpc-1898/',

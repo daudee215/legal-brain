@@ -75,6 +75,11 @@ export default function LoginPage() {
         <form className="space-y-4" onSubmit={submit}>
           <Field label="Email" type="email" required placeholder="you@chamber.pk" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           <Field label="Password" type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <p className="-mt-2 text-end text-sm">
+            <Link href="/forgot/" className="font-medium text-bronze hover:underline">
+              Forgot password?
+            </Link>
+          </p>
           <FormError msg={err} />
           <button type="submit" disabled={busy} className={`${btn.primary} w-full py-2.5`}>
             {busy ? 'Logging in…' : 'Log in'}
