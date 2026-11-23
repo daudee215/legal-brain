@@ -56,7 +56,8 @@ export interface HearingRow {
 export async function hearingsOn(dayKey: string, db: Db = getDb()): Promise<HearingRow[]> {
   const rows: HearingRow[] = [];
   for (const c of db.cases) {
-    if (!c.nextHearing || pktDateKey(c.nextHearing) !== dayKey) continue;
+    const listed = (c.nextHearing && pktDateKey(c.nextHearing) === dayKey) || c.hearings.some((h) => pktDateKey(h.date) === dayKey);
+    if (!listed) continue;
     const court = db.courts.find((x) => x.id === c.courtId);
     if (!court) continue;
     const entry = db.causeList.find((e) => e.caseId === c.id && e.date === dayKey);

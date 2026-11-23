@@ -48,7 +48,7 @@ function LawsPageBody({ db }: { db: Snapshot }) {
       {rows.length === 0 ? (
         <EmptyState title="No laws match your search" body="Try fewer words or a section number." />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {rows.map((s) => (
             <Link key={s.id} href={`/app/laws/${s.id}/`} className="group">
               <Card className="h-full transition-colors group-hover:border-bronze">

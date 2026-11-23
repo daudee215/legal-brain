@@ -33,7 +33,7 @@ export default function ToolsPage() {
             <Calculator className="h-5 w-5 text-bronze" /> Limitation calculator
           </span>
         </CardTitle>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="block text-sm sm:col-span-2">
             <span className="mb-1 block font-medium">Remedy</span>
             <select className={inputCls} value={remedy} onChange={(e) => setRemedy(e.target.value)}>

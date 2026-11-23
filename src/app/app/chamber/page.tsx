@@ -33,7 +33,7 @@ function ChamberPageBody({ db }: { db: Snapshot }) {
   return (
     <>
       <PageHeader title={db.chamber.name} subtitle="Your chamber — members share cases, dates and documents." />
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="min-w-0 space-y-6">
           <DataTable
             rows={db.chamber.members}

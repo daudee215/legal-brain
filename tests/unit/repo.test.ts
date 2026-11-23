@@ -102,3 +102,14 @@ describe('repo', () => {
     expect(await unreadCount(db)).toBe(1);
   });
 });
+
+describe('hearingsOn after an outcome is recorded', () => {
+  it('still lists a case heard that day even though its next date moved on', async () => {
+    const moved: Db = {
+      ...db,
+      cases: [mkCase({ id: '9', nextHearing: '2026-12-07T09:00:00+05:00', hearings: [{ date: '2026-11-23T09:00:00+05:00', proceedings: 'Adjourned.', nextDate: '2026-12-07T09:00:00+05:00' }] })],
+    };
+    expect((await hearingsOn('2026-11-23', moved)).map((r) => r.case.id)).toEqual(['9']);
+    expect((await hearingsOn('2026-12-07', moved)).map((r) => r.case.id)).toEqual(['9']);
+  });
+});

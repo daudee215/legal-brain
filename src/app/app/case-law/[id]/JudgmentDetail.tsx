@@ -36,7 +36,7 @@ export function JudgmentDetail({ id }: { id: string }) {
           {j.caseNo} · Decided {formatPk(j.date)}
         </p>
       </div>
-      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.6fr_1fr]">
         <Card>
           <h2 className="mb-2 text-lg font-semibold">Held</h2>
           <p className="font-reading text-[1.05rem] leading-relaxed">{j.summary}</p>

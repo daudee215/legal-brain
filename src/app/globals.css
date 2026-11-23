@@ -1,3 +1,5 @@
+/* Nastaliq for Urdu mode: loaded as a stylesheet because next/font cannot self-host this family. */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400..700&display=swap');
 @import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -213,4 +215,58 @@ body {
     box-shadow: none !important;
     border: 0 !important;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Urdu (app only). LanguageProvider sets <html lang="ur" dir="rtl"> while the
+   dashboard is mounted. Nastaliq needs generous line-height and no letter-spacing.
+   The Urdu face only covers Arabic script (unicode-range), so Latin text such as
+   case numbers falls through to Inter.
+   --------------------------------------------------------------------------- */
+:root {
+  --urdu: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Urdu Typesetting', var(--font-inter), system-ui, sans-serif;
+}
+
+html[lang='ur'] {
+  font-size: 106.25%;
+}
+
+html[lang='ur'] body,
+html[lang='ur'] h1,
+html[lang='ur'] h2,
+html[lang='ur'] h3,
+html[lang='ur'] h4,
+html[lang='ur'] .font-serif,
+html[lang='ur'] .font-sans,
+html[lang='ur'] .font-reading,
+html[lang='ur'] input,
+html[lang='ur'] select,
+html[lang='ur'] textarea,
+html[lang='ur'] button {
+  font-family: var(--urdu);
+}
+
+html[lang='ur'] body {
+  line-height: 2;
+}
+
+html[lang='ur'] :is(p, span, a, button, label, li, dt, dd, td, th, h4, input, select, textarea, option) {
+  line-height: 1.95;
+}
+
+html[lang='ur'] :is(h1, h2, h3) {
+  line-height: 1.8;
+  letter-spacing: 0;
+}
+
+/* Tracking (uppercase eyebrows) breaks Nastaliq joins. */
+html[lang='ur'] [class*='tracking-'] {
+  letter-spacing: 0;
+}
+
+/* Any Urdu block, even inside an English page (e.g. Munshi Mode labels). */
+.urdu {
+  font-family: var(--urdu);
+  line-height: 2;
+  letter-spacing: 0;
 }

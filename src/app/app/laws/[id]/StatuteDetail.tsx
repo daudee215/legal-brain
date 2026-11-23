@@ -35,7 +35,7 @@ export function StatuteDetail({ id }: { id: string }) {
           Official source <ExternalLink className="h-3.5 w-3.5" />
         </a>
       </div>
-      <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
         <nav aria-label="Sections" className="hidden lg:block">
           <ul className="sticky top-24 space-y-1 text-sm">
             {s.sections.map((x) => (

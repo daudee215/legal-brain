@@ -122,7 +122,7 @@ function MiniDashboard() {
             </div>
           ))}
         </div>
-        <div className="grid gap-3 sm:grid-cols-[1.4fr_1fr]">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.4fr_1fr]">
           <div className="space-y-2 rounded-lg border border-white/10 bg-white/5 p-3">
             {rows.map(([t, c, title]) => (
               <div key={title} className="flex items-center gap-3 text-xs">

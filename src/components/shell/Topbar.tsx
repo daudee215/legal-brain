@@ -1,9 +1,9 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, Moon, Search, Sun } from 'lucide-react';
+import { Languages, Menu, Moon, Search, Sun } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { ROLE_LABEL } from '../../lib/permissions';
+import { useLang } from '../../lib/i18n';
 import type { Role } from '../../types';
 import { NAV, isActive } from './nav';
 import { NotificationsMenu } from './Notifications';
@@ -13,6 +13,7 @@ import { useTheme } from './ThemeProvider';
 export function Topbar({ onMenu, onSearch }: { onMenu: () => void; onSearch: () => void }) {
   const { role, setRole, member } = useRole();
   const { resolved, toggle } = useTheme();
+  const { lang, setLang, t } = useLang();
   const pathname = usePathname() ?? '/app/';
   const current = NAV.find((n) => isActive(pathname, n.href));
   const initials = member.name
@@ -23,45 +24,55 @@ export function Topbar({ onMenu, onSearch }: { onMenu: () => void; onSearch: () 
 
   return (
     <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-line/80 bg-cream/75 px-4 py-3 backdrop-blur-xl lg:px-8">
-      <button type="button" onClick={onMenu} className="rounded-lg p-2 text-ink hover:bg-line lg:hidden" aria-label="Open menu">
+      <button type="button" onClick={onMenu} className="rounded-lg p-2 text-ink hover:bg-line lg:hidden" aria-label={t('shell.openMenu')}>
         <Menu className="h-5 w-5" />
       </button>
       <p className="hidden min-w-0 items-center gap-2 text-sm xl:flex">
         <span className="text-ink-soft">Khan &amp; Associates</span>
         <span className="text-line">/</span>
-        <span className="truncate font-medium text-ink">{current?.label ?? 'Dashboard'}</span>
+        <span className="truncate font-medium text-ink">{current ? t(`nav.${current.href}`, undefined, current.label) : t('nav./app/')}</span>
       </p>
       <button
         type="button"
         onClick={onSearch}
-        className="group flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-line bg-paper px-3 py-2 text-left text-sm text-ink-soft shadow-sm transition hover:border-bronze/40 sm:max-w-md xl:ml-6"
-        aria-label="Search everything"
+        className="group flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-line bg-paper px-3 py-2 text-start text-sm text-ink-soft shadow-sm transition hover:border-bronze/40 sm:max-w-md xl:ms-6"
+        aria-label={t('top.searchLabel')}
       >
         <Search className="h-4 w-4 shrink-0 transition group-hover:text-bronze" aria-hidden />
-        <span className="min-w-0 flex-1 truncate">Search cases, clients, laws…</span>
+        <span className="min-w-0 flex-1 truncate">{t('top.search')}</span>
         <kbd className="hidden rounded-md border border-line bg-cream px-1.5 py-0.5 font-sans text-[10px] font-medium sm:inline">Ctrl K</kbd>
       </button>
-      <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+      <div className="ms-auto flex items-center gap-1.5 sm:gap-2">
         <label className="hidden items-center gap-2 text-xs text-ink-soft md:flex">
-          Preview as
+          {t('top.previewAs')}
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as Role)}
             className="rounded-lg border border-line bg-paper px-2 py-1.5 text-sm text-ink"
-            aria-label="Preview as"
+            aria-label={t('top.previewAs')}
           >
             {(['senior', 'junior', 'clerk'] as Role[]).map((r) => (
               <option key={r} value={r}>
-                {ROLE_LABEL[r]}
+                {t(`role.${r}`)}
               </option>
             ))}
           </select>
         </label>
         <button
           type="button"
+          onClick={() => setLang(lang === 'ur' ? 'en' : 'ur')}
+          className={`flex h-9 items-center gap-1.5 rounded-lg border border-line bg-paper px-2.5 text-sm font-semibold text-ink transition hover:border-bronze/40 hover:bg-line/40 ${lang === 'en' ? 'urdu' : ''}`}
+          aria-label={t('top.langLabel')}
+          title={t('top.langLabel')}
+        >
+          <Languages className="h-4 w-4 shrink-0 text-bronze" aria-hidden />
+          <span lang={lang === 'en' ? 'ur' : 'en'}>{t('top.langToggle')}</span>
+        </button>
+        <button
+          type="button"
           onClick={toggle}
           className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-lg text-ink transition hover:bg-line"
-          aria-label={resolved === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          aria-label={resolved === 'dark' ? t('top.toLight') : t('top.toDark')}
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
@@ -77,7 +88,7 @@ export function Topbar({ onMenu, onSearch }: { onMenu: () => void; onSearch: () 
         </button>
         <NotificationsMenu />
         <span
-          className="ml-1 grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-bronze-soft to-bronze text-sm font-semibold text-ivory shadow-md shadow-bronze/30"
+          className="ms-1 grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-bronze-soft to-bronze text-sm font-semibold text-ivory shadow-md shadow-bronze/30"
           title={member.name}
         >
           {initials}

@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ROLE_LABEL } from '../../lib/permissions';
+import { LanguageProvider, useLang } from '../../lib/i18n';
 import type { Role } from '../../types';
 import { Loading } from '../ui/Loading';
 import { CommandPalette } from './CommandPalette';
@@ -18,9 +18,10 @@ const COLLAPSE_KEY = 'lb.sidebar';
 
 function MobileRoleSwitch() {
   const { role, setRole } = useRole();
+  const { t } = useLang();
   return (
     <label className="flex items-center justify-between gap-2 border-t border-white/10 bg-night px-5 py-3 text-xs text-ivory/70">
-      Preview as
+      {t('top.previewAs')}
       <select
         value={role}
         onChange={(e) => setRole(e.target.value as Role)}
@@ -29,7 +30,7 @@ function MobileRoleSwitch() {
       >
         {(['senior', 'junior', 'clerk'] as Role[]).map((r) => (
           <option key={r} value={r} className="text-ink">
-            {ROLE_LABEL[r]}
+            {t(`role.${r}`)}
           </option>
         ))}
       </select>
@@ -44,6 +45,8 @@ function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const reduce = useReducedMotion();
   const { ready } = useRole();
+  const { t, dir } = useLang();
+  const off = dir === 'rtl' ? '100%' : '-100%';
 
   useEffect(() => {
     setOpen(false);
@@ -96,23 +99,23 @@ function Shell({ children }: { children: React.ReactNode }) {
             className="fixed inset-0 z-40 lg:hidden"
             role="dialog"
             aria-modal="true"
-            aria-label="Menu"
+            aria-label={t('shell.menu')}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <button className="absolute inset-0 bg-night/50 backdrop-blur-sm" aria-label="Close menu" onClick={() => setOpen(false)} />
+            <button className="absolute inset-0 bg-night/50 backdrop-blur-sm" aria-label={t('shell.closeMenu')} onClick={() => setOpen(false)} />
             <motion.div
-              className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col shadow-2xl"
-              initial={{ x: '-100%' }}
+              className="absolute inset-y-0 start-0 flex w-72 max-w-[85vw] flex-col shadow-2xl"
+              initial={{ x: off }}
               animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
+              exit={{ x: off }}
               transition={{ type: 'spring', stiffness: 380, damping: 40 }}
             >
               <button
                 onClick={() => setOpen(false)}
-                className="absolute right-3 top-4 z-10 rounded-md p-1.5 text-ivory/80 hover:bg-white/10"
-                aria-label="Close menu"
+                className="absolute end-3 top-4 z-10 rounded-md p-1.5 text-ivory/80 hover:bg-white/10"
+                aria-label={t('shell.closeMenu')}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -125,7 +128,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         )}
       </AnimatePresence>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-x-clip">
         <Topbar onMenu={() => setOpen(true)} onSearch={() => setPalette(true)} />
         <DemoBanner />
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 lg:px-8 lg:py-8">
@@ -148,7 +151,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
       <RoleProvider>
-        <Shell>{children}</Shell>
+        <LanguageProvider>
+          <Shell>{children}</Shell>
+        </LanguageProvider>
       </RoleProvider>
     </ThemeProvider>
   );

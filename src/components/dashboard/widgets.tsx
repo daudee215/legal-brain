@@ -51,7 +51,7 @@ export function WelcomeHero({
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-night via-night/95 to-night/60" aria-hidden />
       <div className="pointer-events-none absolute -right-24 -top-24 -z-10 h-72 w-72 rounded-full bg-bronze/30 blur-3xl" aria-hidden />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-bronze-soft">
             {weekday(t)} · {formatPk(t)}
@@ -270,7 +270,7 @@ export function CaseBreakdown({ stats, courts }: { stats: CaseStats; courts: Cou
           ) : null,
         )}
       </div>
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div>
           <h3 className="mb-3 font-sans text-xs font-semibold uppercase tracking-wide text-ink-soft">By category</h3>
           <BarList rows={cat} />

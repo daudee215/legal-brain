@@ -1,10 +1,15 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowLeft, CalendarClock, ExternalLink, FileText, Gavel, NotebookPen, Plus, Users, Wallet } from 'lucide-react';
+import { ArrowLeft, CalendarClock, ClipboardCheck, ExternalLink, FileText, Gavel, NotebookPen, Plus, Users, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { pkr } from '../../../../components/dashboard/widgets';
+import { OutcomeDialog } from '../../../../components/outcome/OutcomeDialog';
+import { DeadlinesForCase } from '../../../../components/deadlines/DeadlinesForCase';
+import { ExpensesPanel } from '../../../../components/fees/ExpensesPanel';
+import { PaymentForm } from '../../../../components/fees/PaymentForm';
+import { CaseStatusButton, FeeReceiptButton, StatusSheetLink } from '../../../../components/pdf/PdfButtons';
 import { useRole } from '../../../../components/shell/RoleProvider';
 import { Badge, btn, Card, CardTitle, EmptyState, StatusBadge } from '../../../../components/ui';
 import { Loading } from '../../../../components/ui/Loading';
@@ -25,6 +30,8 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
   const toast = useToast();
   const seeFees = can(role, 'billing');
   const [tab, setTab] = useState<Tab>('overview');
+  const [paying, setPaying] = useState(false);
+  const [recording, setRecording] = useState(false);
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get('tab') as Tab | null;
     if (t && ['overview', 'hearings', 'documents', 'notes', 'fees'].includes(t)) setTab(t);
@@ -89,6 +96,14 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
           </div>
         </dl>
         <div className="mt-6 flex flex-wrap items-center gap-3">
+          {can(role, 'cases.edit') && c.status !== 'decided' && c.status !== 'disposed' && (
+            <button
+              onClick={() => setRecording(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-bronze px-4 py-2 text-sm font-medium text-ivory shadow-sm shadow-bronze/30 transition hover:-translate-y-0.5 hover:bg-bronze/90"
+            >
+              <ClipboardCheck className="h-4 w-4" /> Record outcome
+            </button>
+          )}
           {court && (
             <a
               href={court.statusUrl}
@@ -164,6 +179,7 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
                   <p className="mt-1 text-xs text-ink-soft">{formatPk(notes[0].date)}</p>
                 </Card>
               )}
+              <DeadlinesForCase caseId={c.id} />
             </div>
             <Card>
               <CardTitle>Client</CardTitle>
@@ -196,6 +212,11 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
                 ))}
               </div>
               <p className="mt-5 text-xs text-ink-soft">Filed on {formatPk(c.filedOn)}</p>
+              <p className="mt-5 text-xs uppercase tracking-wide text-ink-soft">Share with client</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <StatusSheetLink caseId={c.id} />
+                <CaseStatusButton caseId={c.id} className={btn.ghost} />
+              </div>
             </Card>
           </div>
         )}
@@ -235,7 +256,7 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
             {docs.length === 0 ? (
               <EmptyState title="No files yet" body="Pleadings, orders and evidence for this case will appear here." />
             ) : (
-              <ul className="grid gap-3 sm:grid-cols-2">
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {docs.map((d) => (
                   <li key={d.id} className="flex items-center gap-3 rounded-xl border border-line p-3 transition hover:border-bronze/40">
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-bronze/10 text-bronze">
@@ -281,18 +302,28 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
           <Card>
             <CardTitle
               action={
-                <button className={btn.primary} onClick={() => toast.show('Payment recording arrives with real accounts in Phase 2')}>
+                <button className={btn.primary} onClick={() => setPaying((v) => !v)} aria-expanded={paying}>
                   <Plus className="h-4 w-4" /> Record payment
                 </button>
               }
             >
               Fees
             </CardTitle>
+            {paying && (
+              <PaymentForm
+                caseId={c.id}
+                agreed={fee?.agreed}
+                onDone={(m) => {
+                  setPaying(false);
+                  toast.show(m);
+                }}
+              />
+            )}
             {!fee ? (
               <EmptyState title="No fee recorded" body="Record the fee agreed with the client to track payments against it." />
             ) : (
               <>
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   {[
                     ['Agreed', fee.agreed, ''],
                     ['Received', fee.received, 'text-ok'],
@@ -327,17 +358,22 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
                         <th className="py-2 font-medium">Mode</th>
                         <th className="py-2 font-medium">Note</th>
                         <th className="py-2 text-right font-medium">Amount</th>
+                        <th className="py-2 text-right font-medium"><span className="sr-only">Receipt</span></th>
                       </tr>
                     </thead>
                     <tbody>
-                      {[...fee.payments]
-                        .sort((a, b) => (a.date < b.date ? 1 : -1))
-                        .map((p, i) => (
+                      {fee.payments
+                        .map((p, i) => ({ p, i }))
+                        .sort((a, b) => (a.p.date < b.p.date ? 1 : -1))
+                        .map(({ p, i }) => (
                           <tr key={i} className="border-b border-line/60">
                             <td className="whitespace-nowrap py-2.5">{formatPk(p.date)}</td>
                             <td className="py-2.5">{p.mode}</td>
                             <td className="py-2.5 text-ink-soft">{p.note ?? '—'}</td>
                             <td className="py-2.5 text-right font-medium tabular-nums">{pkr(p.amount)}</td>
+                            <td className="py-2.5 pl-3 text-right">
+                              <FeeReceiptButton caseId={c.id} paymentIndex={i} className="text-xs font-medium text-bronze hover:underline" />
+                            </td>
                           </tr>
                         ))}
                     </tbody>
@@ -347,7 +383,13 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
             )}
           </Card>
         )}
+        {active === 'fees' && seeFees && (
+          <div className="mt-6">
+            <ExpensesPanel caseId={c.id} />
+          </div>
+        )}
       </motion.div>
+      {recording && <OutcomeDialog c={c} court={court} client={client} onClose={() => setRecording(false)} />}
       {toast.node}
     </div>
   );

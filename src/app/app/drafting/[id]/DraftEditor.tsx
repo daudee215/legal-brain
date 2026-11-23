@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Copy, Printer } from 'lucide-react';
+import { ArrowLeft, Copy, FileDown, Printer } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { RoleGate } from '../../../../components/shell/RoleGate';
@@ -8,6 +8,8 @@ import { useRole } from '../../../../components/shell/RoleProvider';
 import { btn, EmptyState, inputCls } from '../../../../components/ui';
 import { useToast } from '../../../../components/ui/Toast';
 import { fillTemplate } from '../../../../lib/templates';
+import { downloadBlob } from '../../../../lib/files';
+import { draftPdf } from '../../../../lib/pdfDocs';
 import { snapshot, type Snapshot } from '../../../../lib/repo';
 import { useData } from '../../../../lib/useData';
 import { Loading } from '../../../../components/ui/Loading';
@@ -84,6 +86,21 @@ function DraftEditorBody({ id, db }: { id: string; db: Snapshot }) {
           <div className="flex flex-wrap gap-2 pt-2">
             <button type="button" className={btn.primary} onClick={() => window.print()}>
               <Printer className="h-4 w-4" /> Print / Save PDF
+            </button>
+            <button
+              type="button"
+              className={btn.ghost}
+              onClick={async () => {
+                try {
+                  const bytes = await draftPdf(t.title, text);
+                  downloadBlob(bytes, `${t.title.replace(/[\\/:*?"<>|]+/g, '-')}.pdf`);
+                  toast.show('PDF downloaded');
+                } catch {
+                  toast.show('Could not make the PDF');
+                }
+              }}
+            >
+              <FileDown className="h-4 w-4" /> Download PDF
             </button>
             <button
               type="button"

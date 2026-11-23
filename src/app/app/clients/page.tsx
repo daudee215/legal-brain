@@ -3,6 +3,7 @@
 import { MapPin, Phone } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { ConflictCheck } from '../../../components/clients/ConflictCheck';
 import { Card, EmptyState, inputCls, PageHeader, StatusBadge } from '../../../components/ui';
 import { Loading } from '../../../components/ui/Loading';
 import { listCases, listClients } from '../../../lib/repo';
@@ -24,13 +25,14 @@ export default function ClientsPage() {
         </Link>
         <span className="flex-1 rounded-lg bg-night px-4 py-1.5 text-center text-ivory">Clients</span>
       </div>
+      <ConflictCheck />
       <input className={`${inputCls} mb-5 sm:max-w-sm`} placeholder="Search clients…" aria-label="Search clients" value={q} onChange={(e) => setQ(e.target.value)} />
       {!data ? (
         <Loading />
       ) : rows.length === 0 ? (
         <EmptyState title="No matching clients" />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {rows.map((cl) => {
             const cs = data.cases.filter((c) => c.clientId === cl.id);
             return (

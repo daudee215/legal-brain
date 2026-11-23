@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import { ChevronsLeft, ChevronsRight, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { can, ROLE_LABEL } from '../../lib/permissions';
+import { useLang } from '../../lib/i18n';
+import { can } from '../../lib/permissions';
 import { Logo } from './Logo';
 import { isActive, NAV, NAV_GROUPS } from './nav';
 import { useRole } from './RoleProvider';
@@ -23,6 +24,8 @@ export function Sidebar({
 }) {
   const pathname = usePathname() ?? '/app/';
   const { role, member } = useRole();
+  const { t, dir } = useLang();
+  const rtl = dir === 'rtl';
   const items = NAV.filter((n) => !n.action || can(role, n.action));
   const initials = member.name
     .split(' ')
@@ -32,7 +35,7 @@ export function Sidebar({
 
   return (
     <nav aria-label="Main" className="relative flex h-full flex-col overflow-hidden bg-night text-ivory">
-      <div className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-bronze/25 blur-3xl" aria-hidden />
+      <div className="pointer-events-none absolute -start-24 -top-24 h-64 w-64 rounded-full bg-bronze/25 blur-3xl" aria-hidden />
       <div className={`relative flex items-center pb-4 pt-5 ${collapsed ? 'justify-center px-2' : 'px-5'}`}>
         <Link href="/app/" onClick={onNavigate} aria-label="Legal Brain dashboard">
           {collapsed ? (
@@ -52,7 +55,7 @@ export function Sidebar({
               {collapsed ? (
                 <div className="mx-auto my-2 h-px w-6 bg-white/10" aria-hidden />
               ) : (
-                <p className="px-3 pb-1.5 pt-2 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-bronze-soft/70">{g}</p>
+                <p className="px-3 pb-1.5 pt-2 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-bronze-soft/70">{t(`group.${g}`, undefined, g)}</p>
               )}
               <ul className="space-y-0.5">
                 {groupItems.map((n) => {
@@ -64,7 +67,7 @@ export function Sidebar({
                         href={n.href}
                         onClick={onNavigate}
                         aria-current={active ? 'page' : undefined}
-                        title={collapsed ? n.label : undefined}
+                        title={collapsed ? t(`nav.${n.href}`, undefined, n.label) : undefined}
                         className={`group relative flex items-center gap-3 rounded-lg py-2 text-sm transition-colors ${
                           collapsed ? 'justify-center px-0' : 'px-3'
                         } ${active ? 'font-semibold text-night' : 'text-ivory/75 hover:bg-white/[0.07] hover:text-ivory'}`}
@@ -80,9 +83,9 @@ export function Sidebar({
                           className={`relative h-4 w-4 shrink-0 transition-transform group-hover:scale-110 ${active ? 'text-bronze' : ''}`}
                           aria-hidden
                         />
-                        <span className={collapsed ? 'sr-only' : 'relative truncate'}>{n.label}</span>
+                        <span className={collapsed ? 'sr-only' : 'relative truncate'}>{t(`nav.${n.href}`, undefined, n.label)}</span>
                         {n.href === '/app/assistant/' && !collapsed && (
-                          <span className="relative ml-auto rounded-full bg-bronze/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-ivory">
+                          <span className="relative ms-auto rounded-full bg-bronze/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-ivory">
                             AI
                           </span>
                         )}
@@ -98,33 +101,35 @@ export function Sidebar({
 
       <Link
         href="/"
-        title={collapsed ? 'Website' : undefined}
+        title={collapsed ? t('shell.website') : undefined}
         className={`relative mx-3 mb-1 flex items-center gap-2 rounded-lg py-2 text-xs text-ivory/60 transition hover:bg-white/[0.07] hover:text-ivory ${collapsed ? 'justify-center' : 'px-3'}`}
       >
         <Globe className="h-4 w-4" aria-hidden />
-        <span className={collapsed ? 'sr-only' : ''}>Legal Brain website</span>
+        <span className={collapsed ? 'sr-only' : ''}>{t('shell.website')}</span>
       </Link>
       {onToggleCollapse && (
         <button
           onClick={onToggleCollapse}
           className="relative mx-3 mb-2 flex items-center justify-center gap-2 rounded-lg py-2 text-xs text-ivory/60 transition hover:bg-white/[0.07] hover:text-ivory"
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={collapsed ? t('shell.expandSidebar') : t('shell.collapseSidebar')}
         >
-          {collapsed ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
-          {!collapsed && 'Collapse'}
+          {collapsed !== rtl ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
+          {!collapsed && t('shell.collapse')}
         </button>
       )}
 
       <div className={`relative flex items-center gap-3 border-t border-white/10 py-4 ${collapsed ? 'justify-center px-2' : 'px-5'}`}>
         <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-bronze-soft to-bronze text-sm font-semibold text-ivory">
           {initials}
-          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-night bg-ok" aria-hidden />
+          <span className="absolute -bottom-0.5 -end-0.5 h-3 w-3 rounded-full border-2 border-night bg-ok" aria-hidden />
         </span>
         {!collapsed && (
           <div className="min-w-0 text-sm">
-            <p className="truncate font-medium">Adv. {member.name}</p>
+            <p className="truncate font-medium">
+              {t('shell.advPrefix')} {member.name}
+            </p>
             <p className="truncate text-xs text-ivory/55">
-              {ROLE_LABEL[role]} · Khan &amp; Associates
+              {t(`role.${role}`)} · Khan &amp; Associates
             </p>
           </div>
         )}
