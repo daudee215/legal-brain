@@ -5,6 +5,7 @@ import { CheckCircle2, ExternalLink, FileSearch, HelpCircle, Loader2, Save, Uplo
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { AutoCauseListPanel } from '../../../components/causelist/AutoCauseListPanel';
+import { FullCauseList } from '../../../components/causelist/FullCauseList';
 import { useAutoCauseLists } from '../../../components/causelist/useAutoCauseLists';
 import { Badge, btn, Card, CardTitle, EmptyState, inputCls, Notice, PageHeader } from '../../../components/ui';
 import { Loading } from '../../../components/ui/Loading';
@@ -236,7 +237,10 @@ export default function CauseListPage() {
       <PageHeader title="Daily Cause List" subtitle={`${weekday(day)}, ${formatPk(day)} — ${rows.length} of your cases fixed`} />
       <Notice>
         Lists for the Islamabad and Peshawar High Courts are fetched automatically. For other courts, upload the court&apos;s published cause list
-        below to find your cases with serial number and court room. Always double-check against the official list.
+        below to find your cases with serial number and court room. Always double-check against the official list.{' '}
+        <a href="#full-list" className="font-medium text-bronze underline-offset-2 hover:underline">
+          Browse the full Islamabad and Peshawar lists ↓
+        </a>
       </Notice>
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <div className="flex gap-1 rounded-xl border border-line bg-paper p-1">
@@ -296,6 +300,8 @@ export default function CauseListPage() {
           })}
         </div>
       )}
+
+      <FullCauseList day={day} cases={lib.cases} courts={lib.courts} />
     </>
   );
 }
