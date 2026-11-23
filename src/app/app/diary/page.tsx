@@ -7,10 +7,11 @@ import { useRole } from '../../../components/shell/RoleProvider';
 import { btn, Card, CardTitle, EmptyState, inputCls, PageHeader } from '../../../components/ui';
 import { Loading } from '../../../components/ui/Loading';
 import { useToast } from '../../../components/ui/Toast';
-import { seed } from '../../../data/seed';
 import { formatPk, formatTime, pktDateKey, todayKey, weekday } from '../../../lib/dates';
 import { can } from '../../../lib/permissions';
 import type { DiaryEntry } from '../../../types';
+import { snapshot, type Snapshot } from '../../../lib/repo';
+import { useData } from '../../../lib/useData';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -24,13 +25,13 @@ function monthGrid(year: number, month: number): (string | null)[] {
   return cells;
 }
 
-export default function DiaryPage() {
+function DiaryPageBody({ db }: { db: Snapshot }) {
   const { role, member } = useRole();
   const toast = useToast();
   const [today, setToday] = useState<string | null>(null);
   const [sel, setSel] = useState<string | null>(null);
   const [ym, setYm] = useState<[number, number] | null>(null);
-  const [entries, setEntries] = useState<DiaryEntry[]>(seed.diary);
+  const [entries, setEntries] = useState<DiaryEntry[]>(db.diary);
   const [text, setText] = useState('');
   const [caseId, setCaseId] = useState('');
 
@@ -41,13 +42,13 @@ export default function DiaryPage() {
     setYm([Number(t.slice(0, 4)), Number(t.slice(5, 7)) - 1]);
   }, []);
 
-  const hearingDays = useMemo(() => new Set(seed.cases.filter((c) => c.nextHearing).map((c) => pktDateKey(c.nextHearing!))), []);
+  const hearingDays = useMemo(() => new Set(db.cases.filter((c) => c.nextHearing).map((c) => pktDateKey(c.nextHearing!))), [db.cases]);
   const noteDays = useMemo(() => new Set(entries.map((e) => pktDateKey(e.date))), [entries]);
 
   if (!today || !sel || !ym) return <Loading />;
   const [y, m] = ym;
   const cells = monthGrid(y, m);
-  const dayHearings = seed.cases.filter((c) => c.nextHearing && pktDateKey(c.nextHearing) === sel);
+  const dayHearings = db.cases.filter((c) => c.nextHearing && pktDateKey(c.nextHearing) === sel);
   const dayNotes = entries.filter((e) => pktDateKey(e.date) === sel).sort((a, b) => (a.date < b.date ? 1 : -1));
   const shift = (n: number) => {
     const d = new Date(Date.UTC(y, m + n, 1));
@@ -135,8 +136,8 @@ export default function DiaryPage() {
             ) : (
               <ul className="space-y-3">
                 {dayNotes.map((n) => {
-                  const c = seed.cases.find((x) => x.id === n.caseId);
-                  const author = seed.chamber.members.find((x) => x.id === n.authorId);
+                  const c = db.cases.find((x) => x.id === n.caseId);
+                  const author = db.chamber.members.find((x) => x.id === n.authorId);
                   return (
                     <li key={n.id} className="rounded-xl border border-line bg-cream/50 p-3 text-sm">
                       <p>{n.text}</p>
@@ -182,7 +183,7 @@ export default function DiaryPage() {
                 <div className="flex flex-wrap gap-2">
                   <select className={`${inputCls} sm:w-auto sm:flex-1`} value={caseId} onChange={(e) => setCaseId(e.target.value)} aria-label="Link to case">
                     <option value="">Not linked to a case</option>
-                    {seed.cases.map((c) => (
+                    {db.cases.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.title}
                       </option>
@@ -200,4 +201,10 @@ export default function DiaryPage() {
       {toast.node}
     </>
   );
+}
+
+export default function DiaryPage() {
+  const db = useData(() => snapshot());
+  if (!db) return <Loading />;
+  return <DiaryPageBody db={db} />;
 }

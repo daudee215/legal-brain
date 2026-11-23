@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRole } from '../../../components/shell/RoleProvider';
 import { DataTable, EmptyState, PageHeader } from '../../../components/ui';
-import { seed } from '../../../data/seed';
 import { formatPk } from '../../../lib/dates';
 import { can } from '../../../lib/permissions';
+import { snapshot, type Snapshot } from '../../../lib/repo';
+import { useData } from '../../../lib/useData';
+import { Loading } from '../../../components/ui/Loading';
 
 const FOLDERS = ['All', 'Pleadings', 'Orders', 'Evidence', 'Correspondence', 'Personal'];
 
@@ -15,12 +17,12 @@ function size(kb: number) {
   return kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb} KB`;
 }
 
-export default function DocumentsPage() {
+function DocumentsPageBody({ db }: { db: Snapshot }) {
   const { role } = useRole();
   const [folder, setFolder] = useState('All');
   const [dropped, setDropped] = useState<string[]>([]);
   const [over, setOver] = useState(false);
-  const rows = seed.docs.filter((d) => folder === 'All' || d.folder === folder);
+  const rows = db.docs.filter((d) => folder === 'All' || d.folder === folder);
 
   return (
     <>
@@ -31,7 +33,7 @@ export default function DocumentsPage() {
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
         <nav aria-label="Folders" className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
           {FOLDERS.map((f) => {
-            const n = f === 'All' ? seed.docs.length : seed.docs.filter((d) => d.folder === f).length;
+            const n = f === 'All' ? db.docs.length : db.docs.filter((d) => d.folder === f).length;
             return (
               <button
                 key={f}
@@ -100,7 +102,7 @@ export default function DocumentsPage() {
               {
                 header: 'Case',
                 cell: (d) => {
-                  const c = seed.cases.find((x) => x.id === d.caseId);
+                  const c = db.cases.find((x) => x.id === d.caseId);
                   return c ? (
                     <Link href={`/app/cases/${c.id}/`} className="text-ink-soft hover:text-bronze">
                       {c.title}
@@ -115,7 +117,7 @@ export default function DocumentsPage() {
                 header: 'Uploaded',
                 cell: (d) => (
                   <span className="whitespace-nowrap text-ink-soft">
-                    {formatPk(d.uploadedOn)} · {seed.chamber.members.find((m) => m.id === d.uploadedBy)?.name.split(' ')[0]}
+                    {formatPk(d.uploadedOn)} · {db.chamber.members.find((m) => m.id === d.uploadedBy)?.name.split(' ')[0]}
                   </span>
                 ),
               },
@@ -125,4 +127,10 @@ export default function DocumentsPage() {
       </div>
     </>
   );
+}
+
+export default function DocumentsPage() {
+  const db = useData(() => snapshot());
+  if (!db) return <Loading />;
+  return <DocumentsPageBody db={db} />;
 }

@@ -4,21 +4,23 @@ import { BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { Badge, Card, DemoBadge, EmptyState, inputCls, PageHeader } from '../../../components/ui';
-import { seed } from '../../../data/seed';
 import { searchItems } from '../../../lib/search';
 import { JURISDICTIONS, type Jurisdiction } from '../../../types';
+import { snapshot, type Snapshot } from '../../../lib/repo';
+import { useData } from '../../../lib/useData';
+import { Loading } from '../../../components/ui/Loading';
 
-export default function LawsPage() {
+function LawsPageBody({ db }: { db: Snapshot }) {
   const [q, setQ] = useState('');
   const [j, setJ] = useState<Jurisdiction | ''>('');
   const rows = useMemo(
     () =>
       searchItems(
-        seed.statutes.filter((s) => !j || s.jurisdiction === j),
+        db.statutes.filter((s) => !j || s.jurisdiction === j),
         q,
         (s) => [s.title, String(s.year), s.category, ...s.sections.flatMap((x) => [x.no, x.heading, x.text])],
       ),
-    [q, j],
+    [q, j, db.statutes],
   );
 
   return (
@@ -75,4 +77,10 @@ export default function LawsPage() {
       </p>
     </>
   );
+}
+
+export default function LawsPage() {
+  const db = useData(() => snapshot());
+  if (!db) return <Loading />;
+  return <LawsPageBody db={db} />;
 }

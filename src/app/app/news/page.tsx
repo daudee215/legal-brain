@@ -6,16 +6,17 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { Badge, btn, Card, DemoBadge, EmptyState, PageHeader } from '../../../components/ui';
 import { Loading } from '../../../components/ui/Loading';
-import { seed } from '../../../data/seed';
 import { formatPk, formatTime } from '../../../lib/dates';
 import type { AppNotification } from '../../../types';
+import { snapshot, type Snapshot } from '../../../lib/repo';
+import { useData } from '../../../lib/useData';
 
 const ICON = { hearing: Gavel, judgment: Landmark, news: Newspaper, system: Settings } as const;
 
-function NewsInner() {
+function NewsInnerBody({ db }: { db: Snapshot }) {
   const params = useSearchParams();
   const [tab, setTab] = useState<'news' | 'notifications'>('news');
-  const [notes, setNotes] = useState<AppNotification[]>(() => [...seed.notifications].sort((a, b) => (a.date < b.date ? 1 : -1)));
+  const [notes, setNotes] = useState<AppNotification[]>(() => [...db.notifications].sort((a, b) => (a.date < b.date ? 1 : -1)));
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -24,7 +25,7 @@ function NewsInner() {
 
   if (!mounted) return <Loading />;
   const unread = notes.filter((n) => !n.read).length;
-  const news = [...seed.news].sort((a, b) => (a.date < b.date ? 1 : -1));
+  const news = [...db.news].sort((a, b) => (a.date < b.date ? 1 : -1));
 
   return (
     <>
@@ -105,4 +106,10 @@ export default function NewsPage() {
       <NewsInner />
     </Suspense>
   );
+}
+
+function NewsInner() {
+  const db = useData(() => snapshot());
+  if (!db) return <Loading />;
+  return <NewsInnerBody db={db} />;
 }

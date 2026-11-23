@@ -7,11 +7,13 @@ import { RoleGate } from '../../../../components/shell/RoleGate';
 import { useRole } from '../../../../components/shell/RoleProvider';
 import { btn, EmptyState, inputCls } from '../../../../components/ui';
 import { useToast } from '../../../../components/ui/Toast';
-import { seed } from '../../../../data/seed';
 import { fillTemplate } from '../../../../lib/templates';
+import { snapshot, type Snapshot } from '../../../../lib/repo';
+import { useData } from '../../../../lib/useData';
+import { Loading } from '../../../../components/ui/Loading';
 
-export function DraftEditor({ id }: { id: string }) {
-  const t = seed.templates.find((x) => x.id === id);
+function DraftEditorBody({ id, db }: { id: string; db: Snapshot }) {
+  const t = db.templates.find((x) => x.id === id);
   const { member } = useRole();
   const toast = useToast();
   const [values, setValues] = useState<Record<string, string>>({});
@@ -20,10 +22,10 @@ export function DraftEditor({ id }: { id: string }) {
   if (!t) return <EmptyState title="Template not found" />;
 
   function fromCase(caseId: string) {
-    const c = seed.cases.find((x) => x.id === caseId);
+    const c = db.cases.find((x) => x.id === caseId);
     if (!c) return;
-    const court = seed.courts.find((x) => x.id === c.courtId);
-    const client = seed.clients.find((x) => x.id === c.clientId);
+    const court = db.courts.find((x) => x.id === c.courtId);
+    const client = db.clients.find((x) => x.id === c.clientId);
     const [pet, resp] = c.title.split(/\s+v\.?\s+/);
     setValues((v) => ({
       ...v,
@@ -51,7 +53,7 @@ export function DraftEditor({ id }: { id: string }) {
             <span className="mb-1 block font-medium">Fill from a case</span>
             <select className={inputCls} defaultValue="" onChange={(e) => fromCase(e.target.value)}>
               <option value="">— choose a case —</option>
-              {seed.cases.map((c) => (
+              {db.cases.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.title}
                 </option>
@@ -106,4 +108,10 @@ export function DraftEditor({ id }: { id: string }) {
       {toast.node}
     </RoleGate>
   );
+}
+
+export function DraftEditor({ id }: { id: string }) {
+  const db = useData(() => snapshot());
+  if (!db) return <Loading />;
+  return <DraftEditorBody id={id} db={db} />;
 }

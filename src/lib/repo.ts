@@ -127,6 +127,39 @@ export async function listBooks(ownerId: string, db: Db = seed) {
 export async function listDocs(folder?: string, db: Db = seed) {
   return folder ? db.docs.filter((d) => d.folder === folder) : db.docs;
 }
+export async function listCaseDocs(caseId: string, db: Db = seed) {
+  return db.docs.filter((d) => d.caseId === caseId);
+}
+export async function listCaseDiary(caseId: string, db: Db = seed) {
+  return db.diary.filter((d) => d.caseId === caseId).sort((a, b) => (a.date < b.date ? 1 : -1));
+}
+export async function listMembers(db: Db = seed) {
+  return db.chamber.members;
+}
+/**
+ * Everything a demo page reads, fetched through the functions above.
+ * Phase 2 replaces page-level use of this with targeted queries.
+ */
+export async function snapshot(db: Db = seed) {
+  const me = await getMe(db);
+  return {
+    me,
+    chamber: await getChamber(db),
+    courts: await listCourts(db),
+    cases: await listCases({}, db),
+    clients: await listClients(db),
+    statutes: await listStatutes(db),
+    judgments: await listJudgments(db),
+    templates: await listTemplates(db),
+    diary: await listDiary(undefined, db),
+    news: await listNews(db),
+    notifications: await listNotifications(db),
+    books: await listBooks(me.id, db),
+    docs: await listDocs(undefined, db),
+  };
+}
+export type Snapshot = Awaited<ReturnType<typeof snapshot>>;
+
 export async function getChamber(db: Db = seed) {
   return db.chamber;
 }

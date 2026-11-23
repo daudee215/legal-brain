@@ -4,12 +4,12 @@ import { ArrowLeft, ExternalLink, FileText, NotebookPen } from 'lucide-react';
 import Link from 'next/link';
 import { Badge, Card, CardTitle, EmptyState, StatusBadge } from '../../../../components/ui';
 import { Loading } from '../../../../components/ui/Loading';
-import { seed } from '../../../../data/seed';
 import { formatPk, formatTime } from '../../../../lib/dates';
 import { getCase, getClient, getCourt } from '../../../../lib/repo';
 import { useData } from '../../../../lib/useData';
+import { snapshot, type Snapshot } from '../../../../lib/repo';
 
-export function CaseDetail({ id }: { id: string }) {
+function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
   const data = useData(async () => {
     const c = await getCase(id);
     if (!c) return { c: undefined } as const;
@@ -20,9 +20,9 @@ export function CaseDetail({ id }: { id: string }) {
   const { c } = data;
   if (!c) return <EmptyState title="Case not found" action={<Link href="/app/cases/">Back to cases</Link>} />;
   const { court, client } = data;
-  const docs = seed.docs.filter((d) => d.caseId === c.id);
-  const notes = seed.diary.filter((d) => d.caseId === c.id);
-  const members = seed.chamber.members.filter((m) => c.assignedTo.includes(m.id));
+  const docs = db.docs.filter((d) => d.caseId === c.id);
+  const notes = db.diary.filter((d) => d.caseId === c.id);
+  const members = db.chamber.members.filter((m) => c.assignedTo.includes(m.id));
   const hearings = [...c.hearings].sort((a, b) => (a.date < b.date ? 1 : -1));
 
   return (
@@ -154,4 +154,10 @@ export function CaseDetail({ id }: { id: string }) {
       </div>
     </div>
   );
+}
+
+export function CaseDetail({ id }: { id: string }) {
+  const db = useData(() => snapshot());
+  if (!db) return <Loading />;
+  return <CaseDetailBody id={id} db={db} />;
 }

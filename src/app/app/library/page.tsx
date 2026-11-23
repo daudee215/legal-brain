@@ -4,16 +4,18 @@ import { BookMarked, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { RoleGate } from '../../../components/shell/RoleGate';
 import { btn, EmptyState, inputCls, Notice, PageHeader } from '../../../components/ui';
-import { seed } from '../../../data/seed';
 import { formatPk } from '../../../lib/dates';
 import { searchItems } from '../../../lib/search';
+import { snapshot, type Snapshot } from '../../../lib/repo';
+import { useData } from '../../../lib/useData';
+import { Loading } from '../../../components/ui/Loading';
 
 const SPINES = ['bg-ink', 'bg-bronze', 'bg-[#5b3b22]', 'bg-[#2f3b2a]'];
 
-export default function LibraryPage() {
+function LibraryPageBody({ db }: { db: Snapshot }) {
   const [q, setQ] = useState('');
   const books = searchItems(
-    seed.books.filter((b) => b.ownerId === seed.me.id),
+    db.books.filter((b) => b.ownerId === db.me.id),
     q,
     (b) => [b.title, b.author],
   );
@@ -54,4 +56,10 @@ export default function LibraryPage() {
       )}
     </RoleGate>
   );
+}
+
+export default function LibraryPage() {
+  const db = useData(() => snapshot());
+  if (!db) return <Loading />;
+  return <LibraryPageBody db={db} />;
 }

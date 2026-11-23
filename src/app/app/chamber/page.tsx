@@ -5,9 +5,11 @@ import { useState } from 'react';
 import { useRole } from '../../../components/shell/RoleProvider';
 import { Badge, btn, Card, CardTitle, DataTable, inputCls, PageHeader } from '../../../components/ui';
 import { useToast } from '../../../components/ui/Toast';
-import { seed } from '../../../data/seed';
 import { can, ROLE_LABEL, type Action } from '../../../lib/permissions';
 import type { Role } from '../../../types';
+import { snapshot, type Snapshot } from '../../../lib/repo';
+import { useData } from '../../../lib/useData';
+import { Loading } from '../../../components/ui/Loading';
 
 const MATRIX_ROWS: { label: string; action?: Action }[] = [
   { label: 'View cases, cause lists, laws, case law, news' },
@@ -22,7 +24,7 @@ const MATRIX_ROWS: { label: string; action?: Action }[] = [
 ];
 const ROLES: Role[] = ['senior', 'junior', 'clerk'];
 
-export default function ChamberPage() {
+function ChamberPageBody({ db }: { db: Snapshot }) {
   const { role } = useRole();
   const toast = useToast();
   const [email, setEmail] = useState('');
@@ -30,11 +32,11 @@ export default function ChamberPage() {
 
   return (
     <>
-      <PageHeader title={seed.chamber.name} subtitle="Your chamber — members share cases, dates and documents." />
+      <PageHeader title={db.chamber.name} subtitle="Your chamber — members share cases, dates and documents." />
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="min-w-0 space-y-6">
           <DataTable
-            rows={seed.chamber.members}
+            rows={db.chamber.members}
             rowKey={(m) => m.id}
             columns={[
               { header: 'Member', cell: (m) => <span className="font-medium">{m.name}</span> },
@@ -106,7 +108,7 @@ export default function ChamberPage() {
               <button type="submit" className={`${btn.primary} w-full`}>
                 Send invite
               </button>
-              <p className="text-xs text-ink-soft">They&apos;ll get an invite code to join {seed.chamber.name} when they sign up.</p>
+              <p className="text-xs text-ink-soft">They&apos;ll get an invite code to join {db.chamber.name} when they sign up.</p>
             </form>
           </Card>
         ) : (
@@ -118,4 +120,10 @@ export default function ChamberPage() {
       {toast.node}
     </>
   );
+}
+
+export default function ChamberPage() {
+  const db = useData(() => snapshot());
+  if (!db) return <Loading />;
+  return <ChamberPageBody db={db} />;
 }

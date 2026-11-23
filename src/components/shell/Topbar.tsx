@@ -4,17 +4,18 @@ import { Bell, Menu, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { seed } from '../../data/seed';
 import { ROLE_LABEL } from '../../lib/permissions';
+import { unreadCount } from '../../lib/repo';
+import { useData } from '../../lib/useData';
 import type { Role } from '../../types';
 import { useRole } from './RoleProvider';
 
-const unread = seed.notifications.filter((n) => !n.read).length;
 
 export function Topbar({ onMenu }: { onMenu: () => void }) {
   const { role, setRole, member } = useRole();
   const router = useRouter();
   const [q, setQ] = useState('');
+  const unread = useData(() => unreadCount()) ?? 0;
   const initials = member.name
     .split(' ')
     .map((p) => p[0])

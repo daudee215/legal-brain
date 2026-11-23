@@ -4,9 +4,11 @@ import { FilePen, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { RoleGate } from '../../../components/shell/RoleGate';
 import { Badge, btn, Card, PageHeader } from '../../../components/ui';
-import { seed } from '../../../data/seed';
+import { snapshot, type Snapshot } from '../../../lib/repo';
+import { useData } from '../../../lib/useData';
+import { Loading } from '../../../components/ui/Loading';
 
-export default function DraftingPage() {
+function DraftingPageBody({ db }: { db: Snapshot }) {
   return (
     <RoleGate action="drafting">
       <PageHeader
@@ -19,7 +21,7 @@ export default function DraftingPage() {
         }
       />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {seed.templates.map((t) => (
+        {db.templates.map((t) => (
           <Link key={t.id} href={`/app/drafting/${t.id}/`} className="group">
             <Card className="h-full transition-colors group-hover:border-bronze">
               <FilePen className="h-6 w-6 text-bronze" />
@@ -38,4 +40,10 @@ export default function DraftingPage() {
       </p>
     </RoleGate>
   );
+}
+
+export default function DraftingPage() {
+  const db = useData(() => snapshot());
+  if (!db) return <Loading />;
+  return <DraftingPageBody db={db} />;
 }

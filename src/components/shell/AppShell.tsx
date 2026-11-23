@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ROLE_LABEL } from '../../lib/permissions';
+import { Loading } from '../ui/Loading';
 import type { Role } from '../../types';
 import { RoleProvider, useRole } from './RoleProvider';
 import { Sidebar } from './Sidebar';
@@ -33,9 +34,23 @@ function MobileRoleSwitch() {
 function Shell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { ready } = useRole();
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  // Render the app only in the browser, once the role is known: the site is a static
+  // export, so anything date-relative or role-gated must not be baked into the HTML.
+  if (!ready) {
+    return (
+      <div className="min-h-dvh lg:grid lg:grid-cols-[260px_1fr]">
+        <aside className="hidden bg-ink lg:block" />
+        <main className="mx-auto w-full max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
+          <Loading />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[260px_1fr]">
