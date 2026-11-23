@@ -1,36 +1,87 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import { CalendarCheck, ShieldCheck, Sparkles } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
+import { EASE } from '../motion';
 import { Logo } from '../shell/Logo';
+import { IMG } from './images';
 
 export function AuthCard({ title, subtitle, children, footer }: { title: string; subtitle: string; children: React.ReactNode; footer: React.ReactNode }) {
   return (
-    <div className="grid min-h-dvh lg:grid-cols-2">
-      <div className="relative hidden overflow-hidden bg-night p-12 text-ivory lg:flex lg:flex-col lg:justify-between">
-        <Link href="/">
+    <div className="grid min-h-dvh bg-cream lg:grid-cols-[1.05fr_1fr]">
+      <div className="grain relative hidden overflow-hidden bg-night p-12 text-ivory lg:flex lg:flex-col lg:justify-between">
+        <motion.div initial={{ scale: 1.08 }} animate={{ scale: 1 }} transition={{ duration: 2.4, ease: EASE }} className="absolute inset-0">
+          <Image
+            src={IMG.justice}
+            alt=""
+            fill
+            priority
+            sizes="50vw"
+            className="object-cover object-[60%_30%] opacity-45 [filter:sepia(.6)_saturate(1.2)]"
+          />
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-t from-night via-night/70 to-night/30" aria-hidden />
+        <Link href="/" className="relative">
           <Logo light />
         </Link>
-        <div>
-          <p className="font-serif text-4xl font-bold leading-tight text-ivory">
-            &ldquo;Every date, every document, every precedent — one search away.&rdquo;
-          </p>
-          <p className="mt-4 text-ivory/60">Legal Brain for Pakistani advocates and chambers.</p>
+        <div className="relative">
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: EASE, delay: 0.2 }}
+            className="font-serif text-4xl font-bold leading-tight text-ivory xl:text-5xl"
+          >
+            &ldquo;Every date, every document, every precedent — <span className="bronze-text">one search away.</span>&rdquo;
+          </motion.p>
+          <ul className="mt-8 space-y-3 text-sm text-ivory/80">
+            {[
+              [CalendarCheck, "Today's hearings across every court, before you leave home"],
+              [Sparkles, 'An AI assistant that answers with citations'],
+              [ShieldCheck, "Private to your chamber — no one else sees your clients"],
+            ].map(([Icon, text], i) => {
+              const I = Icon as typeof ShieldCheck;
+              return (
+                <motion.li
+                  key={text as string}
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, ease: EASE, delay: 0.5 + 0.12 * i }}
+                  className="flex items-center gap-3"
+                >
+                  <span className="grid h-8 w-8 place-items-center rounded-full border border-white/15 bg-white/5">
+                    <I className="h-4 w-4 text-bronze-soft" />
+                  </span>
+                  {text as string}
+                </motion.li>
+              );
+            })}
+          </ul>
         </div>
-        <p className="text-xs text-ivory/40">Draft preview</p>
+        <p className="relative text-xs text-ivory/40">Preview · Photography: Unsplash</p>
       </div>
-      <div className="flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-md">
+      <div className="relative flex items-center justify-center overflow-hidden px-4 py-10">
+        <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-bronze-soft/25 blur-3xl" aria-hidden />
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: EASE }}
+          className="relative w-full max-w-md"
+        >
           <div className="mb-8 lg:hidden">
             <Link href="/">
               <Logo />
             </Link>
           </div>
-          <h1 className="text-3xl font-bold">{title}</h1>
+          <h1 className="text-3xl font-bold sm:text-4xl">{title}</h1>
           <p className="mt-1 text-ink-soft">{subtitle}</p>
-          <div className="mt-6">{children}</div>
+          <div className="mt-8 rounded-2xl border border-line bg-paper/80 p-6 shadow-xl shadow-bronze/5 backdrop-blur">{children}</div>
           <p className="mt-6 text-sm text-ink-soft">{footer}</p>
           <p className="mt-4 rounded-lg border border-bronze/30 bg-bronze/10 px-3 py-2 text-xs text-ink">
             Demo — real accounts arrive in Phase 2. Any details take you to the demo dashboard.
           </p>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

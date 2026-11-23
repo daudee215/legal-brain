@@ -2,33 +2,23 @@ import { Info, type LucideIcon } from 'lucide-react';
 import type { CaseStatus } from '../../types';
 
 export function Card({ className = '', children }: { className?: string; children: React.ReactNode }) {
-  return <section className={`rounded-2xl border border-line bg-paper p-5 ${className}`}>{children}</section>;
+  return <section className={`rounded-2xl border border-line bg-paper p-5 shadow-[0_1px_0_rgb(0_0_0/0.02)] transition-shadow duration-300 hover:shadow-lg hover:shadow-bronze/5 ${className}`}>{children}</section>;
 }
 
 export function CardTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="mb-4 flex items-center justify-between gap-3">
-      <h2 className="text-lg font-semibold">{children}</h2>
+      <h2 className="text-xl font-semibold tracking-tight">{children}</h2>
       {action}
     </div>
   );
 }
 
-export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: React.ReactNode }) {
-  return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div className="min-w-0">
-        <h1 className="text-2xl font-bold sm:text-3xl">{title}</h1>
-        {subtitle && <p className="mt-1 text-ink-soft">{subtitle}</p>}
-      </div>
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
-    </div>
-  );
-}
+export { PageHeader } from './PageHeader';
 
 export function StatTile({ label, value, hint, icon: Icon }: { label: string; value: string | number; hint?: string; icon?: LucideIcon }) {
   return (
-    <div className="rounded-2xl border border-line bg-paper p-4">
+    <div className="rounded-2xl border border-line bg-paper p-4 transition duration-300 hover:-translate-y-0.5 hover:border-bronze/40 hover:shadow-lg hover:shadow-bronze/10">
       <div className="flex items-center justify-between text-ink-soft">
         <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
         {Icon && <Icon className="h-4 w-4 text-bronze" aria-hidden />}
@@ -93,15 +83,15 @@ export function Notice({ children }: { children: React.ReactNode }) {
 
 export const btn = {
   primary:
-    'inline-flex items-center justify-center gap-2 rounded-lg bg-night px-4 py-2 text-sm font-medium text-ivory hover:bg-night/90 disabled:opacity-50',
+    'inline-flex items-center justify-center gap-2 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-cream shadow-sm transition hover:-translate-y-px hover:bg-ink/90 hover:shadow-md active:translate-y-0 disabled:opacity-50',
   bronze:
-    'inline-flex items-center justify-center gap-2 rounded-lg bg-bronze px-4 py-2 text-sm font-medium text-ivory hover:bg-bronze/90 disabled:opacity-50',
+    'inline-flex items-center justify-center gap-2 rounded-lg bg-bronze px-4 py-2 text-sm font-medium text-ivory shadow-sm shadow-bronze/30 transition hover:-translate-y-px hover:bg-bronze/90 active:translate-y-0 disabled:opacity-50',
   ghost:
-    'inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-paper px-4 py-2 text-sm font-medium text-ink hover:bg-line/50 disabled:opacity-50',
+    'inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-paper px-4 py-2 text-sm font-medium text-ink transition hover:border-bronze/40 hover:bg-line/40 disabled:opacity-50',
 };
 
 export const inputCls =
-  'w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-soft/60 focus:border-bronze';
+  'w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-soft/60 transition focus:border-bronze focus:ring-4 focus:ring-bronze/10';
 
 export interface Column<T> {
   header: string;
@@ -127,7 +117,7 @@ export function DataTable<T>({ rows, columns, rowKey, empty }: { rows: T[]; colu
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={rowKey(r)} className="border-t border-line align-top hover:bg-cream/40">
+              <tr key={rowKey(r)} className="border-t border-line align-top transition-colors hover:bg-bronze/[0.04]">
                 {columns.map((c) => (
                   <td key={c.header} className={`px-4 py-3 ${c.className ?? ''}`}>
                     {c.cell(r)}
@@ -140,7 +130,7 @@ export function DataTable<T>({ rows, columns, rowKey, empty }: { rows: T[]; colu
       </div>
       <ul className="space-y-3 md:hidden">
         {rows.map((r) => (
-          <li key={rowKey(r)} className="rounded-xl border border-line bg-paper p-4">
+          <li key={rowKey(r)} className="rounded-xl border border-line bg-paper p-4 shadow-sm">
             <dl className="space-y-1.5 text-sm">
               {columns.map((c) => (
                 <div key={c.header} className="flex gap-3">

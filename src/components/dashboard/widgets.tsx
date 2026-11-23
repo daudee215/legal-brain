@@ -139,7 +139,7 @@ export function KpiTile({
           <Icon className="h-4 w-4" aria-hidden />
         </span>
       </div>
-      <p className="mt-2 font-serif text-3xl font-bold">
+      <p className={`mt-2 whitespace-nowrap font-serif font-bold ${prefix ? "text-2xl xl:text-[1.7rem]" : "text-3xl"}`}>
         <CountUp to={value} prefix={prefix} />
       </p>
       {hint && <p className="mt-0.5 text-xs text-ink-soft">{hint}</p>}

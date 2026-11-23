@@ -5,7 +5,7 @@ test.use({ viewport: { width: 375, height: 812 } });
 
 for (const path of ROUTES) {
   test(`no horizontal scroll at 375px: ${path}`, async ({ page }) => {
-    await page.goto(path);
+    await page.goto(path, { waitUntil: 'domcontentloaded' });
     await expect(page.locator('h1').first()).toBeVisible();
     const sw = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(sw).toBeLessThanOrEqual(375);

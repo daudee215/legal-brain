@@ -55,7 +55,7 @@ export function StatuteDetail({ id }: { id: string }) {
                 <h2 className="text-lg font-semibold">
                   <span className="text-bronze">{/^\d/.test(x.no) ? (s.category === 'Constitutional' ? 'Art. ' : 'S. ') : ''}{x.no}</span> — {x.heading}
                 </h2>
-                <p className="mt-2 leading-relaxed">{x.text}</p>
+                <p className="mt-2 font-reading text-[1.02rem] leading-relaxed">{x.text}</p>
               </article>
             </Card>
           ))}

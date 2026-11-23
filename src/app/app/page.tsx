@@ -78,7 +78,7 @@ export default function DashboardPage() {
         </StaggerItem>
       </Stagger>
 
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
         <TodayHearings rows={today} />
         <UpcomingList cases={week} courts={courts} />
       </div>
@@ -88,12 +88,12 @@ export default function DashboardPage() {
         <HearingLoadChart data={load} today={t} />
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
         <CaseBreakdown stats={stats} courts={courts} />
         {seeFees ? <FeesCard {...fees} /> : <AttentionCard cases={cases} />}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <ActivityFeed items={activity.filter((a) => seeFees || a.kind !== 'payment').slice(0, 7)} />
         {seeFees ? <AttentionCard cases={cases} /> : null}
       </div>

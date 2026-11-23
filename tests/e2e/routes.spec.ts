@@ -9,7 +9,7 @@ for (const path of ROUTES) {
     page.on('console', (m) => {
       if (m.type() === 'error') errors.push(m.text());
     });
-    const res = await page.goto(path);
+    const res = await page.goto(path, { waitUntil: 'domcontentloaded' });
     expect(res?.status()).toBe(200);
     await expect(page.locator('h1').first()).toBeVisible();
     expect(errors).toEqual([]);

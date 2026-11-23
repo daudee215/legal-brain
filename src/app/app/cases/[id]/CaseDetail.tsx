@@ -137,7 +137,7 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
 
       <motion.div key={active} role="tabpanel" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
         {active === 'overview' && (
-          <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.5fr_1fr]">
             <div className="space-y-6">
               {c.result && (
                 <Card className="border-ok/40 bg-ok/5">
@@ -150,7 +150,7 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
                 {hearings[0] ? (
                   <div>
                     <p className="text-sm font-semibold">{formatPk(hearings[0].date)}</p>
-                    <p className="mt-1">{hearings[0].proceedings}</p>
+                    <p className="mt-1 font-reading">{hearings[0].proceedings}</p>
                     {hearings[0].nextDate && <p className="mt-2 text-xs text-ink-soft">Adjourned to {formatPk(hearings[0].nextDate)}</p>}
                   </div>
                 ) : (
@@ -220,7 +220,7 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
                   <motion.li key={h.date} className="relative" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
                     <span className="absolute -left-[31px] top-1 h-3.5 w-3.5 rounded-full border-2 border-paper bg-ink-soft" />
                     <p className="text-sm font-semibold">{formatPk(h.date)}</p>
-                    <p className="text-sm">{h.proceedings}</p>
+                    <p className="font-reading text-sm">{h.proceedings}</p>
                     {h.nextDate && <p className="text-xs text-ink-soft">Next date: {formatPk(h.nextDate)}</p>}
                   </motion.li>
                 ))}

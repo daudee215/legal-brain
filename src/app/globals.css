@@ -4,6 +4,9 @@
 
 /* Adaptive tokens (flip in dark mode) + fixed brand surfaces (night/ivory never flip). */
 :root {
+  --serif: var(--font-display), 'Cormorant Garamond', Garamond, Georgia, serif;
+  --reading: var(--font-reading-face), 'Source Serif 4', Georgia, serif;
+  --sans: var(--font-inter), system-ui, sans-serif;
   --cream: #f4eee4;
   --paper: #fbf8f3;
   --ink: #3a2a1d;
@@ -49,8 +52,9 @@
   --color-night: var(--night);
   --color-night-2: var(--night-2);
   --color-ivory: var(--ivory);
-  --font-serif: var(--font-playfair), Georgia, serif;
-  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-serif: var(--serif);
+  --font-reading: var(--reading);
+  --font-sans: var(--sans);
   --animate-marquee: marquee 40s linear infinite;
   --animate-marquee-slow: marquee 70s linear infinite;
   --animate-spin-slow: spin 18s linear infinite;
@@ -97,15 +101,23 @@ html {
 body {
   background: var(--cream);
   color: var(--ink);
-  font-family: var(--font-sans);
+  font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
 }
 
-h1,
-h2,
-h3,
-.font-serif {
-  font-family: var(--font-serif);
+@layer base {
+  .font-serif,
+  .font-reading {
+    font-variant-numeric: lining-nums;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--serif);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    font-feature-settings: 'liga', 'lnum';
+  }
 }
 
 :focus-visible {
@@ -171,7 +183,7 @@ h3,
 }
 
 .legal-sheet {
-  font-family: var(--font-serif);
+  font-family: var(--reading);
   white-space: pre-wrap;
   line-height: 1.7;
 }

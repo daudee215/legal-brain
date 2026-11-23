@@ -80,7 +80,7 @@ export default function AssistantPage() {
               </div>
             ) : (
               <div key={i} className="max-w-[92%] rounded-2xl rounded-bl-sm border border-line bg-cream/60 px-4 py-3 text-sm">
-                <p className="whitespace-pre-line leading-relaxed">{m.text}</p>
+                <p className="whitespace-pre-line font-reading leading-relaxed">{m.text}</p>
                 {m.citations && (
                   <div className="mt-3 flex flex-wrap gap-1.5 border-t border-line pt-3">
                     {m.citations.map((c) => (

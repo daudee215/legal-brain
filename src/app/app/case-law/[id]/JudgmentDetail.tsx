@@ -39,7 +39,7 @@ export function JudgmentDetail({ id }: { id: string }) {
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         <Card>
           <h2 className="mb-2 text-lg font-semibold">Held</h2>
-          <p className="leading-relaxed">{j.summary}</p>
+          <p className="font-reading text-[1.05rem] leading-relaxed">{j.summary}</p>
           <div className="mt-4 flex flex-wrap gap-1.5">
             {j.tags.map((t) => (
               <Badge key={t} tone="bronze">

@@ -61,7 +61,7 @@ function CaseLawPageBody({ db }: { db: Snapshot }) {
               <Link href={`/app/case-law/${j.id}/`} className="mt-2 block font-serif text-lg font-semibold hover:text-bronze">
                 {j.title}
               </Link>
-              <p className="mt-1 text-sm text-ink-soft">{j.summary}</p>
+              <p className="mt-1 font-reading text-sm text-ink-soft">{j.summary}</p>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {j.tags.map((t) => (
                   <Badge key={t} tone="bronze">

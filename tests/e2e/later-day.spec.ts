@@ -12,7 +12,7 @@ for (const path of ROUTES) {
       if (m.type() === 'error') errors.push(m.text());
     });
     await page.clock.setFixedTime(LATER);
-    await page.goto(path);
+    await page.goto(path, { waitUntil: 'domcontentloaded' }); // external photos must not gate the check
     await expect(page.locator('h1').first()).toBeVisible();
     expect(errors).toEqual([]);
   });
