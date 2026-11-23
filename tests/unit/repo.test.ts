@@ -38,6 +38,7 @@ const empty: Db = {
   notifications: [],
   books: [],
   docs: [],
+  fees: [],
 };
 
 const db: Db = {

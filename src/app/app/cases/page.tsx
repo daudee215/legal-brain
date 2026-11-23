@@ -1,8 +1,10 @@
 'use client';
 
-import { Plus, X } from 'lucide-react';
+import { Kanban, Plus, Rows3, X } from 'lucide-react';
+import { KanbanBoard } from '../../../components/cases/KanbanBoard';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { Suspense, useEffect, useState } from 'react';
 import { useRole } from '../../../components/shell/RoleProvider';
 import { btn, DataTable, EmptyState, inputCls, PageHeader, StatusBadge } from '../../../components/ui';
@@ -89,6 +91,22 @@ function CasesInner() {
   const { role } = useRole();
   const toast = useToast();
   const [adding, setAdding] = useState(false);
+  const [view, setViewState] = useState<'table' | 'board'>('table');
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem('lb.casesView') === 'board') setViewState('board');
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  const setView = (v: 'table' | 'board') => {
+    setViewState(v);
+    try {
+      window.localStorage.setItem('lb.casesView', v);
+    } catch {
+      /* ignore */
+    }
+  };
   const urlQ = params.get('q') ?? '';
   const [f, setF] = useState<CaseFilter>({ q: urlQ });
   useEffect(() => {
@@ -110,7 +128,24 @@ function CasesInner() {
           ) : undefined
         }
       />
-      <Tabs />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <Tabs />
+        <div className="mb-5 flex gap-1 rounded-xl border border-line bg-paper p-1 text-sm" role="group" aria-label="Case view">
+          {([['table', 'Table', Rows3], ['board', 'Board', Kanban]] as const).map(([v, label, Icon]) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setView(v)}
+              aria-pressed={view === v}
+              className={`relative inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition ${view === v ? 'text-ivory' : 'text-ink-soft hover:text-ink'}`}
+            >
+              {view === v && <motion.span layoutId="case-view" className="absolute inset-0 rounded-lg bg-night" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
+              <Icon className="relative h-4 w-4" />
+              <span className="relative">{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <input
           className={inputCls}
@@ -144,6 +179,14 @@ function CasesInner() {
       </div>
       {!data ? (
         <Loading />
+      ) : view === 'board' ? (
+        <KanbanBoard
+          rows={data.rows}
+          courts={data.courts}
+          clients={data.clients}
+          canEdit={can(role, 'cases.edit')}
+          onMove={(c, to) => toast.show(`Moved “${c.title}” to ${to} — demo only, not saved`)}
+        />
       ) : (
         <DataTable
           rows={data.rows}

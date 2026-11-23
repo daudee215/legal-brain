@@ -21,3 +21,14 @@ describe('PKT dates', () => {
     expect(formatTime('2026-11-23T04:00:00Z')).toBe('09:00 AM');
   });
 });
+
+import { greeting, pktHour } from '../../src/lib/dates';
+describe('greeting (PKT)', () => {
+  it('uses Pakistan time, not UTC', () => {
+    // 03:30 UTC = 08:30 PKT
+    expect(pktHour(new Date('2026-11-23T03:30:00Z'))).toBe(8);
+    expect(greeting(new Date('2026-11-23T03:30:00Z'))).toBe('Good morning');
+    expect(greeting(new Date('2026-11-23T09:00:00Z'))).toBe('Good afternoon'); // 14:00 PKT
+    expect(greeting(new Date('2026-11-23T14:00:00Z'))).toBe('Good evening'); // 19:00 PKT
+  });
+});

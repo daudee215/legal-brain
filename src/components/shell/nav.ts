@@ -16,27 +16,33 @@ import {
 } from 'lucide-react';
 import type { Action } from '../../lib/permissions';
 
+export type NavGroup = 'Overview' | 'Practice' | 'Research' | 'Office';
+export const NAV_GROUPS: NavGroup[] = ['Overview', 'Practice', 'Research', 'Office'];
+
 export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
   action?: Action;
+  group: NavGroup;
+  /** Short hint shown in the command palette. */
+  hint: string;
 }
 
 export const NAV: NavItem[] = [
-  { href: '/app/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/app/laws/', label: 'Laws & Statutes', icon: BookOpen },
-  { href: '/app/case-law/', label: 'Case Law', icon: Gavel },
-  { href: '/app/cause-list/', label: 'Daily Cause List', icon: CalendarDays },
-  { href: '/app/cases/', label: 'Cases & Clients', icon: Briefcase },
-  { href: '/app/drafting/', label: 'Legal Drafting', icon: FilePen, action: 'drafting' },
-  { href: '/app/assistant/', label: 'AI Assistant', icon: Sparkles, action: 'assistant' },
-  { href: '/app/news/', label: 'Legal News', icon: Newspaper },
-  { href: '/app/diary/', label: 'Digital Diary', icon: NotebookPen },
-  { href: '/app/library/', label: 'Law Books', icon: Library, action: 'library' },
-  { href: '/app/documents/', label: 'Documents', icon: FolderLock },
-  { href: '/app/chamber/', label: 'Chamber', icon: Users },
-  { href: '/app/tools/', label: 'Tools', icon: Calculator },
+  { href: '/app/', label: 'Dashboard', icon: LayoutDashboard, group: 'Overview', hint: 'Your day at a glance' },
+  { href: '/app/cases/', label: 'Cases & Clients', icon: Briefcase, group: 'Practice', hint: 'Every matter and client' },
+  { href: '/app/cause-list/', label: 'Daily Cause List', icon: CalendarDays, group: 'Practice', hint: 'Today in court' },
+  { href: '/app/diary/', label: 'Digital Diary', icon: NotebookPen, group: 'Practice', hint: 'Hearing notes & reminders' },
+  { href: '/app/documents/', label: 'Documents', icon: FolderLock, group: 'Practice', hint: 'Secure file storage' },
+  { href: '/app/laws/', label: 'Laws & Statutes', icon: BookOpen, group: 'Research', hint: 'Acts, codes, ordinances' },
+  { href: '/app/case-law/', label: 'Case Law', icon: Gavel, group: 'Research', hint: 'Judgments & precedents' },
+  { href: '/app/assistant/', label: 'AI Assistant', icon: Sparkles, action: 'assistant', group: 'Research', hint: 'Ask with citations' },
+  { href: '/app/library/', label: 'Law Books', icon: Library, action: 'library', group: 'Research', hint: 'Your private library' },
+  { href: '/app/news/', label: 'Legal News', icon: Newspaper, group: 'Research', hint: 'News & notifications' },
+  { href: '/app/drafting/', label: 'Legal Drafting', icon: FilePen, action: 'drafting', group: 'Office', hint: 'Petitions & applications' },
+  { href: '/app/chamber/', label: 'Chamber', icon: Users, group: 'Office', hint: 'Team & roles' },
+  { href: '/app/tools/', label: 'Tools', icon: Calculator, group: 'Office', hint: 'Limitation & fee calculators' },
 ];
 
 export function isActive(pathname: string, href: string): boolean {

@@ -42,3 +42,14 @@ export function weekday(key: string): string {
 export function pktIso(key: string, hhmm = '09:00'): string {
   return `${key}T${hhmm}:00+05:00`;
 }
+
+const hourFmt = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', hour12: false });
+/** Hour of day (0–23) in Pakistan time. */
+export function pktHour(now: Date = new Date()): number {
+  return Number(hourFmt.format(now)) % 24;
+}
+/** 'Good morning' / 'Good afternoon' / 'Good evening' for the time in Pakistan. */
+export function greeting(now: Date = new Date()): string {
+  const h = pktHour(now);
+  return h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+}

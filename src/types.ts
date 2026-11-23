@@ -183,4 +183,25 @@ export interface Db {
   notifications: AppNotification[];
   books: Book[];
   docs: DocFile[];
+  fees: FeeLedger[];
+}
+
+export interface FeePayment {
+  date: string;
+  amount: number;
+  mode: 'Cash' | 'Cheque' | 'Bank transfer' | 'Online';
+  note?: string;
+}
+/** Professional fee agreed for a case and what the client has paid so far (PKR). */
+export interface FeeLedger {
+  caseId: string;
+  agreed: number;
+  payments: FeePayment[];
+}
+export interface ActivityItem {
+  date: string;
+  kind: 'hearing' | 'diary' | 'document' | 'payment';
+  title: string;
+  detail: string;
+  href?: string;
 }

@@ -4,7 +4,7 @@
  * Hearing dates are relative to "today" (PKT) so the dashboard is always populated.
  */
 import { addDays, pktIso, todayKey } from '../lib/dates';
-import type { Case, Db, Hearing } from '../types';
+import type { Case, Db, FeePayment, Hearing } from '../types';
 
 const T = todayKey();
 const d = (n: number, hhmm = '09:00') => pktIso(addDays(T, n), hhmm);
@@ -431,6 +431,24 @@ const docs: Db['docs'] = [
   { id: 'f12', name: 'CPLA paper book.pdf', folder: 'Pleadings', caseId: 'k8', sizeKb: 5400, uploadedOn: k(-150), uploadedBy: 'm1' },
 ];
 
+const P = (n: number, amount: number, mode: FeePayment['mode'], note?: string): FeePayment => ({ date: k(n), amount, mode, note });
+const fees: Db['fees'] = [
+  { caseId: 'k1', agreed: 150000, payments: [P(-40, 75000, 'Cash', 'Retainer'), P(-8, 25000, 'Bank transfer')] },
+  { caseId: 'k2', agreed: 80000, payments: [P(-60, 40000, 'Cash', 'Retainer'), P(-12, 20000, 'Online')] },
+  { caseId: 'k3', agreed: 350000, payments: [P(-50, 200000, 'Cheque', 'Retainer'), P(-5, 150000, 'Cheque', 'Final instalment')] },
+  { caseId: 'k4', agreed: 120000, payments: [P(-30, 60000, 'Bank transfer', 'Retainer')] },
+  { caseId: 'k5', agreed: 500000, payments: [P(-300, 200000, 'Cheque', 'Retainer'), P(-120, 100000, 'Cheque'), P(-25, 50000, 'Bank transfer')] },
+  { caseId: 'k6', agreed: 60000, payments: [P(-45, 30000, 'Cash', 'Retainer')] },
+  { caseId: 'k7', agreed: 200000, payments: [P(-70, 100000, 'Bank transfer', 'Retainer'), P(-2, 50000, 'Online')] },
+  { caseId: 'k8', agreed: 750000, payments: [P(-160, 400000, 'Cheque', 'Retainer'), P(-15, 150000, 'Cheque')] },
+  { caseId: 'k9', agreed: 180000, payments: [P(-200, 180000, 'Cash', 'Paid in full')] },
+  { caseId: 'k10', agreed: 300000, payments: [P(-35, 100000, 'Bank transfer', 'Retainer')] },
+  { caseId: 'k11', agreed: 90000, payments: [P(-500, 90000, 'Cash', 'Paid in full')] },
+  { caseId: 'k12', agreed: 70000, payments: [P(-20, 35000, 'Online', 'Retainer')] },
+  { caseId: 'k13', agreed: 150000, payments: [P(-28, 50000, 'Bank transfer', 'Retainer')] },
+  { caseId: 'k14', agreed: 250000, payments: [P(-55, 125000, 'Cheque', 'Retainer'), P(-1, 25000, 'Online')] },
+];
+
 export const seed: Db = {
   chamber: { id: 'ch1', name: 'Khan & Associates', members },
   me: members[0],
@@ -446,4 +464,5 @@ export const seed: Db = {
   notifications,
   books,
   docs,
+  fees,
 };
