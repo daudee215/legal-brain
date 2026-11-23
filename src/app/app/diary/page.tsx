@@ -57,7 +57,7 @@ export default function DiaryPage() {
   return (
     <>
       <PageHeader title="Digital Diary" subtitle="Your court diary — hearings, notes and follow-ups, day by day." />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,420px)_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,420px)_1fr]">
         <Card className="self-start">
           <div className="mb-3 flex items-center justify-between">
             <button onClick={() => shift(-1)} className="rounded p-1.5 hover:bg-line" aria-label="Previous month">
