@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowLeft, CalendarClock, ClipboardCheck, ExternalLink, FileText, Gavel, NotebookPen, Plus, Users, Wallet } from 'lucide-react';
+import { ArrowLeft, CalendarClock, ClipboardCheck, Download, ExternalLink, FileText, Gavel, Loader2, NotebookPen, Plus, UploadCloud, Users, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { pkr } from '../../../../components/dashboard/widgets';
@@ -9,13 +9,17 @@ import { OutcomeDialog } from '../../../../components/outcome/OutcomeDialog';
 import { DeadlinesForCase } from '../../../../components/deadlines/DeadlinesForCase';
 import { ExpensesPanel } from '../../../../components/fees/ExpensesPanel';
 import { PaymentForm } from '../../../../components/fees/PaymentForm';
+import { hasFile, UploadBadge, useDocFile } from '../../../../components/docs/DocFiles';
 import { CaseStatusButton, FeeReceiptButton, StatusSheetLink } from '../../../../components/pdf/PdfButtons';
 import { useRole } from '../../../../components/shell/RoleProvider';
 import { Badge, btn, Card, CardTitle, EmptyState, StatusBadge } from '../../../../components/ui';
 import { Loading } from '../../../../components/ui/Loading';
 import { useToast } from '../../../../components/ui/Toast';
 import { formatPk, formatTime, pktDateKey, todayKey } from '../../../../lib/dates';
+import { tooBigMessage } from '../../../../lib/cloud/storage';
+import { uploadDocument } from '../../../../lib/docText';
 import { can } from '../../../../lib/permissions';
+import { getMode } from '../../../../lib/store';
 import { getCase, getClient, getCourt, getFeeLedger, snapshot, type Snapshot } from '../../../../lib/repo';
 import { useData } from '../../../../lib/useData';
 
@@ -26,9 +30,13 @@ function daysBetween(a: string, b: string) {
 }
 
 function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
-  const { role } = useRole();
+  const { role, member } = useRole();
   const toast = useToast();
   const seeFees = can(role, 'billing');
+  const canUpload = can(role, 'documents.upload');
+  const files = useDocFile(toast);
+  const [upBusy, setUpBusy] = useState<string | null>(null);
+  const [upErr, setUpErr] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('overview');
   const [paying, setPaying] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -48,6 +56,33 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
   if (!c) return <EmptyState title="Case not found" action={<Link href="/app/cases/">Back to cases</Link>} />;
   const { court, client, fee } = data;
   const docs = db.docs.filter((d) => d.caseId === c.id);
+  const inCloud = getMode() === 'cloud';
+
+  async function addFiles(list: File[]) {
+    setUpErr(null);
+    const errors: string[] = [];
+    let pending = 0;
+    let done = 0;
+    for (const [i, f] of list.entries()) {
+      const big = tooBigMessage(f);
+      if (big) {
+        errors.push(big);
+        continue;
+      }
+      const label = `${inCloud ? 'Uploading' : 'Saving'} ${f.name}${list.length > 1 ? ` (${i + 1} of ${list.length})` : ''}`;
+      setUpBusy(`${label}…`);
+      try {
+        const r = await uploadDocument(f, { folder: 'Pleadings', caseId: id, uploadedBy: member.id }, (p) => setUpBusy(`${label} · ${Math.round(p * 100)}%`));
+        done++;
+        if (r.shared === 'pending') pending++;
+      } catch (e) {
+        errors.push(e instanceof Error ? e.message : `Could not save ${f.name}.`);
+      }
+    }
+    setUpBusy(null);
+    if (errors.length) setUpErr(errors.join(' '));
+    if (done) toast.show(pending ? 'Saved on this device · not yet uploaded — will retry when online' : inCloud ? 'File shared with your chamber' : 'File saved');
+  }
   const notes = db.diary.filter((d) => d.caseId === c.id).sort((a, b) => (a.date < b.date ? 1 : -1));
   const members = db.chamber.members.filter((m) => c.assignedTo.includes(m.id));
   const hearings = [...c.hearings].sort((a, b) => (a.date < b.date ? 1 : -1));
@@ -252,7 +287,39 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
 
         {active === 'documents' && (
           <Card>
-            <CardTitle action={<Link href="/app/documents/" className="text-sm text-bronze hover:underline">Open documents</Link>}>Files</CardTitle>
+            <CardTitle
+              action={
+                <span className="flex items-center gap-3">
+                  {canUpload && (
+                    <label className="inline-flex cursor-pointer items-center gap-1.5 text-sm text-bronze hover:underline">
+                      <UploadCloud className="h-4 w-4" aria-hidden /> Upload file
+                      <input
+                        type="file"
+                        multiple
+                        className="sr-only"
+                        aria-label="Upload a file to this case"
+                        disabled={!!upBusy}
+                        onChange={(e) => {
+                          void addFiles(Array.from(e.target.files ?? []));
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+                  )}
+                  <Link href="/app/documents/" className="text-sm text-bronze hover:underline">
+                    Open documents
+                  </Link>
+                </span>
+              }
+            >
+              Files
+            </CardTitle>
+            {upBusy && (
+              <p className="mb-3 inline-flex items-center gap-2 text-sm text-ink-soft" role="status">
+                <Loader2 className="h-4 w-4 animate-spin text-bronze" aria-hidden /> {upBusy}
+              </p>
+            )}
+            {upErr && <p className="mb-3 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{upErr}</p>}
             {docs.length === 0 ? (
               <EmptyState title="No files yet" body="Pleadings, orders and evidence for this case will appear here." />
             ) : (
@@ -267,7 +334,32 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
                       <span className="text-xs text-ink-soft">
                         {d.folder} · {d.sizeKb >= 1024 ? `${(d.sizeKb / 1024).toFixed(1)} MB` : `${d.sizeKb} KB`} · {formatPk(d.uploadedOn)}
                       </span>
+                      <span className="mt-1 block empty:hidden">
+                        <UploadBadge doc={d} />
+                      </span>
                     </span>
+                    {hasFile(d) && (
+                      <span className="flex shrink-0 gap-1">
+                        <button
+                          type="button"
+                          className="rounded-lg p-1.5 text-ink-soft transition hover:bg-line/50 hover:text-ink"
+                          onClick={() => void files.open(d)}
+                          aria-label={`Open ${d.name}`}
+                          title="Open"
+                        >
+                          {files.fetching === d.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-lg p-1.5 text-ink-soft transition hover:bg-line/50 hover:text-ink"
+                          onClick={() => void files.download(d)}
+                          aria-label={`Download ${d.name}`}
+                          title="Download"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>

@@ -4,12 +4,13 @@ import { Cloud, CloudOff, LogIn, LogOut, RefreshCw, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useCloud } from '../../../components/shell/CloudProvider';
 import { Badge, btn, Card, CardTitle } from '../../../components/ui';
+import { formatBytes, PLAN_BYTES, WARN_BYTES } from '../../../lib/cloud/storage';
 import { hasUnsyncedChanges } from '../../../lib/cloud/sync';
 
 const LABEL = { off: 'Off', loading: 'Connecting…', saved: 'Saved', saving: 'Saving…', offline: 'Offline', error: 'Problem' } as const;
 
 /** Signed in to a shared chamber: where things stand. */
-export function CloudSyncCard({ chamber, cases, clients }: { chamber: string; cases: number; clients: number }) {
+export function CloudSyncCard({ chamber, cases, clients, storageBytes = 0 }: { chamber: string; cases: number; clients: number; storageBytes?: number }) {
   const { sync, email, signOut } = useCloud();
   const bad = sync.status === 'offline' || sync.status === 'error';
   const out = async () => {
@@ -29,6 +30,10 @@ export function CloudSyncCard({ chamber, cases, clients }: { chamber: string; ca
           </div>
           <p className="mt-1 text-sm text-ink-soft">
             Signed in as <strong className="text-ink">{email}</strong> · {cases} cases, {clients} clients shared with your chamber.
+          </p>
+          <p className={`mt-1 text-sm ${storageBytes >= WARN_BYTES ? 'text-danger' : 'text-ink-soft'}`} data-testid="storage-used">
+            Storage used: <strong className="text-ink">{formatBytes(storageBytes)}</strong> of {formatBytes(PLAN_BYTES)} (free plan)
+            {storageBytes >= WARN_BYTES && ' — nearly full. Delete files you no longer need, or move the chamber to a paid plan, before uploads start failing.'}
           </p>
           {sync.status === 'offline' && <p className="mt-1 text-sm text-ink">You are offline. Changes are kept on this device and will be sent when the connection returns.</p>}
           {sync.status === 'error' && <p className="mt-1 text-sm text-danger">{sync.error}</p>}

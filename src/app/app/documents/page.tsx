@@ -7,13 +7,15 @@ import { useRole } from '../../../components/shell/RoleProvider';
 import { Badge, DataTable, EmptyState, inputCls, PageHeader } from '../../../components/ui';
 import { useToast } from '../../../components/ui/Toast';
 import { formatPk } from '../../../lib/dates';
+import { hasFile, UploadBadge, useDocFile } from '../../../components/docs/DocFiles';
 import { removeDocument, searchDocs, uploadDocument, type DocSearchHit } from '../../../lib/docText';
-import { downloadBlob, getFile } from '../../../lib/files';
 import { can } from '../../../lib/permissions';
+import { getMode } from '../../../lib/store';
 import { snapshot, type Snapshot } from '../../../lib/repo';
 import { useData } from '../../../lib/useData';
 import { Loading } from '../../../components/ui/Loading';
 import type { DocFile } from '../../../types';
+import { tooBigMessage } from '../../../lib/cloud/storage';
 
 const FOLDERS = ['All', 'Pleadings', 'Orders', 'Evidence', 'Correspondence', 'Personal'];
 
@@ -47,6 +49,8 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
   const [hits, setHits] = useState<DocSearchHit[] | null>(null);
   const rows = db.docs.filter((d) => folder === 'All' || d.folder === folder);
   const canUpload = can(role, 'documents.upload');
+  const inCloud = getMode() === 'cloud';
+  const { open, download, fetching } = useDocFile(toast);
 
   useEffect(() => {
     if (q.trim().length < 2) {
@@ -55,7 +59,7 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
     }
     let alive = true;
     const t = setTimeout(() => {
-      searchDocs(db.docs, q).then((h) => {
+      searchDocs(db.docs, q, { fetchMissing: inCloud }).then((h) => {
         if (alive) setHits(h);
       });
     }, 250);
@@ -63,49 +67,47 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
       alive = false;
       clearTimeout(t);
     };
-  }, [q, db.docs]);
+  }, [q, db.docs, inCloud]);
 
   async function upload(files: FileList | File[] | null) {
     if (!files || !files.length) return;
     setError(null);
     const list = Array.from(files);
+    const errors: string[] = [];
+    // Too big for the chamber storage: say so before anything is saved or sent.
+    const ok = list.filter((f) => {
+      const big = tooBigMessage(f);
+      if (big) errors.push(big);
+      return !big;
+    });
     let done = 0;
     let indexed = 0;
-    for (const f of list) {
-      setBusy(`Saving ${f.name} (${done + 1} of ${list.length})…`);
+    let pending = 0;
+    for (const [i, f] of ok.entries()) {
+      const label = `${inCloud ? 'Uploading' : 'Saving'} ${f.name} (${i + 1} of ${ok.length})`;
+      setBusy(`${label}…`);
       try {
-        const r = await uploadDocument(f, { folder: upFolder, caseId: upCase || undefined, uploadedBy: member.id });
+        const r = await uploadDocument(f, { folder: upFolder, caseId: upCase || undefined, uploadedBy: member.id }, (p) => setBusy(`${label} · ${Math.round(p * 100)}%`));
         done++;
         if (r.pages) indexed++;
+        if (r.shared === 'pending') pending++;
       } catch (e) {
-        setError(e instanceof Error ? e.message : `Could not save ${f.name}.`);
+        errors.push(e instanceof Error ? e.message : `Could not save ${f.name}.`);
       }
     }
     setBusy(null);
-    if (done) toast.show(`${done} file${done === 1 ? '' : 's'} saved${indexed ? ` · ${indexed} PDF${indexed === 1 ? '' : 's'} searchable` : ''}`);
-  }
-
-  async function blobOf(d: DocFile) {
-    const b = d.blobKey ? await getFile(d.blobKey) : undefined;
-    if (!b) toast.show('This file is not on this device');
-    return b;
-  }
-
-  async function open(d: DocFile) {
-    const w = window.open('', '_blank');
-    const b = await blobOf(d);
-    if (!b) {
-      w?.close();
-      return;
-    }
-    const url = URL.createObjectURL(b.type ? b : new Blob([b], { type: d.mime ?? 'application/octet-stream' }));
-    if (w) w.location.href = url;
-    else window.location.href = url;
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    setError(errors.length ? errors.join(' ') : null);
+    if (!done) return;
+    const what = `${done} file${done === 1 ? '' : 's'}`;
+    const searchable = indexed ? ` · ${indexed} PDF${indexed === 1 ? '' : 's'} searchable` : '';
+    if (!inCloud) toast.show(`${what} saved${searchable}`);
+    else if (pending) toast.show(`${what} saved on this device · ${pending} not yet uploaded — will retry when online`);
+    else toast.show(`${what} shared with your chamber${searchable}`);
   }
 
   async function remove(d: DocFile) {
-    if (!window.confirm(`Delete "${d.name}" from this device? This cannot be undone.`)) return;
+    const where = inCloud ? 'for everyone in your chamber' : 'from this device';
+    if (!window.confirm(`Delete "${d.name}" ${where}? This cannot be undone.`)) return;
     await removeDocument(d);
     toast.show('File deleted');
   }
@@ -116,7 +118,7 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
     <>
       <PageHeader title="Documents" subtitle="Pleadings, orders and evidence for every case." />
       <p className="mb-6 inline-flex items-center gap-2 rounded-full bg-ok/10 px-3 py-1 text-sm text-ok">
-        <Lock className="h-4 w-4" /> Stored privately on this device · cloud sync arrives in Phase 2
+        <Lock className="h-4 w-4" /> {inCloud ? 'Shared privately with your chamber · a copy stays on this device for offline use' : 'Stored privately on this device'}
       </p>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
         <nav aria-label="Folders" className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
@@ -232,7 +234,9 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
                   </select>
                 </label>
               </div>
-              <p className="mt-2 text-xs text-ink-soft">Files are kept on this device. PDFs with text become searchable.</p>
+              <p className="mt-2 text-xs text-ink-soft">
+                {inCloud ? 'Files are shared with your chamber (up to 25 MB each).' : 'Files are kept on this device.'} PDFs with text become searchable.
+              </p>
               {error && <p className="mt-2 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
             </div>
           )}
@@ -246,7 +250,8 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
                 cell: (d) => (
                   <span className="inline-flex flex-wrap items-center gap-2 font-medium">
                     <FileText className="h-4 w-4 shrink-0 text-bronze" /> <span className="break-all">{d.name}</span>
-                    {!d.blobKey && <Badge>demo file</Badge>}
+                    {!hasFile(d) && <Badge>demo file</Badge>}
+                    <UploadBadge doc={d} />
                   </span>
                 ),
               },
@@ -275,18 +280,15 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
               {
                 header: 'Actions',
                 cell: (d) =>
-                  d.blobKey ? (
+                  hasFile(d) ? (
                     <span className="inline-flex gap-1">
                       <button type="button" className={iconBtn} onClick={() => void open(d)} aria-label={`Open ${d.name}`} title="Open">
-                        <ExternalLink className="h-4 w-4" />
+                        {fetching === d.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
                       </button>
                       <button
                         type="button"
                         className={iconBtn}
-                        onClick={async () => {
-                          const b = await blobOf(d);
-                          if (b) downloadBlob(b, d.name);
-                        }}
+                        onClick={() => void download(d)}
                         aria-label={`Download ${d.name}`}
                         title="Download"
                       >

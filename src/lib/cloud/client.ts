@@ -9,6 +9,9 @@ const URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
 export const cloudEnabled = Boolean(URL && KEY);
+/** Project URL and public key, for the few calls made without the client (upload progress needs XHR). */
+export const supabaseUrl = URL;
+export const supabaseKey = KEY;
 
 let client: SupabaseClient | null = null;
 export function supabase(): SupabaseClient {

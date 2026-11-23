@@ -17,6 +17,8 @@ import { applyRemote, enterCloud, getDb, getMode, leaveCloud, readCloudCache } f
 import { friendlyError, supabase } from './client';
 import { mergeDocs } from './merge';
 import { BILLING_KEYS, composeDb, DATA_KEYS, splitDb, type Half } from './split';
+import { uploadLocalFiles, type BringResult } from './storage';
+import type { DocFile } from '../../types';
 
 export type Kind = 'data' | 'billing';
 export interface MemberRow {
@@ -495,12 +497,24 @@ export function stopSync() {
   setState({ status: 'off', error: '', chamberId: null, removed: false });
 }
 
-/** Copy this device's own practice ("mine" mode) into a brand-new chamber (both rows at version 1). */
-export async function uploadLocal(chamberId: string, opts: { backend?: Backend } = {}): Promise<void> {
+/**
+ * Copy this device's own practice ("mine" mode) into a brand-new chamber (both rows at version 1).
+ * Uploaded files go first (continue on error; failures are retried later from this device), so the
+ * document rows arrive already pointing at their shared copies. Returns the file counts.
+ */
+export async function uploadLocal(
+  chamberId: string,
+  opts: { backend?: Backend; onFileProgress?: (p: { done: number; total: number; name: string }) => void } = {},
+): Promise<BringResult> {
+  const none: BringResult = { total: 0, uploaded: 0, pending: 0, tooBig: [], paths: {} };
   const be = opts.backend ?? backend();
-  if (getMode() !== 'mine') return;
+  if (getMode() !== 'mine') return none;
   const { data, billing } = splitDb(getDb());
+  const docs = data.docs as DocFile[];
+  const files = docs.some((d) => d.blobKey) ? await uploadLocalFiles(chamberId, docs, opts.onFileProgress) : none;
+  data.docs = docs.map((d) => (files.paths[d.id] ? { ...d, ...files.paths[d.id] } : d));
   const v1 = await be.saveDoc(chamberId, 'data', data, 1);
   const v2 = await be.saveDoc(chamberId, 'billing', billing, 1);
   if (v1 === -1 || v2 === -1) throw new Error('The new chamber already has data — nothing was copied.');
+  return files;
 }

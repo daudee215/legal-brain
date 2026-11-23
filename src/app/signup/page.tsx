@@ -8,6 +8,7 @@ import { DemoNote, Field, FormError, NotConfigured } from '../../components/mark
 import { btn } from '../../components/ui';
 import { chooseChamber, createChamber, currentUser, signOut, signUp } from '../../lib/cloud/chamber';
 import { cloudEnabled, friendlyError } from '../../lib/cloud/client';
+import { bringSummary } from '../../lib/cloud/storage';
 import { uploadLocal } from '../../lib/cloud/sync';
 import { getDb, getMode } from '../../lib/store';
 
@@ -18,14 +19,15 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [chamber, setChamber] = useState('');
   const [bring, setBring] = useState(false);
-  const [mine, setMine] = useState<{ cases: number } | null>(null);
+  const [mine, setMine] = useState<{ cases: number; files: number } | null>(null);
+  const [progress, setProgress] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [signedIn, setSignedIn] = useState<string | null>(null);
 
   useEffect(() => {
     if (getMode() === 'mine') {
-      setMine({ cases: getDb().cases.length });
+      setMine({ cases: getDb().cases.length, files: getDb().docs.filter((d) => d.blobKey).length });
       setBring(true);
     }
     if (cloudEnabled) void currentUser().then((u) => setSignedIn(u?.email ?? null));
@@ -42,7 +44,11 @@ export default function SignupPage() {
       const id = await createChamber(chamber, name);
       if (bring && mine) {
         step = 'upload';
-        await uploadLocal(id);
+        const files = await uploadLocal(id, { onFileProgress: (p) => p.total && setProgress(`Uploading files: ${Math.min(p.done + 1, p.total)} of ${p.total}…`) });
+        if (files.total) {
+          setProgress(bringSummary(files));
+          await new Promise((r) => setTimeout(r, files.uploaded === files.total ? 1200 : 4000));
+        }
       }
       chooseChamber(id);
       router.push('/app/');
@@ -114,12 +120,17 @@ export default function SignupPage() {
               <span>
                 Bring this device&apos;s cases into the new chamber
                 <span className="block text-xs text-ink-soft">
-                  {mine.cases} case{mine.cases === 1 ? '' : 's'} with their clients, diary, fees and tasks. Your copy on this device is kept as it is.
+                  {mine.cases} case{mine.cases === 1 ? '' : 's'} with their clients, diary, fees and tasks{mine.files ? `, and ${mine.files} uploaded file${mine.files === 1 ? '' : 's'}` : ''}. Your copy on this device is kept as it is.
                 </span>
               </span>
             </label>
           )}
           <FormError msg={err} />
+          {busy && progress && (
+            <p role="status" className="rounded-lg bg-cream/70 px-3 py-2 text-sm text-ink">
+              {progress}
+            </p>
+          )}
           <button type="submit" disabled={busy} className={`${btn.primary} w-full py-2.5`}>
             {busy ? 'Creating your chamber…' : 'Create account & chamber'}
           </button>

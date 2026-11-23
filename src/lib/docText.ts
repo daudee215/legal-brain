@@ -1,13 +1,16 @@
 /**
- * Real document storage and PDF text search, all on this device:
+ * Real document storage and PDF text search:
  * - file bytes go to IndexedDB through files.ts; the DocFile row goes into the practice data;
+ * - in a cloud chamber the bytes are also uploaded to the chamber's storage (cloud/storage.ts), and a
+ *   file opened on another device is downloaded and cached through the same `docBlob` path;
  * - text pulled out of each PDF (one string per page) is kept in IndexedDB under `text:<blobKey>`.
  * pdfjs is loaded only inside the functions that need it, so nothing runs at build time.
  */
 import { createStore, del, get, set } from 'idb-keyval';
+import { getBlob, removeShared, shareDocument, tooBigMessage } from './cloud/storage';
 import { deleteFile, putFile } from './files';
 import { todayKey } from './dates';
-import { uid, updateDb } from './store';
+import { getDb, getMode, uid, updateDb } from './store';
 import type { DocFile } from '../types';
 
 let store: ReturnType<typeof createStore> | null = null;
@@ -94,8 +97,12 @@ export interface DocSearchHit extends TextHit {
   doc: DocFile;
 }
 
-/** Search the stored text of every uploaded PDF. */
-export async function searchDocs(docs: DocFile[], q: string): Promise<DocSearchHit[]> {
+/**
+ * Search the stored text of every uploaded PDF. With `fetchMissing` (cloud chambers), PDFs shared by
+ * other members whose text is not on this device yet are downloaded and indexed first.
+ */
+export async function searchDocs(docs: DocFile[], q: string, opts: { fetchMissing?: boolean } = {}): Promise<DocSearchHit[]> {
+  if (opts.fetchMissing) await indexMissing(docs);
   const out: DocSearchHit[] = [];
   for (const doc of docs) {
     if (!doc.blobKey) continue;
@@ -112,8 +119,13 @@ export interface DocMeta {
   uploadedBy: string;
 }
 
-/** Store bytes on this device and add the DocFile row. */
-export async function saveDocument(blob: Blob, name: string, meta: DocMeta): Promise<DocFile> {
+/**
+ * Store bytes on this device and add the DocFile row; in a cloud chamber also upload the bytes (a failed
+ * upload stays on this device and is retried). The returned row has `storagePath` when the upload finished.
+ */
+export async function saveDocument(blob: Blob, name: string, meta: DocMeta, onProgress?: (fraction: number) => void): Promise<DocFile> {
+  const big = tooBigMessage({ name, size: blob.size });
+  if (big) throw new Error(big);
   const blobKey = await putFile(blob);
   const doc: DocFile = {
     id: uid('doc'),
@@ -121,6 +133,7 @@ export async function saveDocument(blob: Blob, name: string, meta: DocMeta): Pro
     folder: meta.folder,
     caseId: meta.caseId || undefined,
     sizeKb: Math.max(1, Math.round(blob.size / 1024)),
+    size: blob.size,
     uploadedOn: todayKey(),
     uploadedBy: meta.uploadedBy,
     blobKey,
@@ -134,12 +147,62 @@ export async function saveDocument(blob: Blob, name: string, meta: DocMeta): Pro
     await deleteFile(blobKey);
     throw e;
   }
+  if ((await shareDocument(doc, blob, onProgress)) === 'uploaded') return getDocRow(doc.id) ?? doc;
   return doc;
 }
 
-/** Upload a user's file; PDFs also get their text indexed for search. Returns the row and the page count indexed. */
-export async function uploadDocument(file: File, meta: DocMeta): Promise<{ doc: DocFile; pages: number }> {
-  const doc = await saveDocument(file, file.name, meta);
+const getDocRow = (id: string) => getDb().docs.find((d) => d.id === id);
+
+/** Index a PDF's text on this device if it is not indexed yet. */
+async function indexText(doc: DocFile, blob: Blob): Promise<void> {
+  if (!doc.blobKey || !isPdf({ name: doc.name, type: doc.mime ?? blob.type })) return;
+  if (await getDocText(doc.blobKey)) return;
+  try {
+    await setDocText(doc.blobKey, await extractPdfText(blob));
+  } catch {
+    /* scanned or protected PDF */
+  }
+}
+
+/**
+ * The bytes of a document from wherever they are: this device first, then the chamber server
+ * (cached on this device afterwards, and a downloaded PDF gets its text indexed for search).
+ * Used by open/download, the paper-book builder and search, so they all work on every member's device.
+ */
+export async function docBlob(doc: DocFile): Promise<Blob | null> {
+  const r = await getBlob(doc);
+  if (!r) return null;
+  if (r.remote) void indexText(doc, r.blob);
+  return r.blob;
+}
+
+const tried = new Set<string>();
+/** Download and index shared PDFs whose text is not on this device yet (each tried once per session). */
+export async function indexMissing(docs: DocFile[]): Promise<void> {
+  for (const doc of docs) {
+    if (!doc.blobKey || !doc.storagePath || tried.has(doc.id) || !isPdf({ name: doc.name, type: doc.mime })) continue;
+    tried.add(doc.id);
+    if (await getDocText(doc.blobKey)) continue;
+    try {
+      const r = await getBlob(doc);
+      if (r) await indexText(doc, r.blob);
+    } catch {
+      /* offline or gone — skip */
+    }
+  }
+}
+
+/**
+ * Upload a user's file; PDFs also get their text indexed for search. Returns the row, the page count
+ * indexed and whether the bytes reached the chamber ('local' outside a cloud chamber).
+ */
+export async function uploadDocument(
+  file: File,
+  meta: DocMeta,
+  onProgress?: (fraction: number) => void,
+): Promise<{ doc: DocFile; pages: number; shared: 'local' | 'uploaded' | 'pending' }> {
+  const doc = await saveDocument(file, file.name, meta, onProgress);
+  const shared = doc.storagePath ? 'uploaded' : getMode() === 'cloud' ? 'pending' : 'local';
   let pages = 0;
   if (isPdf(file) && doc.blobKey) {
     try {
@@ -150,14 +213,15 @@ export async function uploadDocument(file: File, meta: DocMeta): Promise<{ doc: 
       /* scanned or protected PDF — stored, but not searchable */
     }
   }
-  return { doc, pages };
+  return { doc, pages, shared };
 }
 
-/** Remove the row, its bytes and its search text. */
+/** Remove the row, its bytes and its search text (and, in a cloud chamber, the file on the server). */
 export async function removeDocument(doc: DocFile): Promise<void> {
   updateDb((db) => {
     db.docs = db.docs.filter((d) => d.id !== doc.id);
   });
+  await removeShared(doc);
   if (doc.blobKey) {
     await deleteFile(doc.blobKey);
     await deleteDocText(doc.blobKey);

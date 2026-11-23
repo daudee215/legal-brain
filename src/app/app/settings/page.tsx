@@ -12,6 +12,7 @@ import { cellText, FIELDS, guessMapping, parseCsv, planImport, runImport, type C
 import { exportBackup, getDb, getMode, importBackup, resetToDemo, startFresh } from '../../../lib/store';
 import { useData } from '../../../lib/useData';
 import { cloudEnabled } from '../../../lib/cloud/client';
+import { storageUsed } from '../../../lib/cloud/storage';
 import { CloudSignInCard, CloudSyncCard } from './CloudCards';
 
 function savedAt(): string | null {
@@ -204,7 +205,7 @@ export default function SettingsPage() {
   const restoreInput = useRef<HTMLInputElement>(null);
   const data = useData(async () => {
     const db = getDb();
-    return { mode: getMode(), savedAt: savedAt(), cases: db.cases.length, clients: db.clients.length, chamber: db.chamber.name };
+    return { mode: getMode(), savedAt: savedAt(), cases: db.cases.length, clients: db.clients.length, chamber: db.chamber.name, storage: storageUsed(db.docs) };
   });
 
   if (!data) return <Loading label="Loading settings" />;
@@ -252,7 +253,7 @@ export default function SettingsPage() {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr]">
         <div className="space-y-6">
           {inCloud ? (
-            <CloudSyncCard chamber={data.chamber} cases={data.cases} clients={data.clients} />
+            <CloudSyncCard chamber={data.chamber} cases={data.cases} clients={data.clients} storageBytes={data.storage} />
           ) : (
           <Card>
             <div className="flex flex-wrap items-start gap-4">
@@ -357,7 +358,7 @@ export default function SettingsPage() {
               <li className="flex gap-3">
                 <Cloud className="mt-0.5 h-5 w-5 shrink-0 text-bronze" aria-hidden />
                 <p>
-                  <strong>Shared with your chamber.</strong> Cases, clients, diary, tasks and documents list are stored on the chamber&apos;s private server and appear on every member&apos;s devices. Fees are visible to seniors only.
+                  <strong>Shared with your chamber.</strong> Cases, clients, diary, tasks and uploaded documents are stored on the chamber&apos;s private server and appear on every member&apos;s devices. Fees are visible to seniors only.
                 </p>
               </li>
               <li className="flex gap-3">

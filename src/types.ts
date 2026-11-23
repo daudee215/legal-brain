@@ -165,6 +165,10 @@ export interface DocFile {
   /** Key of the file bytes in on-device storage (IndexedDB), when the user uploaded a real file. */
   blobKey?: string;
   mime?: string;
+  /** Exact size in bytes (recorded for uploads since shared storage arrived; older rows only have sizeKb). */
+  size?: number;
+  /** Path in the chamber's Supabase Storage bucket ("<chamberId>/<docId>-<name>"), set once the upload finished. */
+  storagePath?: string;
 }
 export interface CaseStats {
   total: number;

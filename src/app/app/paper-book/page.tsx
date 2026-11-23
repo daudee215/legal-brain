@@ -9,9 +9,10 @@ import { btn, Card, CardTitle, EmptyState, inputCls, PageHeader } from '../../..
 import { Loading } from '../../../components/ui/Loading';
 import { useToast } from '../../../components/ui/Toast';
 import { downloadBlob } from '../../../lib/files';
-import { isPdf } from '../../../lib/docText';
+import { docBlob, isPdf } from '../../../lib/docText';
 import { annexureLetter, buildPaperBook, planPaperBook, savePaperBookToCase } from '../../../lib/paperBook';
-import { getChamber, listCases, listCourts } from '../../../lib/repo';
+import { getChamber, listCases, listCourts, listDocs } from '../../../lib/repo';
+import type { DocFile } from '../../../types';
 import { useData } from '../../../lib/useData';
 
 type Kind = 'main' | 'annexure' | 'none';
@@ -31,7 +32,7 @@ let seq = 0;
 export default function PaperBookPage() {
   const { member } = useRole();
   const toast = useToast();
-  const data = useData(async () => ({ cases: await listCases({}), courts: await listCourts(), chamber: await getChamber() }));
+  const data = useData(async () => ({ cases: await listCases({}), courts: await listCourts(), chamber: await getChamber(), docs: await listDocs() }));
   const [items, setItems] = useState<Item[]>([]);
   const [caseId, setCaseId] = useState('');
   const [head, setHead] = useState({ caseTitle: '', caseNo: '', court: '' });
@@ -113,6 +114,22 @@ export default function PaperBookPage() {
       setBusy(null);
     }
   }
+
+  /** Add a PDF already in the case's documents — from this device, or downloaded from the chamber. */
+  async function addStored(d: DocFile) {
+    setError(null);
+    setBusy(`Getting ${d.name}…`);
+    try {
+      const b = await docBlob(d);
+      if (!b) setError(`"${d.name}" is not on this device and has not been uploaded to the chamber yet.`);
+      else await addFiles([new File([b], d.name, { type: 'application/pdf' })]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : `Could not get ${d.name}.`);
+    } finally {
+      setBusy(null);
+    }
+  }
+  const caseDocs = caseId ? data.docs.filter((d) => d.caseId === caseId && (d.blobKey || d.storagePath) && isPdf({ name: d.name, type: d.mime })) : [];
 
   const fileName = `Paper book - ${(head.caseNo || head.caseTitle || 'untitled').replace(/[\\/:*?"<>|]+/g, '-')}.pdf`;
 
@@ -223,6 +240,23 @@ export default function PaperBookPage() {
             </label>
             <p className="mt-1 text-xs text-ink-soft">Files stay on this device.</p>
           </div>
+
+          {caseDocs.length > 0 && (
+            <Card>
+              <CardTitle>From this case&apos;s documents</CardTitle>
+              <ul className="divide-y divide-line">
+                {caseDocs.map((d) => (
+                  <li key={d.id} className="flex items-center gap-3 py-2 text-sm">
+                    <FileText className="h-4 w-4 shrink-0 text-bronze" aria-hidden />
+                    <span className="min-w-0 flex-1 truncate">{d.name}</span>
+                    <button type="button" className={btn.ghost} disabled={!!busy} onClick={() => void addStored(d)} aria-label={`Add ${d.name} to the paper book`}>
+                      Add
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
 
           {items.length === 0 ? (
             <EmptyState title="No documents yet" body="Add the main petition and its annexures. You can reorder and relabel them before building." />

@@ -4,6 +4,7 @@ import { CloudOff, LogOut, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { acceptInvite, chooseChamber, createChamber } from '../../lib/cloud/chamber';
 import { friendlyError } from '../../lib/cloud/client';
+import { bringSummary } from '../../lib/cloud/storage';
 import { uploadLocal } from '../../lib/cloud/sync';
 import { useLang } from '../../lib/i18n';
 import { getMode } from '../../lib/store';
@@ -29,6 +30,7 @@ export function ChamberSetup() {
   const [hasMine, setHasMine] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [progress, setProgress] = useState('');
   useEffect(() => {
     const mine = getMode() === 'mine';
     setHasMine(mine);
@@ -43,7 +45,13 @@ export function ChamberSetup() {
       let id: string;
       if (tab === 'create') {
         id = await createChamber(chamber, name);
-        if (bring && hasMine) await uploadLocal(id);
+        if (bring && hasMine) {
+          const files = await uploadLocal(id, { onFileProgress: (p) => p.total && setProgress(`Uploading files: ${Math.min(p.done + 1, p.total)} of ${p.total}…`) });
+          if (files.total) {
+            setProgress(bringSummary(files));
+            await new Promise((r) => setTimeout(r, files.uploaded === files.total ? 1200 : 4000));
+          }
+        }
       } else id = await acceptInvite(inviteCode(code), name);
       chooseChamber(id);
       cloud.restart();
@@ -102,6 +110,11 @@ export function ChamberSetup() {
         {err && (
           <p role="alert" className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">
             {err}
+          </p>
+        )}
+        {busy && progress && (
+          <p role="status" className="rounded-lg bg-cream/70 px-3 py-2 text-sm text-ink">
+            {progress}
           </p>
         )}
         <button type="submit" disabled={busy} className={`${btn.primary} w-full py-2.5`}>

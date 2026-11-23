@@ -1,6 +1,7 @@
 /**
  * File bytes (PDFs, photos) kept on this device in IndexedDB. The practice data only stores the key.
- * Phase 2 moves these to Supabase Storage behind the same functions.
+ * In a cloud chamber this is the cache: lib/cloud/storage.ts also keeps each file in Supabase Storage
+ * and fills this cache when a file is first opened on another device.
  */
 import { createStore, del, get, set } from 'idb-keyval';
 import { uid } from './store';
@@ -15,6 +16,11 @@ export async function putFile(blob: Blob): Promise<string> {
   const key = uid('file');
   await set(key, blob, s());
   return key;
+}
+
+/** Store bytes under a known key (a file downloaded from the chamber, cached under its synced key). */
+export async function putFileAt(key: string, blob: Blob): Promise<void> {
+  await set(key, blob, s());
 }
 
 export async function getFile(key: string): Promise<Blob | undefined> {

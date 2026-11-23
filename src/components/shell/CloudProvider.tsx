@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { chooseChamber, chosenChamber, currentUser, myChambers, signOut as cloudSignOut } from '../../lib/cloud/chamber';
 import { cloudEnabled, supabase } from '../../lib/cloud/client';
+import { watchPendingUploads } from '../../lib/cloud/storage';
 import { getSyncStatus, startSync, stopSync, subscribeSync, type SyncState } from '../../lib/cloud/sync';
 import { getMode, subscribe } from '../../lib/store';
 
@@ -100,6 +101,10 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
       void boot();
     }
   }, [sync.removed, boot]);
+
+  // Showing a chamber: send any files that did not upload earlier (now, and whenever we come back online).
+  const showing = phase === 'syncing' && mode === 'cloud';
+  useEffect(() => (showing ? watchPendingUploads() : undefined), [showing]);
 
   const signOut = useCallback(async () => {
     run.current++;
