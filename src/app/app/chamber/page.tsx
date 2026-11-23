@@ -10,6 +10,7 @@ import type { Role } from '../../../types';
 import { snapshot, type Snapshot } from '../../../lib/repo';
 import { useData } from '../../../lib/useData';
 import { Loading } from '../../../components/ui/Loading';
+import { CloudChamber } from './CloudChamber';
 
 const MATRIX_ROWS: { label: string; action?: Action }[] = [
   { label: 'View cases, cause lists, laws, case law, news' },
@@ -24,11 +25,50 @@ const MATRIX_ROWS: { label: string; action?: Action }[] = [
 ];
 const ROLES: Role[] = ['senior', 'junior', 'clerk'];
 
+function RoleMatrix() {
+  return (
+    <Card>
+      <CardTitle>What each role can do</CardTitle>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[420px] text-sm">
+          <thead>
+            <tr className="text-left text-xs uppercase tracking-wide text-ink-soft">
+              <th className="py-2 font-medium">Permission</th>
+              {ROLES.map((r) => (
+                <th key={r} className="py-2 text-center font-medium">
+                  {ROLE_LABEL[r]}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {MATRIX_ROWS.map((row) => (
+              <tr key={row.label} className="border-t border-line">
+                <td className="py-2 pr-2">{row.label}</td>
+                {ROLES.map((r) => (
+                  <td key={r} className="py-2 text-center">
+                    {!row.action || can(r, row.action) ? (
+                      <Check className="mx-auto h-4 w-4 text-ok" aria-label="Allowed" />
+                    ) : (
+                      <Minus className="mx-auto h-4 w-4 text-ink-soft/50" aria-label="Not allowed" />
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+}
+
 function ChamberPageBody({ db }: { db: Snapshot }) {
-  const { role } = useRole();
+  const { role, cloud } = useRole();
   const toast = useToast();
   const [email, setEmail] = useState('');
   const [newRole, setNewRole] = useState<Role>('junior');
+  if (cloud) return <CloudChamber db={db} matrix={<RoleMatrix />} />;
 
   return (
     <>
@@ -44,39 +84,7 @@ function ChamberPageBody({ db }: { db: Snapshot }) {
               { header: 'Role', cell: (m) => <Badge tone={m.role === 'senior' ? 'ink' : m.role === 'junior' ? 'bronze' : 'neutral'}>{ROLE_LABEL[m.role]}</Badge> },
             ]}
           />
-          <Card>
-            <CardTitle>What each role can do</CardTitle>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[420px] text-sm">
-                <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-ink-soft">
-                    <th className="py-2 font-medium">Permission</th>
-                    {ROLES.map((r) => (
-                      <th key={r} className="py-2 text-center font-medium">
-                        {ROLE_LABEL[r]}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {MATRIX_ROWS.map((row) => (
-                    <tr key={row.label} className="border-t border-line">
-                      <td className="py-2 pr-2">{row.label}</td>
-                      {ROLES.map((r) => (
-                        <td key={r} className="py-2 text-center">
-                          {!row.action || can(r, row.action) ? (
-                            <Check className="mx-auto h-4 w-4 text-ok" aria-label="Allowed" />
-                          ) : (
-                            <Minus className="mx-auto h-4 w-4 text-ink-soft/50" aria-label="Not allowed" />
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+          <RoleMatrix />
         </div>
         {can(role, 'chamber.manage') ? (
           <Card className="self-start">

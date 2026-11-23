@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLang } from '../../lib/i18n';
 import { can } from '../../lib/permissions';
+import { getDb } from '../../lib/store';
 import { Logo } from './Logo';
 import { isActive, NAV, NAV_GROUPS } from './nav';
 import { useRole } from './RoleProvider';
@@ -23,7 +24,7 @@ export function Sidebar({
   layoutKey?: string;
 }) {
   const pathname = usePathname() ?? '/app/';
-  const { role, member } = useRole();
+  const { role, member, cloud } = useRole();
   const { t, dir } = useLang();
   const rtl = dir === 'rtl';
   const items = NAV.filter((n) => !n.action || can(role, n.action));
@@ -37,7 +38,7 @@ export function Sidebar({
     <nav aria-label="Main" className="relative flex h-full flex-col overflow-hidden bg-night text-ivory">
       <div className="pointer-events-none absolute -start-24 -top-24 h-64 w-64 rounded-full bg-bronze/25 blur-3xl" aria-hidden />
       <div className={`relative flex items-center pb-4 pt-5 ${collapsed ? 'justify-center px-2' : 'px-5'}`}>
-        <Link href="/app/" onClick={onNavigate} aria-label="Legal Brain dashboard">
+        <Link href="/" onClick={onNavigate} aria-label="Legal Brain website">
           {collapsed ? (
             <span className="grid h-9 w-9 place-items-center rounded-lg bg-bronze font-serif text-lg font-bold text-ivory">L</span>
           ) : (
@@ -129,7 +130,7 @@ export function Sidebar({
               {t('shell.advPrefix')} {member.name}
             </p>
             <p className="truncate text-xs text-ivory/55">
-              {t(`role.${role}`)} · Khan &amp; Associates
+              {t(`role.${role}`)} · {cloud ? getDb().chamber.name : 'Khan & Associates'}
             </p>
           </div>
         )}

@@ -8,7 +8,20 @@ import { EASE } from '../motion';
 import { Logo } from '../shell/Logo';
 import { IMG } from './images';
 
-export function AuthCard({ title, subtitle, children, footer }: { title: string; subtitle: string; children: React.ReactNode; footer: React.ReactNode }) {
+export function AuthCard({
+  title,
+  subtitle,
+  children,
+  footer,
+  note,
+}: {
+  title: string;
+  subtitle: React.ReactNode;
+  children: React.ReactNode;
+  footer: React.ReactNode;
+  /** Small print under the card; defaults to the demo notice. */
+  note?: React.ReactNode;
+}) {
   return (
     <div className="grid min-h-dvh bg-cream lg:grid-cols-[1.05fr_1fr]">
       <div className="grain relative hidden overflow-hidden bg-night p-12 text-ivory lg:flex lg:flex-col lg:justify-between">
@@ -78,9 +91,9 @@ export function AuthCard({ title, subtitle, children, footer }: { title: string;
           <p className="mt-1 text-ink-soft">{subtitle}</p>
           <div className="mt-8 rounded-2xl border border-line bg-paper/80 p-6 shadow-xl shadow-bronze/5 backdrop-blur">{children}</div>
           <p className="mt-6 text-sm text-ink-soft">{footer}</p>
-          <p className="mt-4 rounded-lg border border-bronze/30 bg-bronze/10 px-3 py-2 text-xs text-ink">
-            Demo — real accounts arrive in Phase 2. Any details take you to the demo dashboard.
-          </p>
+          <div className="mt-4 rounded-lg border border-bronze/30 bg-bronze/10 px-3 py-2 text-xs text-ink">
+            {note ?? 'Demo — real accounts arrive in Phase 2. Any details take you to the demo dashboard.'}
+          </div>
         </motion.div>
       </div>
     </div>

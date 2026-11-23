@@ -1,16 +1,18 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle2, CloudOff, Database, Download, FileSpreadsheet, HardDrive, RotateCcw, Sparkles, Upload } from 'lucide-react';
+import { CheckCircle2, Cloud, CloudOff, Database, Download, FileSpreadsheet, HardDrive, RotateCcw, Sparkles, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { Badge, btn, Card, CardTitle, inputCls, PageHeader } from '../../../components/ui';
+import { ConfirmDialog, type Confirm } from '../../../components/ui/ConfirmDialog';
 import { Loading } from '../../../components/ui/Loading';
 import { useToast } from '../../../components/ui/Toast';
 import { formatPk, formatTime } from '../../../lib/dates';
 import { cellText, FIELDS, guessMapping, parseCsv, planImport, runImport, type Cell, type Field, type ImportSummary, type Mapping } from '../../../lib/importCases';
 import { exportBackup, getDb, getMode, importBackup, resetToDemo, startFresh } from '../../../lib/store';
 import { useData } from '../../../lib/useData';
+import { cloudEnabled } from '../../../lib/cloud/client';
+import { CloudSignInCard, CloudSyncCard } from './CloudCards';
 
 function savedAt(): string | null {
   try {
@@ -19,57 +21,6 @@ function savedAt(): string | null {
   } catch {
     return null;
   }
-}
-
-interface Confirm {
-  title: string;
-  body: React.ReactNode;
-  confirm: string;
-  danger?: boolean;
-  run: () => void;
-}
-
-function ConfirmDialog({ c, onClose }: { c: Confirm | null; onClose: () => void }) {
-  return (
-    <AnimatePresence>
-      {c && (
-        <motion.div className="fixed inset-0 z-50 flex items-end justify-center bg-night/50 p-4 sm:items-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
-          <motion.div
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="confirm-title"
-            className="w-full max-w-md rounded-2xl border border-line bg-paper p-6 shadow-2xl"
-            initial={{ y: 20, scale: 0.97 }}
-            animate={{ y: 0, scale: 1 }}
-            exit={{ y: 20, scale: 0.97 }}
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') onClose();
-            }}
-          >
-            <h2 id="confirm-title" className="font-serif text-xl font-semibold">
-              {c.title}
-            </h2>
-            <div className="mt-2 space-y-2 text-sm text-ink-soft">{c.body}</div>
-            <div className="mt-5 flex justify-end gap-2">
-              <button className={btn.ghost} onClick={onClose} autoFocus>
-                Cancel
-              </button>
-              <button
-                className={c.danger ? `${btn.primary} bg-danger hover:bg-danger/90` : btn.bronze}
-                onClick={() => {
-                  c.run();
-                  onClose();
-                }}
-              >
-                {c.confirm}
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
 }
 
 function downloadText(name: string, text: string, type = 'application/json') {
@@ -253,11 +204,12 @@ export default function SettingsPage() {
   const restoreInput = useRef<HTMLInputElement>(null);
   const data = useData(async () => {
     const db = getDb();
-    return { mode: getMode(), savedAt: savedAt(), cases: db.cases.length, clients: db.clients.length };
+    return { mode: getMode(), savedAt: savedAt(), cases: db.cases.length, clients: db.clients.length, chamber: db.chamber.name };
   });
 
   if (!data) return <Loading label="Loading settings" />;
   const mine = data.mode === 'mine';
+  const inCloud = data.mode === 'cloud';
 
   const download = () => {
     const stamp = new Date().toISOString().slice(0, 10);
@@ -299,6 +251,9 @@ export default function SettingsPage() {
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr]">
         <div className="space-y-6">
+          {inCloud ? (
+            <CloudSyncCard chamber={data.chamber} cases={data.cases} clients={data.clients} />
+          ) : (
           <Card>
             <div className="flex flex-wrap items-start gap-4">
               <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${mine ? 'bg-ok/15 text-ok' : 'bg-bronze/15 text-bronze'}`}>
@@ -368,6 +323,8 @@ export default function SettingsPage() {
               )}
             </div>
           </Card>
+          )}
+          {!inCloud && cloudEnabled && <CloudSignInCard />}
 
           <Card>
             <CardTitle>
@@ -380,10 +337,12 @@ export default function SettingsPage() {
               <button className={btn.primary} onClick={download}>
                 <Download className="h-4 w-4" aria-hidden /> Download backup
               </button>
-              <label className={`${btn.ghost} cursor-pointer`}>
-                <Upload className="h-4 w-4" aria-hidden /> Restore backup
-                <input ref={restoreInput} type="file" accept=".json,application/json" className="sr-only" onChange={(e) => onRestore(e.target.files?.[0])} />
-              </label>
+              {!inCloud && (
+                <label className={`${btn.ghost} cursor-pointer`}>
+                  <Upload className="h-4 w-4" aria-hidden /> Restore backup
+                  <input ref={restoreInput} type="file" accept=".json,application/json" className="sr-only" onChange={(e) => onRestore(e.target.files?.[0])} />
+                </label>
+              )}
             </div>
             {err && <p className="mt-3 text-sm text-danger">{err}</p>}
           </Card>
@@ -393,6 +352,28 @@ export default function SettingsPage() {
 
         <Card className="h-fit">
           <CardTitle>Where is my data?</CardTitle>
+          {inCloud ? (
+            <ul className="space-y-4 text-sm">
+              <li className="flex gap-3">
+                <Cloud className="mt-0.5 h-5 w-5 shrink-0 text-bronze" aria-hidden />
+                <p>
+                  <strong>Shared with your chamber.</strong> Cases, clients, diary, tasks and documents list are stored on the chamber&apos;s private server and appear on every member&apos;s devices. Fees are visible to seniors only.
+                </p>
+              </li>
+              <li className="flex gap-3">
+                <HardDrive className="mt-0.5 h-5 w-5 shrink-0 text-bronze" aria-hidden />
+                <p>
+                  <strong>Works offline.</strong> A copy stays on this device; changes made without internet are sent when you are back online.
+                </p>
+              </li>
+              <li className="flex gap-3">
+                <Download className="mt-0.5 h-5 w-5 shrink-0 text-bronze" aria-hidden />
+                <p>
+                  <strong>Your own backup</strong> is still a good habit — download one from time to time.
+                </p>
+              </li>
+            </ul>
+          ) : (
           <ul className="space-y-4 text-sm">
             <li className="flex gap-3">
               <HardDrive className="mt-0.5 h-5 w-5 shrink-0 text-bronze" aria-hidden />
@@ -403,7 +384,7 @@ export default function SettingsPage() {
             <li className="flex gap-3">
               <CloudOff className="mt-0.5 h-5 w-5 shrink-0 text-bronze" aria-hidden />
               <p>
-                <strong>No sync yet.</strong> Cloud sync across your phone and laptop comes with Phase 2 accounts. Until then, each device has its own copy.
+                <strong>Not shared.</strong> {cloudEnabled ? 'Sign in to share one copy with your chamber across phones and laptops.' : 'Each device has its own copy.'}
               </p>
             </li>
             <li className="flex gap-3">
@@ -413,6 +394,7 @@ export default function SettingsPage() {
               </p>
             </li>
           </ul>
+          )}
         </Card>
       </div>
 

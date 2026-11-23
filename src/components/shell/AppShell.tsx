@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react';
 import { LanguageProvider, useLang } from '../../lib/i18n';
 import type { Role } from '../../types';
 import { Loading } from '../ui/Loading';
+import { CloudProvider, useCloud } from './CloudProvider';
+import { ChamberSetup, Unreachable } from './CloudGate';
 import { CommandPalette } from './CommandPalette';
 import { DemoBanner } from './DemoBanner';
 import { RoleProvider, useRole } from './RoleProvider';
@@ -44,7 +46,8 @@ function Shell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const reduce = useReducedMotion();
-  const { ready } = useRole();
+  const { ready, cloud } = useRole();
+  const { view } = useCloud();
   const { t, dir } = useLang();
   const off = dir === 'rtl' ? '100%' : '-100%';
 
@@ -122,7 +125,7 @@ function Shell({ children }: { children: React.ReactNode }) {
               <div className="min-h-0 flex-1">
                 <Sidebar onNavigate={() => setOpen(false)} layoutKey="drawer" />
               </div>
-              <MobileRoleSwitch />
+              {!cloud && <MobileRoleSwitch />}
             </motion.div>
           </motion.div>
         )}
@@ -138,7 +141,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           >
-            {children}
+            {view === 'choose' ? <ChamberSetup /> : view === 'unreachable' ? <Unreachable /> : children}
           </motion.div>
         </main>
       </div>
@@ -150,11 +153,13 @@ function Shell({ children }: { children: React.ReactNode }) {
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
-      <RoleProvider>
-        <LanguageProvider>
-          <Shell>{children}</Shell>
-        </LanguageProvider>
-      </RoleProvider>
+      <CloudProvider>
+        <RoleProvider>
+          <LanguageProvider>
+            <Shell>{children}</Shell>
+          </LanguageProvider>
+        </RoleProvider>
+      </CloudProvider>
     </ThemeProvider>
   );
 }

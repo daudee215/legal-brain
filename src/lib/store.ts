@@ -10,7 +10,49 @@ import { seed } from '../data/seed';
 import type { Db } from '../types';
 
 const KEY = 'lb.db.v1';
-export type Mode = 'demo' | 'mine';
+export type Mode = 'demo' | 'mine' | 'cloud';
+
+/** When signed in to a chamber, the cloud copy replaces the device copy (see lib/cloud/sync.ts). */
+let cloud: { db: Db; onLocalChange: (db: Db) => void } | null = null;
+const CLOUD_CACHE = 'lb.cloud.cache.v1';
+
+export function enterCloud(db: Db, onLocalChange: (db: Db) => void) {
+  cloud = { db, onLocalChange };
+  cacheCloud(db);
+  listeners.forEach((fn) => fn());
+}
+/** A newer copy arrived from the server (or a merge finished): show it without pushing it back. */
+export function applyRemote(db: Db) {
+  if (!cloud) return;
+  cloud.db = db;
+  cacheCloud(db);
+  listeners.forEach((fn) => fn());
+}
+export function leaveCloud() {
+  cloud = null;
+  try {
+    window.localStorage.removeItem(CLOUD_CACHE);
+  } catch {
+    /* ignore */
+  }
+  listeners.forEach((fn) => fn());
+}
+/** Last cloud copy on this device, so the app opens instantly (and offline) before the server answers. */
+export function readCloudCache(): Db | null {
+  try {
+    const raw = window.localStorage.getItem(CLOUD_CACHE);
+    return raw ? upgrade(JSON.parse(raw) as Db) : null;
+  } catch {
+    return null;
+  }
+}
+function cacheCloud(db: Db) {
+  try {
+    window.localStorage.setItem(CLOUD_CACHE, JSON.stringify(db));
+  } catch {
+    /* storage full: the server copy is the truth anyway */
+  }
+}
 
 interface Saved {
   v: 1;
@@ -57,6 +99,7 @@ function upgrade(db: Db): Db {
 }
 
 export function getMode(): Mode {
+  if (cloud) return 'cloud';
   const raw = readRaw();
   if (!raw) return 'demo';
   try {
@@ -67,6 +110,7 @@ export function getMode(): Mode {
 }
 
 export function getDb(): Db {
+  if (cloud) return cloud.db;
   const raw = readRaw();
   if (!raw) return seed;
   if (cache && cache.raw === raw) return cache.db;
@@ -82,6 +126,13 @@ export function getDb(): Db {
 }
 
 function save(db: Db) {
+  if (cloud) {
+    cloud.db = db;
+    cacheCloud(db);
+    listeners.forEach((fn) => fn());
+    cloud.onLocalChange(db);
+    return;
+  }
   const raw = JSON.stringify({ v: 1, mode: 'mine', savedAt: new Date().toISOString(), db } satisfies Saved);
   if (hasStorage()) {
     try {

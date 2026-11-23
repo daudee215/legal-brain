@@ -3,11 +3,14 @@
 import { Sparkles, X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { getMode, subscribe } from '../../lib/store';
+import { cloudEnabled } from '../../lib/cloud/client';
+import { useLang } from '../../lib/i18n';
+import { getMode, subscribe, type Mode } from '../../lib/store';
 
 /** Tells the user they're looking at demo data and how to start their own practice. */
 export function DemoBanner() {
-  const [mode, setMode] = useState<'demo' | 'mine' | null>(null);
+  const { t } = useLang();
+  const [mode, setMode] = useState<Mode | null>(null);
   const [hidden, setHidden] = useState(false);
   useEffect(() => {
     setMode(getMode());
@@ -23,10 +26,19 @@ export function DemoBanner() {
     <div className="flex items-center gap-3 border-b border-bronze/25 bg-bronze/10 px-4 py-2 text-sm text-ink lg:px-8">
       <Sparkles className="h-4 w-4 shrink-0 text-bronze" aria-hidden />
       <p className="min-w-0 flex-1">
-        You&apos;re exploring <b>demo data</b>. Your first edit saves a private copy on this device.{' '}
+        {t('demo.text')}{' '}
         <Link href="/app/settings/" className="font-medium text-bronze underline-offset-2 hover:underline">
-          Start my own practice
+          {t('demo.start')}
         </Link>
+        {cloudEnabled && (
+          <>
+            {' '}
+            {t('demo.or')}{' '}
+            <Link href="/signup/" className="font-medium text-bronze underline-offset-2 hover:underline">
+              {t('demo.shared')}
+            </Link>
+          </>
+        )}
       </p>
       <button
         onClick={() => {
@@ -38,7 +50,7 @@ export function DemoBanner() {
           }
         }}
         className="rounded p-1 text-ink-soft hover:bg-bronze/10"
-        aria-label="Hide demo notice"
+        aria-label={t('demo.hide')}
       >
         <X className="h-4 w-4" />
       </button>

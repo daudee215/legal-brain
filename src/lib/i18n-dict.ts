@@ -64,6 +64,49 @@ export const DICT = {
   'top.langToggle': { en: 'اردو', ur: 'EN' },
   'top.langLabel': { en: 'Switch to Urdu', ur: 'انگریزی میں دیکھیں' },
 
+  // Cloud sync (signed-in chambers)
+  'cloud.status': { en: 'Sync status', ur: 'ہم آہنگی کی صورتحال' },
+  'cloud.loading': { en: 'Connecting…', ur: 'رابطہ ہو رہا ہے…' },
+  'cloud.saved': { en: 'Saved', ur: 'محفوظ' },
+  'cloud.saving': { en: 'Saving…', ur: 'محفوظ ہو رہا ہے…' },
+  'cloud.offline': { en: 'Offline — changes kept on this device', ur: 'آف لائن — تبدیلیاں اسی ڈیوائس پر محفوظ ہیں' },
+  'cloud.error': { en: 'Sync problem — retrying', ur: 'ہم آہنگی میں مسئلہ — دوبارہ کوشش جاری' },
+  'cloud.unreachableTitle': { en: 'Can’t reach the server', ur: 'سرور سے رابطہ نہیں ہو رہا' },
+  'cloud.unreachableBody': {
+    en: 'Check your internet connection. Your chamber opens as soon as you are back online.',
+    ur: 'انٹرنیٹ چیک کریں۔ کنکشن بحال ہوتے ہی آپ کا چیمبر کھل جائے گا۔',
+  },
+  'cloud.retry': { en: 'Try again', ur: 'دوبارہ کوشش کریں' },
+  'account.menu': { en: 'Account', ur: 'اکاؤنٹ' },
+  'account.signedInAs': { en: 'Signed in as', ur: 'لاگ اِن:' },
+  'account.signOut': { en: 'Sign out', ur: 'لاگ آؤٹ' },
+  'account.settings': { en: 'Cloud sync & backup', ur: 'کلاؤڈ اور بیک اپ' },
+  'account.chamber': { en: 'Chamber members', ur: 'چیمبر کے اراکین' },
+  'account.unsynced': {
+    en: 'Some changes have not reached the server yet (no internet?). Signing out now removes them from this device. Sign out anyway?',
+    ur: 'کچھ تبدیلیاں ابھی سرور تک نہیں پہنچیں (انٹرنیٹ؟)۔ ابھی لاگ آؤٹ کرنے سے یہ اس ڈیوائس سے مٹ جائیں گی۔ پھر بھی لاگ آؤٹ کریں؟',
+  },
+
+  // Demo banner
+  'demo.text': { en: 'You’re exploring demo data. Your first edit saves a private copy on this device.', ur: 'آپ ڈیمو ڈیٹا دیکھ رہے ہیں۔ پہلی تبدیلی پر ایک نجی کاپی اسی ڈیوائس پر محفوظ ہو جائے گی۔' },
+  'demo.start': { en: 'Start my own practice', ur: 'اپنی پریکٹس شروع کریں' },
+  'demo.shared': { en: 'Create a shared chamber', ur: 'مشترکہ چیمبر بنائیں' },
+  'demo.or': { en: 'or', ur: 'یا' },
+  'demo.hide': { en: 'Hide demo notice', ur: 'ڈیمو نوٹس چھپائیں' },
+
+  // Create or join a chamber (signed in, no chamber yet)
+  'setup.title': { en: 'Set up your chamber', ur: 'اپنا چیمبر بنائیں' },
+  'setup.subtitle': { en: 'You are signed in as {email} but not part of a chamber yet.', ur: 'آپ {email} سے لاگ اِن ہیں مگر ابھی کسی چیمبر کا حصہ نہیں۔' },
+  'setup.create': { en: 'Create a chamber', ur: 'نیا چیمبر' },
+  'setup.join': { en: 'Join with an invite', ur: 'دعوت سے شامل ہوں' },
+  'setup.chamberName': { en: 'Chamber name', ur: 'چیمبر کا نام' },
+  'setup.myName': { en: 'Your name (as colleagues will see it)', ur: 'آپ کا نام (جیسا ساتھی دیکھیں گے)' },
+  'setup.invite': { en: 'Invite link or code', ur: 'دعوت کا لنک یا کوڈ' },
+  'setup.bring': { en: 'Bring this device’s cases into the new chamber', ur: 'اس ڈیوائس کے مقدمات نئے چیمبر میں لے جائیں' },
+  'setup.createBtn': { en: 'Create chamber', ur: 'چیمبر بنائیں' },
+  'setup.joinBtn': { en: 'Join chamber', ur: 'چیمبر میں شامل ہوں' },
+  'setup.working': { en: 'Please wait…', ur: 'انتظار کریں…' },
+
   // Munshi Mode
   'munshi.title': { en: 'Munshi Mode', ur: 'منشی موڈ' },
   'munshi.subtitle': { en: 'Big buttons for the court day', ur: 'کچہری کے دن کے لیے آسان بٹن' },

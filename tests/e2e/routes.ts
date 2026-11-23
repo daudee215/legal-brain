@@ -2,6 +2,7 @@ export const ROUTES = [
   '/',
   '/login/',
   '/signup/',
+  '/join/',
   '/app/',
   '/app/laws/',
   '/app/laws/crpc-1898/',
