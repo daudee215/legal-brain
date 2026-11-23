@@ -5,12 +5,14 @@ import { AlertTriangle, CalendarClock, CheckCircle2, ClipboardCheck, ExternalLin
 import Link from 'next/link';
 import { useState } from 'react';
 import { OutcomeDialog } from '../../../components/outcome/OutcomeDialog';
+import { ClientReminders } from '../../../components/reminders/ClientReminders';
 import { useRole } from '../../../components/shell/RoleProvider';
 import { Badge, btn, Card, CardTitle, EmptyState, StatusBadge } from '../../../components/ui';
 import { Loading } from '../../../components/ui/Loading';
 import { useToast } from '../../../components/ui/Toast';
 import { assignCover, findClashes, overdueCases } from '../../../lib/clashes';
-import { addDays, formatPk, formatTime, greeting, pktDateKey, todayKey, weekday } from '../../../lib/dates';
+import { addDays, formatPk, formatTime, greeting, pktDateKey, pktHour, todayKey, weekday } from '../../../lib/dates';
+import { nextCourtDay, remindersFor } from '../../../lib/reminders';
 import { can } from '../../../lib/permissions';
 import { hearingsOn, listCases, listClients, listCourts, listMembers, type HearingRow } from '../../../lib/repo';
 import { useData } from '../../../lib/useData';
@@ -81,19 +83,25 @@ export default function TodayPage() {
 
   const data = useData(async () => {
     const t = todayKey();
-    const [today, tomorrow, cases, courts, clients, members] = await Promise.all([
+    const remindDay = nextCourtDay(t);
+    const [today, tomorrow, remindRows, cases, courts, clients, members] = await Promise.all([
       hearingsOn(t),
       hearingsOn(addDays(t, 1)),
+      hearingsOn(remindDay),
       listCases({}),
       listCourts(),
       listClients(),
       listMembers(),
     ]);
-    return { t, today, tomorrow, cases, courts, clients, members };
+    return { t, today, tomorrow, remindDay, reminders: remindersFor(remindDay, remindRows, clients), cases, courts, clients, members };
   });
 
   if (!data) return <Loading label="Preparing your day" />;
-  const { t, today, tomorrow, cases, courts, clients, members } = data;
+  const { t, today, tomorrow, remindDay, reminders, cases, courts, clients, members } = data;
+  const canRemind = can(role, 'diary.write');
+  // From noon the evening job comes first; in the morning, today's hearings do.
+  const remindFirst = pktHour() >= 12;
+  const remindCard = <ClientReminders dayKey={remindDay} rows={reminders} canSend={canRemind} />;
   const clashes = findClashes(cases, courts, t);
   const overdue = overdueCases(cases, t);
   const pendingToday = today.filter((r) => !r.case.hearings.some((h) => pktDateKey(h.date) === t)).length;
@@ -149,6 +157,8 @@ export default function TodayPage() {
           </a>
         </div>
       </section>
+
+      {remindFirst && remindCard}
 
       {clashes.map((g, gi) => (
         <motion.div
@@ -252,6 +262,8 @@ export default function TodayPage() {
           </ol>
         )}
       </section>
+
+      {!remindFirst && remindCard}
 
       <Card>
         <CardTitle action={<span className="text-xs text-ink-soft">{formatPk(addDays(t, 1))}</span>}>Tomorrow</CardTitle>

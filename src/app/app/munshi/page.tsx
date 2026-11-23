@@ -1,7 +1,8 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { CalendarClock, Check, FileText, Gavel, Mic, MicOff, NotebookPen, Scale, Wallet, X } from 'lucide-react';
+import { BellRing, CalendarClock, Check, FileText, Gavel, Mic, MicOff, NotebookPen, Scale, Wallet, X } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useRole } from '../../../components/shell/RoleProvider';
 import { Loading } from '../../../components/ui/Loading';
@@ -9,7 +10,8 @@ import { addDays, formatPk, formatTime, pktIso, todayKey } from '../../../lib/da
 import { DICT, type DictKey } from '../../../lib/i18n-dict';
 import { addDiary, addPayment, addTask, recordOutcome } from '../../../lib/mutations';
 import { can } from '../../../lib/permissions';
-import { hearingsOn, listCases, listMembers, type HearingRow } from '../../../lib/repo';
+import { hearingsOn, listCases, listClients, listMembers, type HearingRow } from '../../../lib/repo';
+import { nextCourtDay, remindersFor } from '../../../lib/reminders';
 import { useData } from '../../../lib/useData';
 import type { FeePayment } from '../../../types';
 
@@ -164,7 +166,14 @@ function CasePicker({ cases, value, onChange }: { cases: { id: string; title: st
 export default function MunshiPage() {
   const { role, member } = useRole();
   const today = todayKey();
-  const data = useData(async () => ({ hearings: await hearingsOn(today), cases: await listCases(), members: await listMembers() }), [today]);
+  const data = useData(
+    async () => {
+      const day = nextCourtDay(today);
+      const reminders = remindersFor(day, await hearingsOn(day), await listClients());
+      return { hearings: await hearingsOn(today), cases: await listCases(), members: await listMembers(), remindLeft: reminders.filter((r) => !r.sent).length };
+    },
+    [today],
+  );
 
   const [sheet, setSheet] = useState<Sheet>(null);
   const [step, setStep] = useState<HearingStep>('choose');
@@ -340,6 +349,12 @@ export default function MunshiPage() {
         <h2 id="munshi-quick" className="m-0">
           <Bi k="munshi.quick" big />
         </h2>
+        {data.remindLeft > 0 && (
+          <Link href="/app/today/#reminders" className={tone.bronze}>
+            <BellRing className="h-7 w-7 shrink-0" aria-hidden />
+            <Bi k="munshi.remind" n={data.remindLeft} />
+          </Link>
+        )}
         <button type="button" onClick={() => open({ kind: 'copy' })} className={tone.primary}>
           <FileText className="h-7 w-7 shrink-0" aria-hidden />
           <Bi k="munshi.copyApplied" />

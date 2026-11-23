@@ -1,6 +1,7 @@
 'use client';
 
-import { CalendarClock, CalendarDays, Scale, Wallet } from 'lucide-react';
+import { BellRing, CalendarClock, CalendarDays, Scale, Wallet } from 'lucide-react';
+import Link from 'next/link';
 import { HearingLoadChart } from '../../components/dashboard/charts';
 import {
   ActivityFeed,
@@ -16,9 +17,10 @@ import { Stagger, StaggerItem } from '../../components/motion';
 import { useRole } from '../../components/shell/RoleProvider';
 import { Card, CardTitle } from '../../components/ui';
 import { Loading } from '../../components/ui/Loading';
-import { addDays, todayKey } from '../../lib/dates';
+import { addDays, formatPk, pktHour, todayKey } from '../../lib/dates';
+import { nextCourtDay, remindersFor } from '../../lib/reminders';
 import { can } from '../../lib/permissions';
-import { caseStats, feeSummary, hearingLoad, hearingsOn, listCases, listCourts, recentActivity, upcomingHearings } from '../../lib/repo';
+import { caseStats, feeSummary, hearingLoad, hearingsOn, listCases, listClients, listCourts, recentActivity, upcomingHearings } from '../../lib/repo';
 import { useData } from '../../lib/useData';
 
 export default function DashboardPage() {
@@ -36,11 +38,13 @@ export default function DashboardPage() {
       listCases({}),
       upcomingHearings(t, 60),
     ]);
-    return { t, today, week, stats, courts, load, fees, activity, cases, nextUp };
+    const remindDay = nextCourtDay(t);
+    const remindLeft = remindersFor(remindDay, await hearingsOn(remindDay), await listClients()).filter((r) => !r.sent).length;
+    return { t, today, week, stats, courts, load, fees, activity, cases, nextUp, remindDay, remindLeft };
   });
 
   if (!data) return <Loading label="Loading dashboard" />;
-  const { t, today, week, stats, courts, load, fees, activity, cases, nextUp } = data;
+  const { t, today, week, stats, courts, load, fees, activity, cases, nextUp, remindDay, remindLeft } = data;
   const active = stats.byStatus.pending + stats.byStatus.adjourned + stats.byStatus.reserved;
   const nowIso = new Date().toISOString();
   const nextCase = nextUp.find((c) => c.nextHearing! >= nowIso) ?? nextUp[0];
@@ -58,6 +62,19 @@ export default function DashboardPage() {
         weekCount={week.length}
         next={nextCase ? { case: nextCase, court: courts.find((c) => c.id === nextCase.courtId) } : undefined}
       />
+
+      {remindLeft > 0 && pktHour() >= 15 && (
+        <Link
+          href="/app/today/#reminders"
+          className="flex items-center gap-3 rounded-2xl border border-bronze/40 bg-bronze/10 px-4 py-3 text-sm transition hover:bg-bronze/15"
+        >
+          <BellRing className="h-5 w-5 shrink-0 text-bronze" aria-hidden />
+          <span className="min-w-0 flex-1">
+            <b>{remindLeft} client{remindLeft === 1 ? '' : 's'}</b> not yet reminded about their hearing on {formatPk(remindDay)}.
+          </span>
+          <span className="font-medium text-bronze">Send reminders →</span>
+        </Link>
+      )}
 
       <Stagger className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StaggerItem>

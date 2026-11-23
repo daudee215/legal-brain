@@ -132,6 +132,7 @@ export const DICT = {
   'munshi.case': { en: 'Case', ur: 'مقدمہ' },
   'munshi.chooseCase': { en: 'Choose a case', ur: 'مقدمہ چنیں' },
   'munshi.note': { en: 'Diary note', ur: 'ڈائری نوٹ' },
+  'munshi.remind': { en: 'Remind clients ({n} left)', ur: 'کلائنٹس کو یاد دہانی ({n} باقی)' },
   'munshi.notePlaceholder': { en: 'Write or speak a short note…', ur: 'مختصر نوٹ لکھیں یا بولیں…' },
   'munshi.speak': { en: 'Speak', ur: 'بولیں' },
   'munshi.listening': { en: 'Listening…', ur: 'سن رہا ہے…' },

@@ -75,6 +75,8 @@ export interface Case {
   assignedTo: string[];
   hearings: Hearing[];
   result?: string;
+  /** Day key of the hearing the client was last reminded about (WhatsApp). */
+  remindedFor?: string;
 }
 export interface CauseListEntry {
   date: string;
