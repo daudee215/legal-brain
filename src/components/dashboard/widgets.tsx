@@ -30,6 +30,7 @@ export const pkrShort = (n: number) => (n >= 100000 ? `Rs ${(n / 100000).toFixed
 
 /** Live "in 2h 15m" label for the next hearing; falls back to the day count for later dates. */
 function Countdown({ iso }: { iso: string }) {
+  const { t: tr } = useLang();
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
     setNow(Date.now());
@@ -44,7 +45,7 @@ function Countdown({ iso }: { iso: string }) {
   else {
     const mins = Math.round(ms / 60000);
     const days = Math.floor(mins / 1440);
-    label = days >= 1 ? `In ${days} day${days === 1 ? '' : 's'}` : mins >= 60 ? `In ${Math.floor(mins / 60)}h ${mins % 60}m` : `In ${mins} min`;
+    label = days >= 1 ? (days === 1 ? tr('dash.inDay') : tr('dash.inDays', { n: days })) : mins >= 60 ? tr('dash.inHM', { h: Math.floor(mins / 60), m: mins % 60 }) : tr('dash.inMin', { n: mins });
   }
   return <p className="mt-3 inline-flex rounded-full bg-bronze/25 px-2.5 py-1 text-[11px] font-semibold tabular-nums text-bronze-soft">{label}</p>;
 }
@@ -221,7 +222,7 @@ export function TodayHearings({ rows }: { rows: HearingRow[] }) {
                   rel="noopener noreferrer"
                   className="mt-1 inline-flex items-center gap-1 text-xs text-bronze opacity-80 hover:underline group-hover:opacity-100"
                 >
-                  Check on court website <ExternalLink className="h-3 w-3" />
+                  {tr('dash.checkCourt')} <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
             </motion.li>
@@ -238,7 +239,7 @@ export function UpcomingList({ cases, courts }: { cases: Case[]; courts: Court[]
     <Card>
       <CardTitle>{tr('dash.next7')}</CardTitle>
       {cases.length === 0 ? (
-        <EmptyState title="Nothing scheduled" body="No hearings in the coming week." />
+        <EmptyState title={tr('dash.nothingScheduled')} body={tr('dash.noHearingsWeek')} />
       ) : (
         <ul className="space-y-2">
           {cases.map((c) => {
@@ -273,16 +274,16 @@ export function CaseBreakdown({ stats, courts }: { stats: CaseStats; courts: Cou
       <Card>
         <CardTitle>{tr('dash.yourCases')}</CardTitle>
         <EmptyState
-          title="No cases yet"
-          body="Add your first case to see it broken down by category, court and status."
-          action={<Link href="/app/cases/" className={btn.primary}>Add a case</Link>}
+          title={tr('dash.noCases')}
+          body={tr('dash.noCasesBody')}
+          action={<Link href="/app/cases/" className={btn.primary}>{tr('dash.addCase')}</Link>}
         />
       </Card>
     );
   }
   const cat = (Object.entries(stats.byCategory) as [CaseCategory, number][])
     .sort((a, b) => b[1] - a[1])
-    .map(([label, value]) => ({ label, value }));
+    .map(([label, value]) => ({ label: tr(`cat.${label}`, undefined, label), value }));
   const court = Object.entries(stats.byCourt)
     .sort((a, b) => b[1] - a[1])
     .map(([id, value]) => ({ label: courts.find((c) => c.id === id)?.shortName ?? id, value }));
@@ -301,11 +302,11 @@ export function CaseBreakdown({ stats, courts }: { stats: CaseStats; courts: Cou
       </div>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div>
-          <h3 className="mb-3 font-sans text-xs font-semibold uppercase tracking-wide text-ink-soft">By category</h3>
+          <h3 className="mb-3 font-sans text-xs font-semibold uppercase tracking-wide text-ink-soft">{tr('dash.byCategory')}</h3>
           <BarList rows={cat} />
         </div>
         <div>
-          <h3 className="mb-3 font-sans text-xs font-semibold uppercase tracking-wide text-ink-soft">By court</h3>
+          <h3 className="mb-3 font-sans text-xs font-semibold uppercase tracking-wide text-ink-soft">{tr('dash.byCourt')}</h3>
           <BarList rows={court} />
         </div>
       </div>
@@ -314,34 +315,35 @@ export function CaseBreakdown({ stats, courts }: { stats: CaseStats; courts: Cou
 }
 
 export function FeesCard({ agreed, received, outstanding, rows }: { agreed: number; received: number; outstanding: number; rows: (FeeRow & { case: Case })[] }) {
+  const { t: tr } = useLang();
   if (agreed === 0) {
     return (
       <Card>
-        <CardTitle>Fees</CardTitle>
-        <EmptyState title="No fees recorded" body="Record the fee agreed on a case to track what clients have paid." />
+        <CardTitle>{tr('dash.fees')}</CardTitle>
+        <EmptyState title={tr('dash.noFees')} body={tr('dash.noFeesBody')} />
       </Card>
     );
   }
   const due = rows.filter((r) => r.outstanding > 0).slice(0, 4);
   return (
     <Card>
-      <CardTitle action={<Link href="/app/cases/" className="text-sm text-bronze hover:underline">By case</Link>}>Fees</CardTitle>
+      <CardTitle action={<Link href="/app/cases/" className="text-sm text-bronze hover:underline">{tr('dash.byCase')}</Link>}>{tr('dash.fees')}</CardTitle>
       <div className="flex items-center gap-5">
-        <Ring value={received / agreed} label="collected" />
+        <Ring value={received / agreed} label={tr('dash.collected')} />
         <dl className="min-w-0 space-y-2 text-sm">
           <div>
-            <dt className="text-xs text-ink-soft">Received</dt>
+            <dt className="text-xs text-ink-soft">{tr('dash.received')}</dt>
             <dd className="font-serif text-xl font-bold">{pkrShort(received)}</dd>
           </div>
           <div>
-            <dt className="text-xs text-ink-soft">Outstanding</dt>
+            <dt className="text-xs text-ink-soft">{tr('dash.outstanding')}</dt>
             <dd className="font-serif text-xl font-bold text-danger">{pkrShort(outstanding)}</dd>
           </div>
         </dl>
       </div>
       {due.length > 0 && (
         <>
-          <h3 className="mb-2 mt-5 font-sans text-xs font-semibold uppercase tracking-wide text-ink-soft">Largest balances</h3>
+          <h3 className="mb-2 mt-5 font-sans text-xs font-semibold uppercase tracking-wide text-ink-soft">{tr('dash.largest')}</h3>
           <ul className="divide-y divide-line">
             {due.map((r) => (
               <li key={r.caseId}>
@@ -361,11 +363,12 @@ export function FeesCard({ agreed, received, outstanding, rows }: { agreed: numb
 const ACT_ICON: Record<ActivityItem['kind'], LucideIcon> = { hearing: CalendarClock, diary: NotebookPen, document: FileText, payment: Wallet };
 
 export function ActivityFeed({ items }: { items: ActivityItem[] }) {
+  const { t: tr } = useLang();
   return (
     <Card>
-      <CardTitle>Chamber activity</CardTitle>
+      <CardTitle>{tr('dash.activity')}</CardTitle>
       {items.length === 0 ? (
-        <EmptyState title="Nothing yet" body="Hearings, notes, documents and payments will appear here." />
+        <EmptyState title={tr('dash.nothingYet')} body={tr('dash.activityBody')} />
       ) : (
         <ul className="space-y-4">
           {items.map((a, i) => {
@@ -402,17 +405,18 @@ export function ActivityFeed({ items }: { items: ActivityItem[] }) {
 
 /** Matters that need a decision: judgments reserved, and live cases with no next date fixed. */
 export function AttentionCard({ cases }: { cases: Case[] }) {
+  const { t: tr } = useLang();
   const reserved = cases.filter((c) => c.status === 'reserved');
   const noDate = cases.filter((c) => !c.nextHearing && (c.status === 'pending' || c.status === 'adjourned'));
   const items = [
-    ...reserved.map((c) => ({ c, icon: Hourglass, why: 'Judgment reserved — watch for the announcement' })),
-    ...noDate.map((c) => ({ c, icon: AlertTriangle, why: 'No next date fixed — check the court website' })),
+    ...reserved.map((c) => ({ c, icon: Hourglass, why: tr('dash.reservedWhy') })),
+    ...noDate.map((c) => ({ c, icon: AlertTriangle, why: tr('dash.noDateWhy') })),
   ];
   return (
     <Card>
-      <CardTitle>Needs attention</CardTitle>
+      <CardTitle>{tr('dash.attention')}</CardTitle>
       {items.length === 0 ? (
-        <EmptyState title="All clear" body="Every live case has its next date." />
+        <EmptyState title={tr('dash.allClear')} body={tr('dash.allClearBody')} />
       ) : (
         <ul className="space-y-2">
           {items.map(({ c, icon: Icon, why }) => (

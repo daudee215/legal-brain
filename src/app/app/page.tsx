@@ -45,7 +45,7 @@ export default function DashboardPage() {
     return { t, today, week, stats, courts, load, fees, activity, cases, nextUp, remindDay, remindLeft };
   });
 
-  if (!data) return <Loading label="Loading dashboard" />;
+  if (!data) return <Loading label={tr('dash.loading')} />;
   const { t, today, week, stats, courts, load, fees, activity, cases, nextUp, remindDay, remindLeft } = data;
   const active = stats.byStatus.pending + stats.byStatus.adjourned + stats.byStatus.reserved;
   const nowIso = new Date().toISOString();
@@ -72,7 +72,7 @@ export default function DashboardPage() {
         >
           <BellRing className="h-5 w-5 shrink-0 text-bronze" aria-hidden />
           <span className="min-w-0 flex-1">
-            {tr('dash.reminded', { n: '', date: formatPk(remindDay) }).split('').flatMap((part, i) => (i === 0 ? [part] : [<b key="n">{remindLeft === 1 ? tr('dash.clientOne') : tr('dash.clientMany', { n: remindLeft })}</b>, part]))}
+            {tr('dash.reminded', { n: '%%', date: formatPk(remindDay) }).split('%%').flatMap((part, i) => (i === 0 ? [part] : [<b key="n">{remindLeft === 1 ? tr('dash.clientOne') : tr('dash.clientMany', { n: remindLeft })}</b>, part]))}
           </span>
           <span className="font-medium text-bronze">{tr('dash.sendReminders')} <span className="inline-block rtl:rotate-180">→</span></span>
         </Link>
@@ -80,19 +80,19 @@ export default function DashboardPage() {
 
       <Stagger className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StaggerItem>
-          <KpiTile id="active" label="Active cases" value={active} hint={`${stats.total} on file`} icon={Scale} spark={past} href="/app/cases/" />
+          <KpiTile id="active" label={tr('dash.activeCases')} value={active} hint={tr('dash.onFile', { n: stats.total })} icon={Scale} spark={past} href="/app/cases/" />
         </StaggerItem>
         <StaggerItem>
-          <KpiTile id="today" label="Hearings today" value={today.length} hint="Across all courts" icon={CalendarDays} href="/app/cause-list/" />
+          <KpiTile id="today" label={tr('dash.hearingsToday')} value={today.length} hint={tr('dash.acrossCourts')} icon={CalendarDays} href="/app/cause-list/" />
         </StaggerItem>
         <StaggerItem>
-          <KpiTile id="week" label="Listings this week" value={weekTotal} hint="Next 7 days" icon={CalendarClock} spark={ahead} />
+          <KpiTile id="week" label={tr('dash.listingsWeek')} value={weekTotal} hint={tr('dash.next7')} icon={CalendarClock} spark={ahead} />
         </StaggerItem>
         <StaggerItem>
           {seeFees ? (
-            <KpiTile id="fees" label="Fees outstanding" value={fees.outstanding} prefix="Rs " hint={`of Rs ${fees.agreed.toLocaleString('en-PK')} agreed`} icon={Wallet} />
+            <KpiTile id="fees" label={tr('dash.feesOutstanding')} value={fees.outstanding} prefix="Rs " hint={tr('dash.ofAgreed', { n: fees.agreed.toLocaleString('en-PK') })} icon={Wallet} />
           ) : (
-            <KpiTile id="decided" label="Decided / disposed" value={stats.byStatus.decided + stats.byStatus.disposed} hint="Closed matters" icon={Wallet} />
+            <KpiTile id="decided" label={tr('dash.decided')} value={stats.byStatus.decided + stats.byStatus.disposed} hint={tr('dash.closed')} icon={Wallet} />
           )}
         </StaggerItem>
       </Stagger>
@@ -103,7 +103,7 @@ export default function DashboardPage() {
       </div>
 
       <Card>
-        <CardTitle action={<span className="text-xs text-ink-soft">Last 30 days · next 30 days</span>}>Court workload</CardTitle>
+        <CardTitle action={<span className="text-xs text-ink-soft">{tr('dash.last30')}</span>}>{tr('dash.workload')}</CardTitle>
         <HearingLoadChart data={load} today={t} />
       </Card>
 

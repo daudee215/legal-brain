@@ -1,4 +1,5 @@
 import { Info, type LucideIcon } from 'lucide-react';
+import { useLang } from '../../lib/i18n';
 import type { CaseStatus } from '../../types';
 
 export function Card({ className = '', children }: { className?: string; children: React.ReactNode }) {
@@ -59,7 +60,8 @@ const STATUS_TONE: Record<CaseStatus, Tone> = {
   disposed: 'ok',
 };
 export function StatusBadge({ status }: { status: CaseStatus }) {
-  return <Badge tone={STATUS_TONE[status]}>{status[0].toUpperCase() + status.slice(1)}</Badge>;
+  const { t } = useLang();
+  return <Badge tone={STATUS_TONE[status]}>{t(`status.${status}`, undefined, status[0].toUpperCase() + status.slice(1))}</Badge>;
 }
 
 /** Small line illustration of the scales of justice, drawn in the brand bronze. */
