@@ -1,14 +1,17 @@
 'use client';
 
-import { ArrowDown, ArrowUp, Camera, ImagePlus, Loader2, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, CalendarClock, Camera, Check, ImagePlus, Loader2, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { tooBigMessage } from '../../lib/cloud/storage';
 import { formatPk, todayKey } from '../../lib/dates';
 import { uploadDocument } from '../../lib/docText';
 import { useLang } from '../../lib/i18n';
+import { setNextHearing } from '../../lib/nextHearing';
+import { type DateSuggestion, findNextDates } from '../../lib/ocrDate';
+import { type OcrJob, type OcrProgress, startOcr } from '../../lib/ocrRun';
 import { can } from '../../lib/permissions';
 import { snapshot } from '../../lib/repo';
-import { defaultScanName, enhancePixels, fitSize, imagesToPdf, movePage, SCAN_JPEG_QUALITY, scanFileName, type ScanMode, type ScanPage } from '../../lib/scan';
+import { defaultScanName, enhancePixels, fitSize, imagesToPdf, movePage, SCAN_JPEG_QUALITY, SCAN_MAX_SIDE, scanFileName, type ScanMode, type ScanPage } from '../../lib/scan';
 import { getMode } from '../../lib/store';
 import { useData } from '../../lib/useData';
 import { useRole } from '../shell/RoleProvider';
@@ -143,6 +146,15 @@ export function ScanToPdf({
   const [error, setError] = useState<string | null>(null);
   const shotsRef = useRef<Shot[]>([]);
   shotsRef.current = shots;
+  // opt-in "read the next date from this photo"
+  const [ocrPage, setOcrPage] = useState(0);
+  const [ocr, setOcr] = useState<OcrProgress | null>(null);
+  const [found, setFound] = useState<DateSuggestion[] | null>(null);
+  const [ocrError, setOcrError] = useState<string | null>(null);
+  const [pickDate, setPickDate] = useState('');
+  const [hearingMsg, setHearingMsg] = useState<string | null>(null);
+  const ocrJob = useRef<OcrJob | null>(null);
+  const ocrRun = useRef(0);
 
   const fallbackName = defaultScanName(formatPk(todayKey()));
 
@@ -153,11 +165,18 @@ export function ScanToPdf({
     setFolder(defaultFolder);
     setUpCase(caseId ?? '');
     setError(null);
+    resetOcr();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // Free preview URLs when pages are dropped or the sheet unmounts.
-  useEffect(() => () => shotsRef.current.forEach(revoke), []);
+  useEffect(
+    () => () => {
+      ocrJob.current?.cancel();
+      shotsRef.current.forEach(revoke);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -170,11 +189,24 @@ export function ScanToPdf({
 
   if (!open || !can(role, 'documents.upload')) return null;
 
+  function resetOcr() {
+    ocrRun.current++;
+    ocrJob.current?.cancel();
+    ocrJob.current = null;
+    setOcr(null);
+    setFound(null);
+    setOcrError(null);
+    setPickDate('');
+    setHearingMsg(null);
+    setOcrPage(0);
+  }
+
   function close() {
     shots.forEach(revoke);
     setShots([]);
     setBusy(null);
     setError(null);
+    resetOcr();
     onClose();
   }
 
@@ -202,11 +234,56 @@ export function ScanToPdf({
   }
 
   function removeShot(i: number) {
+    setFound(null);
+    setOcrError(null);
     setShots((s) => {
       const gone = s[i];
       if (gone) revoke(gone);
       return s.filter((_, j) => j !== i);
     });
+  }
+
+  /** OCR the previewed page (the cleaned-up image the PDF would use) and look for the next hearing date. */
+  async function readDate() {
+    const shot = shots[Math.min(ocrPage, shots.length - 1)];
+    if (!shot || ocr) return;
+    setOcrError(null);
+    setFound(null);
+    setHearingMsg(null);
+    setOcr({ phase: 'loading', progress: 0 });
+    const run = ++ocrRun.current;
+    try {
+      const canvas = await drawPhoto(shot.file, SCAN_MAX_SIDE);
+      applyLook(canvas, mode);
+      const image = await toJpeg(canvas, 0.9);
+      canvas.width = canvas.height = 0;
+      if (run !== ocrRun.current) return; // closed or stopped while the page was being prepared
+      const job = startOcr(image, setOcr);
+      ocrJob.current = job;
+      const list = findNextDates(await job.promise, todayKey());
+      setFound(list);
+      const top = list.find((x) => x.strength === 'keyword');
+      setPickDate(top ? top.date : '');
+    } catch (e) {
+      if (!(e instanceof Error && e.message === 'cancelled')) setOcrError(t('scan.ocr.failed', undefined, 'Could not read the page. You can still type the date.'));
+    } finally {
+      if (run === ocrRun.current) {
+        ocrJob.current = null;
+        setOcr(null);
+      }
+    }
+  }
+
+  function applyHearing() {
+    const c = (db?.cases ?? []).find((x) => x.id === upCase);
+    if (!c || !pickDate) return;
+    if (!setNextHearing(c.id, pickDate)) {
+      setOcrError(t('scan.ocr.setFailed', undefined, 'Could not find that case. Nothing was changed.'));
+      return;
+    }
+    const msg = t('scan.ocr.done', { title: c.title, date: formatPk(pickDate) }, `Next hearing of ${c.title} set to ${formatPk(pickDate)}`);
+    setHearingMsg(msg);
+    onSaved?.(msg);
   }
 
   async function save() {
@@ -254,6 +331,10 @@ export function ScanToPdf({
   const pickCls = `${btn.ghost} min-h-11 flex-1 cursor-pointer`;
   const iconBtn = 'grid h-11 w-11 place-items-center rounded-lg text-ink-soft transition hover:bg-line/50 hover:text-ink disabled:opacity-40';
   const n = shots.length;
+  const pageIdx = Math.min(ocrPage, Math.max(0, n - 1));
+  const canSetHearing = can(role, 'cases.edit');
+  const chosenCase = (db?.cases ?? []).find((x) => x.id === upCase);
+  const ocrPct = ocr ? Math.round(ocr.progress * 100) : 0;
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-end bg-night/50 p-0 sm:place-items-center sm:p-4" role="dialog" aria-modal="true" aria-label={t('scan.title', undefined, 'Scan to PDF')}>
@@ -377,6 +458,122 @@ export function ScanToPdf({
               </select>
             </label>
           </div>
+
+          {n > 0 && (
+            <section className="space-y-3 rounded-xl border border-line bg-cream/40 p-3" aria-label={t('scan.ocr.heading', undefined, 'Next hearing date')}>
+              <h3 className="flex items-center gap-2 text-sm font-semibold">
+                <CalendarClock className="h-4 w-4 text-bronze" aria-hidden /> {t('scan.ocr.heading', undefined, 'Next hearing date')}
+              </h3>
+
+              {n > 1 && (
+                <label className="block">
+                  <span className="mb-1 block text-xs text-ink-soft">{t('scan.ocr.pageLabel', undefined, 'Read from')}</span>
+                  <select
+                    className={`${inputCls} min-h-11 text-base sm:text-sm`}
+                    value={pageIdx}
+                    disabled={!!ocr}
+                    onChange={(e) => {
+                      setOcrPage(Number(e.target.value));
+                      setFound(null);
+                      setOcrError(null);
+                    }}
+                  >
+                    {shots.map((s, i) => (
+                      <option key={s.id} value={i}>
+                        {t('scan.pageN', { n: i + 1 }, `Page ${i + 1}`)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+
+              {ocr ? (
+                <div className="flex flex-wrap items-center gap-2" role="status">
+                  <span className="inline-flex min-w-0 flex-1 items-center gap-2 text-sm text-ink-soft">
+                    <Loader2 className="h-4 w-4 shrink-0 animate-spin text-bronze" aria-hidden />
+                    {ocr.phase === 'reading'
+                      ? t('scan.ocr.reading', { p: ocrPct }, `Reading the page… ${ocrPct}%`)
+                      : t('scan.ocr.loading', { p: ocrPct }, `Getting the reader ready… ${ocrPct}%`)}
+                  </span>
+                  <button type="button" className={`${btn.ghost} min-h-11`} onClick={() => ocrJob.current?.cancel()}>
+                    {t('scan.ocr.stop', undefined, 'Stop reading')}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <button type="button" className={`${btn.ghost} min-h-11 w-full`} onClick={() => void readDate()} disabled={!!busy}>
+                    {t('scan.ocr.button', undefined, 'Read the next date from this photo')}
+                  </button>
+                  <p className="text-xs text-ink-soft">{t('scan.ocr.help', undefined, 'Downloads about 10 MB the first time. The photo stays on your phone.')}</p>
+                </div>
+              )}
+
+              {ocrError && (
+                <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger" role="alert">
+                  {ocrError}
+                </p>
+              )}
+              {found && found.length === 0 && <p className="text-sm text-ink-soft">{t('scan.ocr.none', undefined, 'No next date found on this page. You can type it below.')}</p>}
+              {found && found.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm text-ink-soft">{t('scan.ocr.found', undefined, 'Dates found on the page. Tap one to use it.')}</p>
+                  <ul className="grid gap-2">
+                    {found.map((f) => (
+                      <li key={f.date}>
+                        <button
+                          type="button"
+                          aria-pressed={pickDate === f.date}
+                          aria-label={t('scan.ocr.use', { date: formatPk(f.date) }, `Use ${formatPk(f.date)}`)}
+                          onClick={() => {
+                            setPickDate(f.date);
+                            setHearingMsg(null);
+                          }}
+                          className={`flex min-h-11 w-full flex-col items-start rounded-lg border px-3 py-2 text-start transition ${
+                            pickDate === f.date ? 'border-bronze bg-bronze/10' : 'border-line bg-paper hover:bg-line/40'
+                          }`}
+                        >
+                          <span className="text-sm font-semibold">{formatPk(f.date)}</span>
+                          <span className="line-clamp-2 w-full text-xs text-ink-soft" dir="ltr">
+                            {f.strength === 'keyword' ? f.line : `${t('scan.ocr.plain', undefined, 'A date written on the page')} · ${f.line}`}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <label className="block">
+                <span className="mb-1 block text-xs text-ink-soft">{t('scan.ocr.dateLabel', undefined, 'Or type the date')}</span>
+                <input
+                  type="date"
+                  dir="ltr"
+                  className={`${inputCls} min-h-11 text-base sm:text-sm`}
+                  value={pickDate}
+                  onChange={(e) => {
+                    setPickDate(e.target.value);
+                    setHearingMsg(null);
+                  }}
+                />
+              </label>
+              {pickDate && pickDate < todayKey() && <p className="text-xs text-danger">{t('scan.ocr.past', undefined, 'That date has already passed.')}</p>}
+
+              {canSetHearing &&
+                (chosenCase ? (
+                  <button type="button" className={`${btn.bronze} min-h-11 w-full`} disabled={!pickDate || !!busy} onClick={applyHearing}>
+                    <CalendarClock className="h-4 w-4" aria-hidden />{' '}
+                    {pickDate ? t('scan.ocr.set', { date: formatPk(pickDate) }, `Set next hearing to ${formatPk(pickDate)}`) : t('scan.ocr.setEmpty', undefined, 'Set next hearing')}
+                  </button>
+                ) : (
+                  <p className="text-xs text-ink-soft">{t('scan.ocr.needCase', undefined, 'Choose a case above to set its next hearing.')}</p>
+                ))}
+              {hearingMsg && (
+                <p className="flex items-center gap-2 text-sm text-ok" role="status">
+                  <Check className="h-4 w-4 shrink-0" aria-hidden /> {hearingMsg}
+                </p>
+              )}
+            </section>
+          )}
 
           {busy && (
             <p className="inline-flex items-center gap-2 text-sm text-ink-soft" role="status">

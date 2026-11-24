@@ -12,6 +12,13 @@ export const metadata: Metadata = {
   title: 'Legal Brain — Practice dashboard for Pakistani lawyers',
   description: 'Cases, cause lists, laws, judgments, drafting and an AI assistant — one place for your whole practice.',
   manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
   appleWebApp: { capable: true, title: 'Legal Brain', statusBarStyle: 'black-translucent' },
 };
 
@@ -20,6 +27,11 @@ export const viewport: Viewport = { width: 'device-width', initialScale: 1, them
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${inter.variable} ${display.variable} ${reading.variable}`}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400..700&display=swap" />
+      </head>
       <body>{children}</body>
     </html>
   );

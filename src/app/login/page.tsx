@@ -8,6 +8,8 @@ import { DemoNote, Field, FormError, NotConfigured } from '../../components/mark
 import { btn } from '../../components/ui';
 import { currentUser, signIn, signOut } from '../../lib/cloud/chamber';
 import { cloudEnabled, friendlyError } from '../../lib/cloud/client';
+import { needsMfa } from '../../lib/cloud/mfa';
+import { MfaChallenge } from '../../components/shell/MfaChallenge';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,6 +18,7 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [signedIn, setSignedIn] = useState<string | null>(null);
+  const [needCode, setNeedCode] = useState(false);
 
   useEffect(() => {
     if (cloudEnabled) void currentUser().then((u) => setSignedIn(u?.email ?? null));
@@ -27,6 +30,12 @@ export default function LoginPage() {
     setErr('');
     try {
       await signIn(email, password);
+      // Two-step sign-in on for this account: ask for the code before going in. Otherwise straight in, as before.
+      if (await needsMfa().catch(() => false)) {
+        setNeedCode(true);
+        setBusy(false);
+        return;
+      }
       router.push('/app/');
     } catch (x) {
       setErr(friendlyError(x));
@@ -50,6 +59,16 @@ export default function LoginPage() {
     >
       {!cloudEnabled ? (
         <NotConfigured />
+      ) : needCode ? (
+        <MfaChallenge
+          email={email.trim()}
+          onVerified={() => router.push('/app/')}
+          onSignOut={async () => {
+            await signOut();
+            setNeedCode(false);
+            setPassword('');
+          }}
+        />
       ) : signedIn ? (
         <div className="space-y-4 text-sm">
           <p>

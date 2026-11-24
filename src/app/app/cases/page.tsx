@@ -2,6 +2,7 @@
 
 import { Kanban, Plus, Rows3, X } from 'lucide-react';
 import { KanbanBoard } from '../../../components/cases/KanbanBoard';
+import { ConflictHint } from '../../../components/clients/ConflictHint';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -132,6 +133,7 @@ function AddCaseModal({ courts, clients, onClose, onSaved }: { courts: Court[]; 
               </label>
             </>
           )}
+          <ConflictHint names={clientId === NEW_CLIENT ? [clientName] : []} title={title} ignoreClientId={clientId === NEW_CLIENT ? undefined : clientId} />
         </div>
         {error && (
           <p role="alert" className="mt-4 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">

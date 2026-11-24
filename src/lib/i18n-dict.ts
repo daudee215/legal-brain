@@ -15,6 +15,10 @@ import { CHAMBER } from './i18n-chamber';
 import { DOCS } from './i18n-docs';
 import { LIBRARY } from './i18n-library';
 import { BRIEFS } from './i18n-briefs';
+import { CONFLICT } from './i18n-conflict';
+import { MFA } from './i18n-mfa';
+import { PDFUR } from './i18n-pdfur';
+import { STATUS } from './i18n-status';
 import { CAUSE } from './i18n-cause';
 import { LOCK } from './i18n-lock';
 import { PROMISES } from './i18n-promises';
@@ -30,6 +34,10 @@ export const DICT = {
   ...CAUSE,
   ...PROMISES,
   ...LOCK,
+  ...STATUS,
+  ...MFA,
+  ...PDFUR,
+  ...CONFLICT,
   ...CHAMBER,
   ...DOCS,
   ...LIBRARY,

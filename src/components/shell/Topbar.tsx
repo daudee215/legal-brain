@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Cloud, CloudOff, Languages, Lock, LogOut, Menu, Moon, RefreshCw, Search, Sun } from 'lucide-react';
+import { Cloud, CloudOff, Languages, Lock, LogOut, Menu, Moon, RefreshCw, Search, ShieldCheck, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { hasUnsyncedChanges } from '../../lib/cloud/sync';
@@ -11,6 +11,7 @@ import { useLang } from '../../lib/i18n';
 import type { Role } from '../../types';
 import { NAV, isActive } from './nav';
 import { AppLockSettings } from './AppLockSettings';
+import { TwoStepSettings } from './TwoStepSettings';
 import { NotificationsMenu } from './Notifications';
 import { useRole } from './RoleProvider';
 import { useCloud } from './CloudProvider';
@@ -132,6 +133,7 @@ function AccountMenu({ initials, name }: { initials: string; name: string }) {
   const { t } = useLang();
   const [open, setOpen] = useState(false);
   const [lockOpen, setLockOpen] = useState(false);
+  const [twoStepOpen, setTwoStepOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -190,12 +192,24 @@ function AccountMenu({ initials, name }: { initials: string; name: string }) {
           >
             <Lock className="h-4 w-4" aria-hidden /> {t('lock.menu')}
           </button>
+          <button
+            role="menuitem"
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              setTwoStepOpen(true);
+            }}
+            className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm text-ink hover:bg-line/50"
+          >
+            <ShieldCheck className="h-4 w-4" aria-hidden /> {t('mfa.menu')}
+          </button>
           <button role="menuitem" type="button" onClick={() => void out()} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm text-danger hover:bg-danger/10">
             <LogOut className="h-4 w-4" aria-hidden /> {t('account.signOut')}
           </button>
         </div>
       )}
       <AppLockSettings open={lockOpen} onClose={() => setLockOpen(false)} />
+      <TwoStepSettings open={twoStepOpen} onClose={() => setTwoStepOpen(false)} />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { chooseChamber, chosenChamber, currentUser, myChambers, signOut as cloudSignOut } from '../../lib/cloud/chamber';
 import { cloudEnabled, supabase } from '../../lib/cloud/client';
+import { needsMfa } from '../../lib/cloud/mfa';
 import { watchPendingUploads } from '../../lib/cloud/storage';
 import { getSyncStatus, startSync, stopSync, subscribeSync, type SyncState } from '../../lib/cloud/sync';
 import { getMode, subscribe } from '../../lib/store';
@@ -13,8 +14,9 @@ import { getMode, subscribe } from '../../lib/store';
  * - choose:      signed in but not in any chamber yet → "create or join a chamber"
  * - unreachable: signed in, no copy on this device yet and the server can't be reached
  * - on:          showing the chamber's shared copy
+ * - mfa:         signed in with a password, but two-step sign-in is on and the code has not been entered yet
  */
-export type CloudView = 'off' | 'loading' | 'choose' | 'unreachable' | 'on';
+export type CloudView = 'off' | 'loading' | 'mfa' | 'choose' | 'unreachable' | 'on';
 
 interface CloudCtx {
   enabled: boolean;
@@ -38,7 +40,7 @@ const OFF: CloudCtx = {
 const Ctx = createContext<CloudCtx | null>(null);
 
 export function CloudProvider({ children }: { children: React.ReactNode }) {
-  const [phase, setPhase] = useState<'off' | 'starting' | 'choose' | 'syncing'>(cloudEnabled ? 'starting' : 'off');
+  const [phase, setPhase] = useState<'off' | 'starting' | 'mfa' | 'choose' | 'syncing'>(cloudEnabled ? 'starting' : 'off');
   const [email, setEmail] = useState('');
   const [sync, setSync] = useState<SyncState>(getSyncStatus());
   const [mode, setMode] = useState(() => (typeof window === 'undefined' ? 'demo' : getMode()));
@@ -55,6 +57,13 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
       return setPhase('off');
     }
     setEmail(u.email);
+    // Two-step sign-in is on but this session has not passed the code yet: stop here, before any chamber data.
+    const mfa = await needsMfa().catch(() => false);
+    if (me !== run.current) return;
+    if (mfa) {
+      if (getSyncStatus().status !== 'off') stopSync();
+      return setPhase('mfa');
+    }
     let id = chosenChamber();
     if (!id) {
       try {
@@ -116,6 +125,7 @@ export function CloudProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<CloudCtx>(() => {
     let view: CloudView = 'off';
     if (phase === 'starting') view = 'loading';
+    else if (phase === 'mfa') view = 'mfa';
     else if (phase === 'choose') view = 'choose';
     else if (phase === 'syncing') {
       if (mode === 'cloud') view = 'on';

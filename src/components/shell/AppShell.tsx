@@ -13,6 +13,7 @@ import { CloudProvider, useCloud } from './CloudProvider';
 import { ChamberSetup, Unreachable } from './CloudGate';
 import { CommandPalette } from './CommandPalette';
 import { DemoBanner } from './DemoBanner';
+import { MfaGate } from './MfaChallenge';
 import { MobileTabBar } from './MobileTabBar';
 import { RoleProvider, useRole } from './RoleProvider';
 import { Sidebar } from './Sidebar';
@@ -191,9 +192,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <CloudProvider>
         <RoleProvider>
           <LanguageProvider>
-            <AppLock>
-              <Shell>{children}</Shell>
-            </AppLock>
+            <MfaGate>
+              <AppLock>
+                <Shell>{children}</Shell>
+              </AppLock>
+            </MfaGate>
           </LanguageProvider>
         </RoleProvider>
       </CloudProvider>

@@ -44,4 +44,33 @@ export const SCAN = {
     en: '{name} saved on this device · will upload when online',
     ur: '{name} اس ڈیوائس پر محفوظ ہے · انٹرنیٹ آنے پر اپ لوڈ ہو جائے گی',
   },
+  // ---- read the next hearing date from a photo (opt-in OCR) ----
+  'scan.ocr.heading': { en: 'Next hearing date', ur: 'اگلی پیشی کی تاریخ' },
+  'scan.ocr.button': { en: 'Read the next date from this photo', ur: 'اس تصویر سے اگلی تاریخ پڑھیں' },
+  'scan.ocr.help': {
+    en: 'Downloads about 10 MB the first time. The photo stays on your phone.',
+    ur: 'پہلی بار تقریباً 10 MB ڈاؤن لوڈ ہوتا ہے۔ تصویر آپ کے فون ہی میں رہتی ہے۔',
+  },
+  'scan.ocr.pageLabel': { en: 'Read from', ur: 'اس صفحے سے پڑھیں' },
+  'scan.ocr.loading': { en: 'Getting the reader ready… {p}%', ur: 'پڑھنے والا ٹول تیار ہو رہا ہے… {p}%' },
+  'scan.ocr.reading': { en: 'Reading the page… {p}%', ur: 'صفحہ پڑھا جا رہا ہے… {p}%' },
+  'scan.ocr.stop': { en: 'Stop reading', ur: 'پڑھنا روکیں' },
+  'scan.ocr.failed': {
+    en: 'Could not read the page. You can still type the date.',
+    ur: 'صفحہ نہیں پڑھا جا سکا۔ آپ تاریخ خود لکھ سکتے ہیں۔',
+  },
+  'scan.ocr.none': {
+    en: 'No next date found on this page. You can type it below.',
+    ur: 'اس صفحے پر اگلی تاریخ نہیں ملی۔ آپ نیچے خود لکھ سکتے ہیں۔',
+  },
+  'scan.ocr.found': { en: 'Dates found on the page. Tap one to use it.', ur: 'صفحے پر یہ تاریخیں ملیں۔ استعمال کے لیے کسی ایک پر ٹیپ کریں۔' },
+  'scan.ocr.plain': { en: 'A date written on the page', ur: 'صفحے پر لکھی ہوئی ایک تاریخ' },
+  'scan.ocr.use': { en: 'Use {date}', ur: '{date} استعمال کریں' },
+  'scan.ocr.dateLabel': { en: 'Or type the date', ur: 'یا تاریخ خود لکھیں' },
+  'scan.ocr.past': { en: 'That date has already passed.', ur: 'یہ تاریخ گزر چکی ہے۔' },
+  'scan.ocr.needCase': { en: 'Choose a case above to set its next hearing.', ur: 'اگلی پیشی مقرر کرنے کے لیے اوپر مقدمہ منتخب کریں۔' },
+  'scan.ocr.set': { en: 'Set next hearing to {date}', ur: 'اگلی پیشی {date} مقرر کریں' },
+  'scan.ocr.setEmpty': { en: 'Set next hearing', ur: 'اگلی پیشی مقرر کریں' },
+  'scan.ocr.done': { en: 'Next hearing of {title} set to {date}', ur: '{title} کی اگلی پیشی {date} مقرر ہو گئی' },
+  'scan.ocr.setFailed': { en: 'Could not find that case. Nothing was changed.', ur: 'یہ مقدمہ نہیں ملا۔ کچھ تبدیل نہیں ہوا۔' },
 } satisfies Record<string, Entry>;

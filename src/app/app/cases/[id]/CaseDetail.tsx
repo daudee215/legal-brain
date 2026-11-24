@@ -1,11 +1,13 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowLeft, CalendarClock, ClipboardCheck, Download, ExternalLink, FileText, Gavel, Loader2, NotebookPen, Plus, UploadCloud, Users, Wallet } from 'lucide-react';
+import { ArrowLeft, CalendarClock, ClipboardCheck, Download, ExternalLink, FileText, Gavel, Link2, Loader2, NotebookPen, Plus, UploadCloud, Users, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { pkr } from '../../../../components/dashboard/widgets';
 import { OutcomeDialog } from '../../../../components/outcome/OutcomeDialog';
+import { StatusLinkDialog } from '../../../../components/cases/StatusLinkDialog';
+import { useLang } from '../../../../lib/i18n';
 import { DeadlinesForCase } from '../../../../components/deadlines/DeadlinesForCase';
 import { ExpensesPanel } from '../../../../components/fees/ExpensesPanel';
 import { PaymentForm } from '../../../../components/fees/PaymentForm';
@@ -33,7 +35,9 @@ function daysBetween(a: string, b: string) {
 }
 
 function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
-  const { role, member } = useRole();
+  const { role, member, cloud } = useRole();
+  const { t: tr } = useLang();
+  const [sharing, setSharing] = useState(false);
   const toast = useToast();
   const seeFees = can(role, 'billing');
   const canUpload = can(role, 'documents.upload');
@@ -152,6 +156,15 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
             >
               Check status on {court.shortName} website <ExternalLink className="h-4 w-4" />
             </a>
+          )}
+          {cloud && can(role, 'cases.edit') && (
+            <button
+              type="button"
+              onClick={() => setSharing(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-ivory px-4 py-2 text-sm font-medium text-night transition hover:-translate-y-0.5"
+            >
+              <Link2 className="h-4 w-4" /> {tr('status.link.button')}
+            </button>
           )}
           {daysToNext !== null && daysToNext >= 0 && (
             <CaseCalendarButton c={c} className="inline-flex items-center gap-2 rounded-lg bg-ivory px-4 py-2 text-sm font-medium text-night transition hover:-translate-y-0.5" />
@@ -513,6 +526,17 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
         )}
       </motion.div>
       {recording && <OutcomeDialog c={c} court={court} client={client} onClose={() => setRecording(false)} />}
+      {sharing && cloud && (
+        <StatusLinkDialog
+          chamberId={db.chamber.id}
+          chamberName={db.chamber.name}
+          caseId={c.id}
+          caseTitle={c.title}
+          clientPhone={client?.phone}
+          notify={toast.show}
+          onClose={() => setSharing(false)}
+        />
+      )}
       {toast.node}
     </div>
   );

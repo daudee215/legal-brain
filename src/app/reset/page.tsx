@@ -7,13 +7,15 @@ import { useEffect, useState } from 'react';
 import { AuthCard } from '../../components/marketing/AuthCard';
 import { Field, FormError, NotConfigured } from '../../components/marketing/AuthBits';
 import { btn } from '../../components/ui';
-import { currentUser, setNewPassword } from '../../lib/cloud/chamber';
+import { MfaChallenge } from '../../components/shell/MfaChallenge';
+import { currentUser, setNewPassword, signOut } from '../../lib/cloud/chamber';
 import { cloudEnabled, friendlyError, supabase } from '../../lib/cloud/client';
+import { needsMfa } from '../../lib/cloud/mfa';
 
 /** Where the emailed reset link lands. The link signs the person in; here they choose a new password. */
 export default function ResetPage() {
   const router = useRouter();
-  const [state, setState] = useState<'checking' | 'ready' | 'invalid'>('checking');
+  const [state, setState] = useState<'checking' | 'mfa' | 'ready' | 'invalid'>('checking');
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
@@ -33,7 +35,9 @@ export default function ResetPage() {
     const ready = (mail: string) => {
       done = true;
       setEmail(mail);
-      setState('ready');
+      // Two-step sign-in on: the code comes first (a new password needs a fully signed-in session).
+      // Deferred: this can run inside the auth callback, which must not call Supabase.
+      setTimeout(() => void needsMfa().catch(() => false).then((m) => setState(m ? 'mfa' : 'ready')), 0);
     };
     const { data } = supabase().auth.onAuthStateChange((_e, session) => {
       if (session?.user) ready(session.user.email ?? '');
@@ -85,6 +89,15 @@ export default function ResetPage() {
             Send a new link
           </Link>
         </div>
+      ) : state === 'mfa' ? (
+        <MfaChallenge
+          email={email}
+          onVerified={() => setState('ready')}
+          onSignOut={async () => {
+            await signOut();
+            router.push('/login/');
+          }}
+        />
       ) : (
         <form className="space-y-4" onSubmit={submit}>
           <Field label="New password" type="password" required minLength={8} autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} hint="At least 8 characters." />

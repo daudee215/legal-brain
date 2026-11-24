@@ -2,6 +2,7 @@
  * - /_next/static/ (hashed, immutable): cache-first.
  * - Page navigations: network-first, falling back to the last cached copy (or the dashboard shell).
  * - Cross-origin requests and non-GET requests are left alone.
+ * - /status/ (public client status links): network only, never cached.
  */
 const VERSION = 'lb-v1';
 const STATIC = `${VERSION}-static`;
@@ -23,6 +24,10 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k))))
+      // drop any status page an older worker may have cached
+      .then(() => caches.open(PAGES))
+      .then((c) => c.keys().then((reqs) => Promise.all(reqs.filter((r) => new URL(r.url).pathname.startsWith('/status')).map((r) => c.delete(r)))))
+      .catch(() => undefined)
       .then(() => self.clients.claim()),
   );
 });
@@ -54,6 +59,8 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  // Client status links are network only: never cached, never served from cache (a revoked link must stop working).
+  if (url.pathname === '/status' || url.pathname.startsWith('/status/')) return;
   if (url.pathname.startsWith('/_next/static/')) {
     event.respondWith(cacheFirst(request));
   } else if (request.mode === 'navigate') {

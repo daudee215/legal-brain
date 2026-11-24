@@ -5,22 +5,14 @@
  */
 import { addDays, pktIso, todayKey } from '../lib/dates';
 import type { Case, Db, FeePayment, Hearing } from '../types';
+import { courts as shippedCourts } from './courts';
 
 const T = todayKey();
 const d = (n: number, hhmm = '09:00') => pktIso(addDays(T, n), hhmm);
 const k = (n: number) => addDays(T, n);
 
-const courts: Db['courts'] = [
-  { id: 'sc', name: 'Supreme Court of Pakistan', shortName: 'SC', level: 'SC', city: 'Islamabad', statusUrl: 'https://www.supremecourt.gov.pk' },
-  { id: 'fcc', name: 'Federal Constitutional Court', shortName: 'FCC', level: 'FCC', city: 'Islamabad', statusUrl: 'https://www.fccp.gov.pk/online-case-information' },
-  { id: 'lhc', name: 'Lahore High Court', shortName: 'LHC', level: 'HC', city: 'Lahore', statusUrl: 'https://www.lhc.gov.pk' },
-  { id: 'ihc', name: 'Islamabad High Court', shortName: 'IHC', level: 'HC', city: 'Islamabad', statusUrl: 'https://www.ihc.gov.pk' },
-  { id: 'shc', name: 'Sindh High Court', shortName: 'SHC', level: 'HC', city: 'Karachi', statusUrl: 'https://sindhhighcourt.gov.pk/causelist.php' },
-  { id: 'cjl', name: 'Civil Courts Lahore', shortName: 'Civil Lhr', level: 'District', city: 'Lahore', statusUrl: 'https://www.lhc.gov.pk' },
-  { id: 'phc', name: 'Peshawar High Court', shortName: 'PHC', level: 'HC', city: 'Peshawar', statusUrl: 'https://www.peshawarhighcourt.gov.pk/app/site/4/p/Causelists_List.html' },
-  { id: 'ict-east', name: 'District Courts Islamabad (East)', shortName: 'ICT East', level: 'District', city: 'Islamabad', statusUrl: 'https://mis.ihc.gov.pk/frmCausLst' },
-  { id: 'ict-west', name: 'District Courts Islamabad (West)', shortName: 'ICT West', level: 'District', city: 'Islamabad', statusUrl: 'https://mis.ihc.gov.pk/frmCausLst' },
-];
+// The courts list lives in its own file so the public status page can use it without the demo data.
+const courts: Db['courts'] = shippedCourts;
 
 const members: Db['chamber']['members'] = [
   { id: 'm1', name: 'Ayesha Khan', email: 'ayesha@example.pk', role: 'senior' },

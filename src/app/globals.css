@@ -1,5 +1,4 @@
-/* Nastaliq for Urdu mode: loaded as a stylesheet because next/font cannot self-host this family. */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400..700&display=swap');
+/* The Nastaliq font for Urdu mode is loaded with a <link> in layout.tsx (an @import here ends up after other rules and is ignored). */
 @import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
