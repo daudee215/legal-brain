@@ -12,6 +12,7 @@ import { CloudProvider, useCloud } from './CloudProvider';
 import { ChamberSetup, Unreachable } from './CloudGate';
 import { CommandPalette } from './CommandPalette';
 import { DemoBanner } from './DemoBanner';
+import { MobileTabBar } from './MobileTabBar';
 import { RoleProvider, useRole } from './RoleProvider';
 import { Sidebar } from './Sidebar';
 import { ThemeProvider } from './ThemeProvider';
@@ -166,7 +167,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <Topbar onMenu={() => setOpen(true)} onSearch={() => setPalette(true)} />
         <DemoBanner />
         <UndoneNotice />
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 lg:px-8 lg:py-8">
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-24 pt-5 lg:px-8 lg:py-8">
           <motion.div
             key={pathname}
             initial={reduce ? false : { opacity: 0, y: 10 }}
@@ -177,6 +178,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           </motion.div>
         </main>
       </div>
+      <MobileTabBar onMenu={() => setOpen(true)} />
       <CommandPalette open={palette} setOpen={setPalette} />
     </div>
   );

@@ -18,6 +18,13 @@ export const DICT = {
   'group.Research': { en: 'Research', ur: 'تحقیق' },
   'group.Office': { en: 'Office', ur: 'دفتر' },
 
+  // Phone tab bar (short labels)
+  'tab./app/': { en: 'Dashboard', ur: 'ڈیش بورڈ' },
+  'tab./app/today/': { en: 'Today', ur: 'آج' },
+  'tab./app/cases/': { en: 'Cases', ur: 'مقدمات' },
+  'tab./app/diary/': { en: 'Diary', ur: 'ڈائری' },
+  'tab.more': { en: 'More', ur: 'مزید' },
+
   // Nav items (English must match nav.ts labels exactly)
   'nav./app/': { en: 'Dashboard', ur: 'ڈیش بورڈ' },
   'nav./app/today/': { en: 'Today', ur: 'آج' },

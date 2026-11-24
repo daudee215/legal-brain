@@ -363,3 +363,36 @@ html.dark[data-accent='teal'] {
   --cream: #0a1213; --paper: #111b1d; --ink: #e6f0f1; --ink-soft: #98aeb1; --bronze: #5fc0c9; --bronze-soft: #9ddde2;
   --line: #1f3235; --night: #0e1a1c; --night-2: #152427; --glow: 95 192 201;
 }
+
+/* Phone comfort: finger-sized targets, no iOS zoom-on-focus, no double-tap delay. */
+@media (pointer: coarse) {
+  button,
+  [role='button'],
+  select,
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+  a.inline-flex {
+    min-height: 44px;
+  }
+  button,
+  a,
+  select,
+  input,
+  label {
+    touch-action: manipulation;
+  }
+  input[type='checkbox'],
+  input[type='radio'] {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+@media (max-width: 1023px) {
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+}

@@ -17,3 +17,20 @@ test('menu button opens the drawer', async ({ page }) => {
   await page.getByRole('button', { name: 'Open menu' }).click();
   await expect(page.getByRole('dialog', { name: 'Menu' }).getByText('Dashboard')).toBeVisible();
 });
+
+test('the phone tab bar jumps between the court-day screens and opens the full menu', async ({ page }) => {
+  await page.goto('/app/');
+  const bar = page.getByRole('navigation', { name: 'Quick' });
+  await expect(bar).toBeVisible();
+  await bar.getByRole('link', { name: 'Cases' }).click();
+  await expect(page).toHaveURL(/\/app\/cases\/?$/);
+  await expect(bar.getByRole('link', { name: 'Cases' })).toHaveAttribute('aria-current', 'page');
+  await bar.getByRole('button', { name: 'Menu' }).click();
+  await expect(page.getByRole('dialog', { name: 'Menu' })).toBeVisible();
+});
+
+test('the phone tab bar is hidden on a desktop-sized screen', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/app/');
+  await expect(page.getByRole('navigation', { name: 'Quick' })).toBeHidden();
+});
