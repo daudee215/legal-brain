@@ -17,6 +17,7 @@ import { Stagger, StaggerItem } from '../../components/motion';
 import { useRole } from '../../components/shell/RoleProvider';
 import { Card, CardTitle } from '../../components/ui';
 import { Loading } from '../../components/ui/Loading';
+import { useLang } from '../../lib/i18n';
 import { addDays, formatPk, pktHour, todayKey } from '../../lib/dates';
 import { nextCourtDay, remindersFor } from '../../lib/reminders';
 import { can } from '../../lib/permissions';
@@ -24,6 +25,7 @@ import { caseStats, feeSummary, hearingLoad, hearingsOn, listCases, listClients,
 import { useData } from '../../lib/useData';
 
 export default function DashboardPage() {
+  const { t: tr } = useLang();
   const { member, role } = useRole();
   const data = useData(async () => {
     const t = todayKey();
@@ -70,9 +72,9 @@ export default function DashboardPage() {
         >
           <BellRing className="h-5 w-5 shrink-0 text-bronze" aria-hidden />
           <span className="min-w-0 flex-1">
-            <b>{remindLeft} client{remindLeft === 1 ? '' : 's'}</b> not yet reminded about their hearing on {formatPk(remindDay)}.
+            {tr('dash.reminded', { n: '', date: formatPk(remindDay) }).split('').flatMap((part, i) => (i === 0 ? [part] : [<b key="n">{remindLeft === 1 ? tr('dash.clientOne') : tr('dash.clientMany', { n: remindLeft })}</b>, part]))}
           </span>
-          <span className="font-medium text-bronze">Send reminders →</span>
+          <span className="font-medium text-bronze">{tr('dash.sendReminders')} <span className="inline-block rtl:rotate-180">→</span></span>
         </Link>
       )}
 

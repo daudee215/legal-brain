@@ -2,7 +2,7 @@ import { Info, type LucideIcon } from 'lucide-react';
 import type { CaseStatus } from '../../types';
 
 export function Card({ className = '', children }: { className?: string; children: React.ReactNode }) {
-  return <section className={`rounded-2xl border border-line bg-paper p-5 shadow-[0_1px_0_rgb(0_0_0/0.02)] transition-shadow duration-300 hover:shadow-lg hover:shadow-bronze/5 ${className}`}>{children}</section>;
+  return <section className={`card-fx rounded-2xl border border-line bg-paper p-5 ${className}`}>{children}</section>;
 }
 
 export function CardTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
@@ -18,12 +18,16 @@ export { PageHeader } from './PageHeader';
 
 export function StatTile({ label, value, hint, icon: Icon }: { label: string; value: string | number; hint?: string; icon?: LucideIcon }) {
   return (
-    <div className="rounded-2xl border border-line bg-paper p-4 transition duration-300 hover:-translate-y-0.5 hover:border-bronze/40 hover:shadow-lg hover:shadow-bronze/10">
+    <div className="card-fx lift rounded-2xl border border-line bg-paper p-4">
       <div className="flex items-center justify-between text-ink-soft">
         <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
-        {Icon && <Icon className="h-4 w-4 text-bronze" aria-hidden />}
+        {Icon && (
+          <span className="chip-bronze grid h-8 w-8 place-items-center rounded-lg">
+            <Icon className="h-4 w-4 text-bronze" aria-hidden />
+          </span>
+        )}
       </div>
-      <p className="mt-2 font-serif text-3xl font-bold">{value}</p>
+      <p className="mt-2 font-serif text-3xl font-bold tabular-nums">{value}</p>
       {hint && <p className="mt-1 text-xs text-ink-soft">{hint}</p>}
     </div>
   );
@@ -39,7 +43,12 @@ const TONES: Record<Tone, string> = {
 };
 
 export function Badge({ tone = 'neutral', children }: { tone?: Tone; children: React.ReactNode }) {
-  return <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${TONES[tone]}`}>{children}</span>;
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ring-current/15 ${TONES[tone]}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" aria-hidden />
+      {children}
+    </span>
+  );
 }
 
 const STATUS_TONE: Record<CaseStatus, Tone> = {
@@ -53,9 +62,25 @@ export function StatusBadge({ status }: { status: CaseStatus }) {
   return <Badge tone={STATUS_TONE[status]}>{status[0].toUpperCase() + status.slice(1)}</Badge>;
 }
 
+/** Small line illustration of the scales of justice, drawn in the brand bronze. */
+function EmptyArt() {
+  return (
+    <svg viewBox="0 0 96 96" className="mx-auto mb-3 h-16 w-16 text-bronze" fill="none" aria-hidden>
+      <circle cx="48" cy="48" r="44" fill="currentColor" opacity="0.08" />
+      <circle cx="48" cy="48" r="44" stroke="currentColor" strokeOpacity="0.25" strokeDasharray="2 5" />
+      <g stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M48 24v44M36 70h24M30 34h36" />
+        <path d="M30 34 21 52a9 9 0 0 0 18 0L30 34ZM66 34l-9 18a9 9 0 0 0 18 0l-9-18Z" fill="currentColor" fillOpacity="0.14" />
+        <circle cx="48" cy="22" r="2.6" fill="currentColor" />
+      </g>
+    </svg>
+  );
+}
+
 export function EmptyState({ title, body, action }: { title: string; body?: string; action?: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-dashed border-line bg-cream/50 px-6 py-10 text-center">
+      <EmptyArt />
       <p className="font-serif text-lg font-semibold">{title}</p>
       {body && <p className="mx-auto mt-1 max-w-sm text-sm text-ink-soft">{body}</p>}
       {action && <div className="mt-4">{action}</div>}
@@ -83,11 +108,11 @@ export function Notice({ children }: { children: React.ReactNode }) {
 
 export const btn = {
   primary:
-    'inline-flex items-center justify-center gap-2 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-cream shadow-sm transition hover:-translate-y-px hover:bg-ink/90 hover:shadow-md active:translate-y-0 disabled:opacity-50',
+    'inline-flex items-center justify-center gap-2 btn-ink rounded-lg bg-ink px-4 py-2 text-sm font-medium text-cream transition hover:-translate-y-px hover:bg-ink/90 active:translate-y-0 disabled:opacity-50',
   bronze:
-    'inline-flex items-center justify-center gap-2 rounded-lg bg-bronze px-4 py-2 text-sm font-medium text-ivory shadow-sm shadow-bronze/30 transition hover:-translate-y-px hover:bg-bronze/90 active:translate-y-0 disabled:opacity-50',
+    'inline-flex items-center justify-center gap-2 btn-bronze rounded-lg bg-bronze px-4 py-2 text-sm font-medium text-ivory transition hover:-translate-y-px active:translate-y-0 disabled:opacity-50',
   ghost:
-    'inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-paper px-4 py-2 text-sm font-medium text-ink transition hover:border-bronze/40 hover:bg-line/40 disabled:opacity-50',
+    'inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-paper px-4 py-2 text-sm font-medium text-ink shadow-[var(--elev-1)] transition hover:-translate-y-px hover:border-bronze/40 hover:bg-line/40 active:translate-y-0 disabled:opacity-50',
 };
 
 export const inputCls =
@@ -104,9 +129,9 @@ export function DataTable<T>({ rows, columns, rowKey, empty }: { rows: T[]; colu
   if (rows.length === 0) return <>{empty ?? <EmptyState title="Nothing here yet" />}</>;
   return (
     <>
-      <div className="hidden overflow-hidden rounded-2xl border border-line bg-paper md:block">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-cream/60 text-xs uppercase tracking-wide text-ink-soft">
+      <div className="card-fx hidden overflow-hidden rounded-2xl border border-line bg-paper md:block">
+        <table className="w-full text-start text-sm">
+          <thead className="bg-cream/70 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-soft">
             <tr>
               {columns.map((c) => (
                 <th key={c.header} className={`px-4 py-3 font-medium ${c.className ?? ''}`}>

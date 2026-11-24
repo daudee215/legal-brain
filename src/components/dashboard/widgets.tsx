@@ -15,9 +15,11 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { formatPk, formatTime, greeting, todayKey, weekday } from '../../lib/dates';
 import type { FeeRow, HearingRow } from '../../lib/repo';
 import type { ActivityItem, Case, CaseCategory, CaseStats, Court } from '../../types';
+import { useLang } from '../../lib/i18n';
 import { CountUp } from '../motion';
 import { IMG } from '../marketing/images';
 import { Card, CardTitle, EmptyState, StatusBadge, btn } from '../ui';
@@ -25,6 +27,27 @@ import { BarList, Ring, Sparkline } from './charts';
 
 export const pkr = (n: number) => `Rs ${n.toLocaleString('en-PK')}`;
 export const pkrShort = (n: number) => (n >= 100000 ? `Rs ${(n / 100000).toFixed(n >= 1000000 ? 1 : 2).replace(/\.?0+$/, '')} lakh` : pkr(n));
+
+/** Live "in 2h 15m" label for the next hearing; falls back to the day count for later dates. */
+function Countdown({ iso }: { iso: string }) {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(id);
+  }, []);
+  if (now === null) return null;
+  const ms = new Date(iso).getTime() - now;
+  let label: string;
+  if (Number.isNaN(ms)) return null;
+  if (ms < 0) return null;
+  else {
+    const mins = Math.round(ms / 60000);
+    const days = Math.floor(mins / 1440);
+    label = days >= 1 ? `In ${days} day${days === 1 ? '' : 's'}` : mins >= 60 ? `In ${Math.floor(mins / 60)}h ${mins % 60}m` : `In ${mins} min`;
+  }
+  return <p className="mt-3 inline-flex rounded-full bg-bronze/25 px-2.5 py-1 text-[11px] font-semibold tabular-nums text-bronze-soft">{label}</p>;
+}
 
 export function WelcomeHero({
   name,
@@ -37,10 +60,12 @@ export function WelcomeHero({
   weekCount: number;
   next?: { case: Case; court?: Court };
 }) {
+  const { t: tr, dir } = useLang();
   const first = name.split(' ')[0];
   const t = todayKey();
-  const todayText =
-    todayCount === 0 ? 'You have no hearings today' : `You have ${todayCount} hearing${todayCount === 1 ? '' : 's'} today`;
+  const todayText = todayCount === 0 ? tr('dash.todayNone') : todayCount === 1 ? tr('dash.todayOne') : tr('dash.todayMany', { n: todayCount });
+  const g = greeting();
+  const greetKey = g === 'Good morning' ? 'dash.goodMorning' : g === 'Good afternoon' ? 'dash.goodAfternoon' : 'dash.goodEvening';
   return (
     <section className="relative isolate overflow-hidden rounded-3xl bg-night p-6 text-ivory shadow-xl shadow-night/20 sm:p-8">
       <div
@@ -49,7 +74,7 @@ export function WelcomeHero({
         aria-hidden
       />
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-night via-night/95 to-night/60" aria-hidden />
-      <div className="pointer-events-none absolute -right-24 -top-24 -z-10 h-72 w-72 rounded-full bg-bronze/30 blur-3xl" aria-hidden />
+      <div className="pointer-events-none absolute -end-24 -top-24 -z-10 h-72 w-72 rounded-full bg-bronze/30 blur-3xl" aria-hidden />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
@@ -62,25 +87,25 @@ export function WelcomeHero({
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="mt-3 text-3xl font-bold leading-tight text-ivory sm:text-4xl"
           >
-            {greeting()},
+            {tr(greetKey)}{dir === 'rtl' ? '،' : ','}
             <br />
-            <span className="bronze-text">Advocate {first}</span>
+            <span className="bronze-text">{tr('dash.advocate', { name: first })}</span>
           </motion.h1>
           <p className="mt-3 max-w-xl text-ivory/75">
-            {todayText} and {weekCount} more coming up this week.
+            {todayText} {tr('dash.week', { n: weekCount })}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/app/cause-list/"
               className="group inline-flex items-center gap-2 rounded-lg bg-ivory px-4 py-2.5 text-sm font-medium text-night shadow-lg transition hover:-translate-y-0.5"
             >
-              Open today&apos;s cause list <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              {tr('dash.openCause')} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
             </Link>
             <Link
               href="/app/assistant/"
               className="inline-flex items-center gap-2 rounded-lg border border-white/25 px-4 py-2.5 text-sm font-medium text-ivory backdrop-blur transition hover:bg-white/10"
             >
-              <Sparkles className="h-4 w-4 text-bronze-soft" /> Ask AI Assistant
+              <Sparkles className="h-4 w-4 text-bronze-soft" /> {tr('dash.ask')}
             </Link>
           </div>
         </div>
@@ -96,7 +121,7 @@ export function WelcomeHero({
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-bronze-soft/70" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-bronze-soft" />
               </span>
-              Next up
+              {tr('dash.nextUp')}
             </p>
             <Link href={`/app/case/?id=${next.case.id}`} className="mt-2 block font-serif text-lg font-semibold leading-snug text-ivory hover:underline">
               {next.case.title}
@@ -105,6 +130,7 @@ export function WelcomeHero({
               {formatPk(next.case.nextHearing!)} · {formatTime(next.case.nextHearing!)} · {next.court?.shortName}
             </p>
             <p className="mt-2 text-xs text-ivory/80">{next.case.stage}</p>
+            <Countdown iso={next.case.nextHearing!} />
           </motion.div>
         )}
       </div>
@@ -135,7 +161,7 @@ export function KpiTile({
     <>
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium uppercase tracking-wide text-ink-soft">{label}</span>
-        <span className="grid h-8 w-8 place-items-center rounded-lg bg-bronze/10 text-bronze transition group-hover:bg-bronze group-hover:text-ivory">
+        <span className="chip-bronze grid h-8 w-8 place-items-center rounded-lg text-bronze transition group-hover:bg-bronze group-hover:text-ivory">
           <Icon className="h-4 w-4" aria-hidden />
         </span>
       </div>
@@ -147,7 +173,7 @@ export function KpiTile({
     </>
   );
   const cls =
-    'group relative block overflow-hidden rounded-2xl border border-line bg-paper p-4 transition duration-300 hover:-translate-y-0.5 hover:border-bronze/40 hover:shadow-xl hover:shadow-bronze/10';
+    'card-fx lift group relative block overflow-hidden rounded-2xl border border-line bg-paper p-4';
   return href ? (
     <Link href={href} className={cls}>
       {body}
@@ -158,29 +184,30 @@ export function KpiTile({
 }
 
 export function TodayHearings({ rows }: { rows: HearingRow[] }) {
+  const { t: tr } = useLang();
   return (
     <Card>
-      <CardTitle action={<Link href="/app/cause-list/" className="text-sm text-bronze hover:underline">Full cause list</Link>}>
-        Today&apos;s hearings
+      <CardTitle action={<Link href="/app/cause-list/" className="text-sm text-bronze hover:underline">{tr('dash.fullCause')}</Link>}>
+        {tr('dash.todaysHearings')}
       </CardTitle>
       {rows.length === 0 ? (
-        <EmptyState title="No hearings today" body="Enjoy the quiet — use it to prepare for the week ahead." />
+        <EmptyState title={tr('dash.noHearings')} body={tr('dash.quiet')} />
       ) : (
-        <ol className="relative space-y-1 before:absolute before:bottom-3 before:left-[4.6rem] before:top-3 before:w-px before:bg-line">
+        <ol className="relative space-y-1 before:absolute before:bottom-3 before:start-[4.6rem] before:top-3 before:w-px before:bg-line">
           {rows.map(({ case: c, court, entry }, i) => (
             <motion.li
               key={c.id}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.08 * i, duration: 0.4 }}
-              className="group relative grid grid-cols-[4rem_1fr] gap-5 rounded-xl py-2.5 pr-2 transition hover:bg-cream/70"
+              className="group relative grid grid-cols-[4rem_1fr] gap-5 rounded-xl py-2.5 pe-2 transition hover:bg-cream/70"
             >
-              <div className="pt-0.5 text-right">
+              <div className="pt-0.5 text-end">
                 <p className="text-sm font-semibold tabular-nums">{c.nextHearing ? formatTime(c.nextHearing) : '—'}</p>
                 <p className="text-[11px] text-ink-soft">{court.shortName}</p>
               </div>
-              <span className="absolute left-[4.6rem] top-4 h-2.5 w-2.5 -translate-x-1/2 rounded-full border-2 border-paper bg-bronze ring-2 ring-bronze/30" aria-hidden />
-              <div className="min-w-0 pl-2">
+              <span className="absolute start-[4.6rem] top-4 h-2.5 w-2.5 -translate-x-1/2 rtl:translate-x-1/2 rounded-full border-2 border-paper bg-bronze ring-2 ring-bronze/30" aria-hidden />
+              <div className="min-w-0 ps-2">
                 <Link href={`/app/case/?id=${c.id}`} className="font-medium leading-snug hover:text-bronze">
                   {c.title}
                 </Link>
@@ -206,9 +233,10 @@ export function TodayHearings({ rows }: { rows: HearingRow[] }) {
 }
 
 export function UpcomingList({ cases, courts }: { cases: Case[]; courts: Court[] }) {
+  const { t: tr } = useLang();
   return (
     <Card>
-      <CardTitle>Next 7 days</CardTitle>
+      <CardTitle>{tr('dash.next7')}</CardTitle>
       {cases.length === 0 ? (
         <EmptyState title="Nothing scheduled" body="No hearings in the coming week." />
       ) : (
@@ -239,10 +267,11 @@ export function UpcomingList({ cases, courts }: { cases: Case[]; courts: Court[]
 }
 
 export function CaseBreakdown({ stats, courts }: { stats: CaseStats; courts: Court[] }) {
+  const { t: tr } = useLang();
   if (stats.total === 0) {
     return (
       <Card>
-        <CardTitle>Your cases</CardTitle>
+        <CardTitle>{tr('dash.yourCases')}</CardTitle>
         <EmptyState
           title="No cases yet"
           body="Add your first case to see it broken down by category, court and status."
@@ -259,7 +288,7 @@ export function CaseBreakdown({ stats, courts }: { stats: CaseStats; courts: Cou
     .map(([id, value]) => ({ label: courts.find((c) => c.id === id)?.shortName ?? id, value }));
   return (
     <Card>
-      <CardTitle action={<Link href="/app/cases/" className="text-sm text-bronze hover:underline">All cases</Link>}>Your cases</CardTitle>
+      <CardTitle action={<Link href="/app/cases/" className="text-sm text-bronze hover:underline">{tr('dash.allCases')}</Link>}>{tr('dash.yourCases')}</CardTitle>
       <div className="mb-5 flex flex-wrap gap-x-4 gap-y-2">
         {(Object.keys(stats.byStatus) as (keyof CaseStats['byStatus'])[]).map((s) =>
           stats.byStatus[s] ? (

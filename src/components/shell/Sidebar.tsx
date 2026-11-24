@@ -35,7 +35,7 @@ export function Sidebar({
     .join('');
 
   return (
-    <nav aria-label="Main" className="relative flex h-full flex-col overflow-hidden bg-night text-ivory">
+    <nav aria-label="Main" className="grain relative flex h-full flex-col overflow-hidden bg-night bg-gradient-to-b from-white/[0.03] to-black/20 text-ivory">
       <div className="pointer-events-none absolute -start-24 -top-24 h-64 w-64 rounded-full bg-bronze/25 blur-3xl" aria-hidden />
       <div className={`relative flex items-center pb-4 pt-5 ${collapsed ? 'justify-center px-2' : 'px-5'}`}>
         <Link href="/" onClick={onNavigate} aria-label="Legal Brain website">

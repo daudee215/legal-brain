@@ -52,7 +52,7 @@ export function NotificationsMenu() {
       >
         <Bell className={`h-5 w-5 ${unread ? 'origin-top animate-wiggle' : ''}`} />
         {unread > 0 && (
-          <span className="absolute right-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] font-bold text-white ring-2 ring-cream">
+          <span className="absolute end-0.5 top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] font-bold text-white ring-2 ring-cream">
             {unread}
           </span>
         )}
@@ -64,7 +64,7 @@ export function NotificationsMenu() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute right-0 top-12 z-50 w-[min(92vw,380px)] origin-top-right overflow-hidden rounded-2xl border border-line bg-paper shadow-2xl shadow-night/20"
+            className="absolute end-0 top-12 z-50 w-[min(92vw,380px)] origin-top-right overflow-hidden rounded-2xl border border-line bg-paper shadow-2xl shadow-night/20"
             role="region"
             aria-label="Notifications"
           >

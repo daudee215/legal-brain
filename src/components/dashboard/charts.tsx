@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
-import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Area, AreaChart, Bar, BarChart, Cell, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { formatPk } from '../../lib/dates';
 
 /** Single-series charts only, all in the brand bronze (theme-aware via CSS variables). */
@@ -39,26 +39,29 @@ function LoadTooltip({ active, payload }: { active?: boolean; payload?: { payloa
   );
 }
 
-/** Cases listed per day across a window, with today marked. */
+/** Cases listed per day across a window: one bar per day, today picked out in ink. */
 export function HearingLoadChart({ data, today }: { data: { date: string; count: number }[]; today: string }) {
   const tick = (d: string) => formatPk(d).split(' ').slice(0, 2).join(' ');
   return (
     <div className="h-56 w-full" role="img" aria-label={`Cases listed per day, ${formatPk(data[0]?.date ?? today)} to ${formatPk(data.at(-1)?.date ?? today)}`}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 10, right: 8, bottom: 0, left: -24 }}>
+        <BarChart data={data} margin={{ top: 14, right: 8, bottom: 0, left: -24 }} barCategoryGap="10%">
           <defs>
-            <linearGradient id="load-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={BRONZE} stopOpacity={0.3} />
-              <stop offset="100%" stopColor={BRONZE} stopOpacity={0.02} />
+            <linearGradient id="load-bar" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={BRONZE} stopOpacity={0.95} />
+              <stop offset="100%" stopColor={BRONZE} stopOpacity={0.45} />
             </linearGradient>
           </defs>
           <CartesianGrid vertical={false} stroke="var(--line)" strokeDasharray="3 4" />
           <XAxis dataKey="date" tickFormatter={tick} tick={{ fill: 'var(--ink-soft)', fontSize: 11 }} axisLine={false} tickLine={false} interval={9} />
           <YAxis allowDecimals={false} tick={{ fill: 'var(--ink-soft)', fontSize: 11 }} axisLine={false} tickLine={false} />
-          <Tooltip content={<LoadTooltip />} cursor={{ stroke: 'var(--ink-soft)', strokeDasharray: '3 3' }} />
-          <ReferenceLine x={today} stroke="var(--ink)" strokeDasharray="4 4" label={{ value: 'Today', position: 'top', fill: 'var(--ink)', fontSize: 11 }} />
-          <Area type="monotone" dataKey="count" stroke={BRONZE} strokeWidth={2} fill="url(#load-fill)" activeDot={{ r: 5, stroke: 'var(--paper)', strokeWidth: 2 }} />
-        </AreaChart>
+          <Tooltip content={<LoadTooltip />} cursor={{ fill: 'rgb(var(--glow) / 0.1)' }} />
+          <Bar dataKey="count" radius={[4, 4, 0, 0]} minPointSize={0} isAnimationActive>
+            {data.map((d) => (
+              <Cell key={d.date} fill={d.date === today ? 'var(--ink)' : d.date < today ? 'var(--bronze-soft)' : 'url(#load-bar)'} />
+            ))}
+          </Bar>
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );
@@ -83,7 +86,7 @@ export function BarList({ rows }: { rows: { label: string; value: number; href?:
               style={reduce ? { width: `${(r.value / max) * 100}%` } : undefined}
             />
           </span>
-          <span className="text-right font-medium tabular-nums">{r.value}</span>
+          <span className="text-end font-medium tabular-nums">{r.value}</span>
         </li>
       ))}
     </ul>

@@ -206,7 +206,7 @@ export function Bento() {
       <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {FEATURES.map(({ icon: Icon, title, body, span, img }, i) => (
           <Reveal key={title} delay={(i % 4) * 0.06} className={span}>
-            <GlowCard className="group relative h-full overflow-hidden rounded-2xl border border-line bg-paper p-6 transition-transform duration-300 hover:-translate-y-1">
+            <GlowCard className="group relative h-full overflow-hidden card-fx rounded-2xl border border-line bg-paper p-6 transition-transform duration-300 hover:-translate-y-1">
               {img && (
                 <div className="absolute inset-y-0 right-0 hidden w-1/2 sm:block" aria-hidden>
                   <Image src={img} alt="" fill sizes="400px" className="object-cover opacity-80 transition duration-700 [filter:sepia(.5)] group-hover:scale-105" />
@@ -345,7 +345,7 @@ export function Pricing() {
             <Reveal key={p.name} delay={i * 0.1}>
               <div
                 className={`relative h-full rounded-3xl border p-8 transition hover:-translate-y-1 ${
-                  p.featured ? 'border-night bg-night text-ivory shadow-2xl shadow-night/30' : 'border-line bg-paper'
+                  p.featured ? 'border-night bg-night text-ivory shadow-2xl shadow-night/30' : 'card-fx border-line bg-paper'
                 }`}
               >
                 {p.featured && <span className="absolute -top-3 left-8 rounded-full bg-bronze px-3 py-1 text-xs font-semibold text-ivory">Most popular</span>}
