@@ -15,6 +15,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Member, Role } from '../../types';
 import { applyRemote, enterCloud, getDb, getMode, leaveCloud, readCloudCache } from '../store';
 import { friendlyError, supabase } from './client';
+import { undoForbidden } from '../roleGuard';
 import { mergeDocs } from './merge';
 import { BILLING_KEYS, composeDb, DATA_KEYS, splitDb, type Half } from './split';
 import { uploadLocalFiles, type BringResult } from './storage';
@@ -95,8 +96,10 @@ export interface SyncState {
   chamberId: string | null;
   /** True when the server says this user is no longer a member of the chamber. */
   removed: boolean;
+  /** Parts of the data whose edits were undone because this role may not change them (cleared when dismissed). */
+  undone: string[];
 }
-let state: SyncState = { status: 'off', error: '', chamberId: null, removed: false };
+let state: SyncState = { status: 'off', error: '', chamberId: null, removed: false, undone: [] };
 const syncListeners = new Set<() => void>();
 function setState(p: Partial<SyncState>) {
   state = { ...state, ...p };
@@ -331,6 +334,15 @@ async function push(): Promise<void> {
     for (let attempt = 0; ; attempt++) {
       if (attempt >= MAX_TRIES) throw new Error('Could not save after several tries — someone else is editing a lot. Will try again shortly.');
       const local = localHalves();
+      // The server refuses edits a role may not make; undo them here first so the rest of the save goes through.
+      if (cur.me && cur.me.role !== 'senior') {
+        const { data, undone } = undoForbidden(cur.me.role, cur.base.data, local.data);
+        if (undone.length) {
+          local.data = data as Half;
+          show(local.data, local.billing);
+          setState({ undone: [...new Set([...state.undone, ...undone])] });
+        }
+      }
       const kinds: Kind[] = [];
       if (!same(local.data, cur.base.data)) kinds.push('data');
       if (isSenior() && local.billing && !same(local.billing, cur.base.billing)) kinds.push('billing');
@@ -433,7 +445,7 @@ export async function startSync(chamberId: string, opts: { backend?: Backend } =
     stopped: false,
   };
   s = cur;
-  setState({ status: 'loading', error: '', chamberId, removed: false });
+  setState({ status: 'loading', error: '', chamberId, removed: false, undone: [] });
 
   const cached = readCloudCache();
   if (cached && cached.chamber.id === chamberId && readMeta(chamberId)) enterCloud(cached, onLocalChange);
@@ -494,7 +506,7 @@ export function stopSync() {
   teardown();
   clearMeta();
   leaveCloud();
-  setState({ status: 'off', error: '', chamberId: null, removed: false });
+  setState({ status: 'off', error: '', chamberId: null, removed: false, undone: [] });
 }
 
 /**
@@ -517,4 +529,9 @@ export async function uploadLocal(
   const v2 = await be.saveDoc(chamberId, 'billing', billing, 1);
   if (v1 === -1 || v2 === -1) throw new Error('The new chamber already has data — nothing was copied.');
   return files;
+}
+
+/** The person has seen the "some changes were undone" notice. */
+export function dismissUndone() {
+  setState({ undone: [] });
 }

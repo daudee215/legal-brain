@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { dismissUndone } from '../../lib/cloud/sync';
 import { LanguageProvider, useLang } from '../../lib/i18n';
 import type { Role } from '../../types';
 import { Loading } from '../ui/Loading';
@@ -37,6 +38,36 @@ function MobileRoleSwitch() {
         ))}
       </select>
     </label>
+  );
+}
+
+const PART_NAME: Record<string, string> = {
+  cases: 'cases',
+  clients: 'clients',
+  causeList: 'the cause list',
+  deadlines: 'deadlines',
+  diary: 'the diary',
+  notifications: 'reminders',
+  docs: 'documents',
+  books: 'law books',
+  precedents: 'precedents',
+  settings: 'chamber settings',
+};
+
+/** Shown when the server rules said a change was not allowed for this person's role, so it was undone. */
+function UndoneNotice() {
+  const { sync } = useCloud();
+  if (!sync.undone.length) return null;
+  const parts = sync.undone.map((k) => PART_NAME[k] ?? k).join(', ');
+  return (
+    <div role="alert" className="flex items-start gap-3 border-b border-bronze/30 bg-bronze/10 px-4 py-2.5 text-sm">
+      <span className="min-w-0 flex-1">
+        Some changes to <strong>{parts}</strong> were not saved, because your role in this chamber does not allow them. Ask the senior advocate if you need that access.
+      </span>
+      <button className="shrink-0 font-medium text-bronze hover:underline" onClick={dismissUndone}>
+        Dismiss
+      </button>
+    </div>
   );
 }
 
@@ -134,6 +165,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col overflow-x-clip">
         <Topbar onMenu={() => setOpen(true)} onSearch={() => setPalette(true)} />
         <DemoBanner />
+        <UndoneNotice />
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 lg:px-8 lg:py-8">
           <motion.div
             key={pathname}

@@ -30,7 +30,7 @@ const OFF: CloudCtx = {
   enabled: false,
   view: 'off',
   email: '',
-  sync: { status: 'off', error: '', chamberId: null, removed: false },
+  sync: { status: 'off', error: '', chamberId: null, removed: false, undone: [] },
   restart: () => {},
   signOut: async () => {},
 };

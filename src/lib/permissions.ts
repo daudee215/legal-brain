@@ -43,11 +43,16 @@ export function setCustomAccess(map: Partial<Record<Role, Action[]>> | null | un
   custom = map && Object.keys(map).length ? map : null;
 }
 
-/** What a role may do right now: the senior's customisation if there is one, else the defaults. */
-export function accessFor(role: Role): ReadonlySet<Action> {
+/** What a role may do given a set of customisations (the senior's saved settings), else the defaults. */
+export function accessOf(role: Role, customised?: Partial<Record<Role, Action[]>> | null): ReadonlySet<Action> {
   if (role === 'senior') return new Set(ALL_ACTIONS);
-  const base = custom?.[role] ?? DEFAULT_ACCESS[role];
+  const base = customised?.[role] ?? DEFAULT_ACCESS[role];
   return new Set(base.filter((a) => !SENIOR_ONLY.includes(a)));
+}
+
+/** What a role may do right now on this device. */
+export function accessFor(role: Role): ReadonlySet<Action> {
+  return accessOf(role, custom);
 }
 
 export function can(role: Role, action: Action): boolean {

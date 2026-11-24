@@ -168,3 +168,21 @@ function stopSyncKeepingCache() {
   stopSync();
   if (meta) window.localStorage.setItem('lb.cloud.meta.v1', meta);
 }
+
+describe('role rules in sync', () => {
+  it('a clerk\u2019s forbidden edit is undone and never sent, while an allowed one is saved', async () => {
+    const srv = fakeServer('clerk');
+    await startSync('c1', { backend: srv.be });
+    updateDb((db) => {
+      db.cases.push(kase('NEW'));
+      db.diary.push({ id: 'd1', date: '2026-11-24T10:00:00Z', text: 'Spoke to client', authorId: 'u1' });
+    });
+    await vi.advanceTimersByTimeAsync(800);
+
+    expect(ids(srv.rows.data.data)).toEqual(['A']);
+    expect((srv.rows.data.data.diary as unknown[]).length).toBe(1);
+    expect(getDb().cases.map((c) => c.id)).toEqual(['A']);
+    expect(getSyncStatus().undone).toEqual(['cases']);
+    expect(getSyncStatus().status).toBe('saved');
+  });
+});
