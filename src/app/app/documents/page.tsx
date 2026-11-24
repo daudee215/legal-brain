@@ -13,6 +13,7 @@ import { can } from '../../../lib/permissions';
 import { getMode } from '../../../lib/store';
 import { snapshot, type Snapshot } from '../../../lib/repo';
 import { useData } from '../../../lib/useData';
+import { useLang } from '../../../lib/i18n';
 import { Loading } from '../../../components/ui/Loading';
 import type { DocFile } from '../../../types';
 import { tooBigMessage } from '../../../lib/cloud/storage';
@@ -39,6 +40,7 @@ function Highlight({ text, q }: { text: string; q: string }) {
 function DocumentsPageBody({ db }: { db: Snapshot }) {
   const { role, member } = useRole();
   const toast = useToast();
+  const { t } = useLang();
   const [folder, setFolder] = useState('All');
   const [over, setOver] = useState(false);
   const [upFolder, setUpFolder] = useState('Pleadings');
@@ -53,6 +55,8 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
   const canUpload = can(role, 'documents.upload');
   const inCloud = getMode() === 'cloud';
   const { open, download, fetching } = useDocFile(toast);
+  // Folder names are stored as data in English; only the label shown is translated.
+  const folderLabel = (f: string) => t(`docs.folder.${f}`, undefined, f);
 
   useEffect(() => {
     if (q.trim().length < 2) {
@@ -60,14 +64,14 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
       return;
     }
     let alive = true;
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       searchDocs(files, q, { fetchMissing: inCloud }).then((h) => {
         if (alive) setHits(h);
       });
     }, 250);
     return () => {
       alive = false;
-      clearTimeout(t);
+      clearTimeout(timer);
     };
   }, [q, db.docs, inCloud]);
 
@@ -86,7 +90,11 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
     let indexed = 0;
     let pending = 0;
     for (const [i, f] of ok.entries()) {
-      const label = `${inCloud ? 'Uploading' : 'Saving'} ${f.name} (${i + 1} of ${ok.length})`;
+      const label = t(
+        inCloud ? 'docs.uploading' : 'docs.saving',
+        { name: f.name, i: i + 1, n: ok.length },
+        `${inCloud ? 'Uploading' : 'Saving'} ${f.name} (${i + 1} of ${ok.length})`,
+      );
       setBusy(`${label}…`);
       try {
         const r = await uploadDocument(f, { folder: upFolder, caseId: upCase || undefined, uploadedBy: member.id }, (p) => setBusy(`${label} · ${Math.round(p * 100)}%`));
@@ -94,36 +102,41 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
         if (r.pages) indexed++;
         if (r.shared === 'pending') pending++;
       } catch (e) {
-        errors.push(e instanceof Error ? e.message : `Could not save ${f.name}.`);
+        errors.push(e instanceof Error ? e.message : t('docs.couldNotSave', { name: f.name }, `Could not save ${f.name}.`));
       }
     }
     setBusy(null);
     setError(errors.length ? errors.join(' ') : null);
     if (!done) return;
-    const what = `${done} file${done === 1 ? '' : 's'}`;
-    const searchable = indexed ? ` · ${indexed} PDF${indexed === 1 ? '' : 's'} searchable` : '';
-    if (!inCloud) toast.show(`${what} saved${searchable}`);
-    else if (pending) toast.show(`${what} saved on this device · ${pending} not yet uploaded — will retry when online`);
-    else toast.show(`${what} shared with your chamber${searchable}`);
+    const what = t('docs.nFiles', { n: done, s: done === 1 ? '' : 's' }, `${done} file${done === 1 ? '' : 's'}`);
+    const searchable = indexed
+      ? t('docs.nPdfsSearchable', { n: indexed, s: indexed === 1 ? '' : 's' }, ` · ${indexed} PDF${indexed === 1 ? '' : 's'} searchable`)
+      : '';
+    if (!inCloud) toast.show(t('docs.toastSaved', { what, searchable }, `${what} saved${searchable}`));
+    else if (pending) toast.show(t('docs.toastPending', { what, pending }, `${what} saved on this device · ${pending} not yet uploaded — will retry when online`));
+    else toast.show(t('docs.toastShared', { what, searchable }, `${what} shared with your chamber${searchable}`));
   }
 
   async function remove(d: DocFile) {
-    const where = inCloud ? 'for everyone in your chamber' : 'from this device';
-    if (!window.confirm(`Delete "${d.name}" ${where}? This cannot be undone.`)) return;
+    const where = inCloud ? t('docs.whereCloud', undefined, 'for everyone in your chamber') : t('docs.whereLocal', undefined, 'from this device');
+    if (!window.confirm(t('docs.confirmDelete', { name: d.name, where }, `Delete "${d.name}" ${where}? This cannot be undone.`))) return;
     await removeDocument(d);
-    toast.show('File deleted');
+    toast.show(t('docs.fileDeleted', undefined, 'File deleted'));
   }
 
   const iconBtn = 'rounded-lg p-1.5 text-ink-soft transition hover:bg-line/50 hover:text-ink';
 
   return (
     <>
-      <PageHeader title="Documents" subtitle="Pleadings, orders and evidence for every case." />
+      <PageHeader title={t('docs.title', undefined, 'Documents')} subtitle={t('docs.subtitle', undefined, 'Pleadings, orders and evidence for every case.')} />
       <p className="mb-6 inline-flex items-center gap-2 rounded-full bg-ok/10 px-3 py-1 text-sm text-ok">
-        <Lock className="h-4 w-4" /> {inCloud ? 'Shared privately with your chamber · a copy stays on this device for offline use' : 'Stored privately on this device'}
+        <Lock className="h-4 w-4" />{' '}
+        {inCloud
+          ? t('docs.lockCloud', undefined, 'Shared privately with your chamber · a copy stays on this device for offline use')
+          : t('docs.lockLocal', undefined, 'Stored privately on this device')}
       </p>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
-        <nav aria-label="Folders" className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
+        <nav aria-label={t('docs.folders', undefined, 'Folders')} className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
           {FOLDERS.map((f) => {
             const n = f === 'All' ? files.length : files.filter((d) => d.folder === f).length;
             return (
@@ -137,7 +150,7 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
                 className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm ${folder === f ? 'bg-night text-ivory' : 'bg-paper hover:bg-line/50'}`}
               >
                 <Folder className="h-4 w-4" />
-                <span className="flex-1 text-left">{f}</span>
+                <span className="flex-1 text-start">{folderLabel(f)}</span>
                 <span className="text-xs opacity-70">{n}</span>
               </button>
             );
@@ -145,30 +158,30 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
         </nav>
         <div className="min-w-0 space-y-4">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-soft" />
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-soft" />
             <input
               type="search"
-              className={`${inputCls} pl-9`}
-              placeholder="Search inside your PDFs — e.g. “489-F” or a party name"
+              className={`${inputCls} ps-9`}
+              placeholder={t('docs.searchPlaceholder', undefined, 'Search inside your PDFs — e.g. “489-F” or a party name')}
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              aria-label="Search inside PDFs"
+              aria-label={t('docs.searchAria', undefined, 'Search inside PDFs')}
             />
           </div>
           {hits && (
             <div className="rounded-2xl border border-line bg-paper p-4">
               <p className="mb-2 text-xs uppercase tracking-wide text-ink-soft">
-                {hits.length} result{hits.length === 1 ? '' : 's'} inside uploaded PDFs
+                {t('docs.results', { n: hits.length, s: hits.length === 1 ? '' : 's' }, `${hits.length} result${hits.length === 1 ? '' : 's'} inside uploaded PDFs`)}
               </p>
               {hits.length === 0 ? (
-                <p className="text-sm text-ink-soft">No matches. Only PDFs you uploaded (with selectable text) are searchable.</p>
+                <p className="text-sm text-ink-soft">{t('docs.noMatches', undefined, 'No matches. Only PDFs you uploaded (with selectable text) are searchable.')}</p>
               ) : (
                 <ul className="divide-y divide-line">
                   {hits.slice(0, 50).map((h) => (
                     <li key={`${h.doc.id}-${h.page}`} className="py-2.5">
                       <button type="button" onClick={() => void open(h.doc)} className="inline-flex items-center gap-2 text-sm font-medium hover:text-bronze">
                         <FileText className="h-4 w-4 text-bronze" /> {h.doc.name}
-                        <Badge tone="bronze">p. {h.page}</Badge>
+                        <Badge tone="bronze">{t('docs.page', { page: h.page }, `p. ${h.page}`)}</Badge>
                       </button>
                       <p className="mt-1 text-sm text-ink-soft">
                         <Highlight text={h.snippet} q={q} />
@@ -200,9 +213,9 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
               ) : (
                 <>
                   <UploadCloud className="mx-auto h-8 w-8 text-bronze" />
-                  <p className="mt-2 text-sm font-medium">Drag files here to upload</p>
+                  <p className="mt-2 text-sm font-medium">{t('docs.drag', undefined, 'Drag files here to upload')}</p>
                   <label className="mt-1 inline-block cursor-pointer text-sm text-bronze hover:underline">
-                    or choose files
+                    {t('docs.choose', undefined, 'or choose files')}
                     <input
                       type="file"
                       multiple
@@ -215,19 +228,21 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
                   </label>
                 </>
               )}
-              <div className="mx-auto mt-4 grid max-w-md gap-2 text-left text-sm sm:grid-cols-2">
+              <div className="mx-auto mt-4 grid max-w-md gap-2 text-start text-sm sm:grid-cols-2">
                 <label>
-                  <span className="mb-1 block text-xs text-ink-soft">Folder</span>
+                  <span className="mb-1 block text-xs text-ink-soft">{t('docs.folderLabel', undefined, 'Folder')}</span>
                   <select className={inputCls} value={upFolder} onChange={(e) => setUpFolder(e.target.value)}>
                     {FOLDERS.slice(1).map((f) => (
-                      <option key={f}>{f}</option>
+                      <option key={f} value={f}>
+                        {folderLabel(f)}
+                      </option>
                     ))}
                   </select>
                 </label>
                 <label>
-                  <span className="mb-1 block text-xs text-ink-soft">Case (optional)</span>
+                  <span className="mb-1 block text-xs text-ink-soft">{t('docs.caseOptional', undefined, 'Case (optional)')}</span>
                   <select className={inputCls} value={upCase} onChange={(e) => setUpCase(e.target.value)}>
-                    <option value="">— none —</option>
+                    <option value="">{t('docs.none', undefined, '— none —')}</option>
                     {db.cases.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.title}
@@ -237,7 +252,10 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
                 </label>
               </div>
               <p className="mt-2 text-xs text-ink-soft">
-                {inCloud ? 'Files are shared with your chamber (up to 25 MB each).' : 'Files are kept on this device.'} PDFs with text become searchable.
+                {inCloud
+                  ? t('docs.hintCloud', undefined, 'Files are shared with your chamber (up to 25 MB each).')
+                  : t('docs.hintLocal', undefined, 'Files are kept on this device.')}{' '}
+                {t('docs.hintPdf', undefined, 'PDFs with text become searchable.')}
               </p>
               {error && <p className="mt-2 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
             </div>
@@ -245,20 +263,20 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
           <DataTable
             rows={rows}
             rowKey={(d) => d.id}
-            empty={<EmptyState title="This folder is empty" />}
+            empty={<EmptyState title={t('docs.emptyFolder', undefined, 'This folder is empty')} />}
             columns={[
               {
-                header: 'Name',
+                header: t('docs.colName', undefined, 'Name'),
                 cell: (d) => (
                   <span className="inline-flex flex-wrap items-center gap-2 font-medium">
                     <FileText className="h-4 w-4 shrink-0 text-bronze" /> <span className="break-all">{d.name}</span>
-                    {!hasFile(d) && <Badge>demo file</Badge>}
+                    {!hasFile(d) && <Badge>{t('docs.demoFile', undefined, 'demo file')}</Badge>}
                     <UploadBadge doc={d} />
                   </span>
                 ),
               },
               {
-                header: 'Case',
+                header: t('docs.colCase', undefined, 'Case'),
                 cell: (d) => {
                   const c = db.cases.find((x) => x.id === d.caseId);
                   return c ? (
@@ -270,9 +288,9 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
                   );
                 },
               },
-              { header: 'Size', cell: (d) => size(d.sizeKb) },
+              { header: t('docs.colSize', undefined, 'Size'), cell: (d) => size(d.sizeKb) },
               {
-                header: 'Uploaded',
+                header: t('docs.colUploaded', undefined, 'Uploaded'),
                 cell: (d) => (
                   <span className="whitespace-nowrap text-ink-soft">
                     {formatPk(d.uploadedOn)} · {db.chamber.members.find((m) => m.id === d.uploadedBy)?.name.split(' ')[0]}
@@ -280,19 +298,25 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
                 ),
               },
               {
-                header: 'Actions',
+                header: t('docs.colActions', undefined, 'Actions'),
                 cell: (d) =>
                   hasFile(d) ? (
                     <span className="inline-flex gap-1">
-                      <button type="button" className={iconBtn} onClick={() => void open(d)} aria-label={`Open ${d.name}`} title="Open">
+                      <button
+                        type="button"
+                        className={iconBtn}
+                        onClick={() => void open(d)}
+                        aria-label={t('docs.openFile', { name: d.name }, `Open ${d.name}`)}
+                        title={t('docs.open', undefined, 'Open')}
+                      >
                         {fetching === d.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
                       </button>
                       <button
                         type="button"
                         className={iconBtn}
                         onClick={() => void download(d)}
-                        aria-label={`Download ${d.name}`}
-                        title="Download"
+                        aria-label={t('docs.downloadFile', { name: d.name }, `Download ${d.name}`)}
+                        title={t('docs.download', undefined, 'Download')}
                       >
                         <Download className="h-4 w-4" />
                       </button>
@@ -301,8 +325,8 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
                           type="button"
                           className={`${iconBtn} hover:bg-danger/10 hover:text-danger`}
                           onClick={() => void remove(d)}
-                          aria-label={`Delete ${d.name}`}
-                          title="Delete"
+                          aria-label={t('docs.deleteFile', { name: d.name }, `Delete ${d.name}`)}
+                          title={t('docs.delete', undefined, 'Delete')}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

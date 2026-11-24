@@ -11,7 +11,16 @@ export interface Entry {
   ur: string;
 }
 
+import { CHAMBER } from './i18n-chamber';
+import { DOCS } from './i18n-docs';
+import { LIBRARY } from './i18n-library';
+import { STUDIO } from './i18n-studio';
+
 export const DICT = {
+  ...STUDIO,
+  ...CHAMBER,
+  ...DOCS,
+  ...LIBRARY,
   // Sidebar groups
   'group.Overview': { en: 'Overview', ur: 'جائزہ' },
   'group.Practice': { en: 'Practice', ur: 'پریکٹس' },

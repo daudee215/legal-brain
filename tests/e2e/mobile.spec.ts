@@ -34,3 +34,14 @@ test('the phone tab bar is hidden on a desktop-sized screen', async ({ page }) =
   await page.goto('/app/');
   await expect(page.getByRole('navigation', { name: 'Quick' })).toBeHidden();
 });
+
+for (const path of ['/app/studio/', '/app/chamber/', '/app/documents/', '/app/library/']) {
+  test(`Urdu: ${path} renders RTL with Urdu text and no sideways scroll`, async ({ page }) => {
+    await page.addInitScript(() => window.localStorage.setItem('lb.lang', 'ur'));
+    await page.goto(path, { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(page.locator('h1').first()).toBeVisible();
+    expect(await page.locator('main').innerText()).toMatch(/[؀-ۿ]/);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  });
+}

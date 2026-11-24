@@ -10,6 +10,7 @@ import { createInvite, inviteLink, leaveChamber, listInvites, removeMember, revo
 import { friendlyError } from '../../../lib/cloud/client';
 import { refreshSync } from '../../../lib/cloud/sync';
 import { formatPk } from '../../../lib/dates';
+import { useLang } from '../../../lib/i18n';
 import { ROLE_LABEL } from '../../../lib/permissions';
 import type { Snapshot } from '../../../lib/repo';
 import type { Member, Role } from '../../../types';
@@ -26,12 +27,12 @@ async function copy(text: string): Promise<boolean> {
   }
 }
 
-function shareText(chamber: string, role: Role, link: string) {
-  return `You're invited to join ${chamber} on Legal Brain as ${ROLE_LABEL[role]}. Open this link to join: ${link}`;
-}
-
 /** Chamber page when signed in to a shared chamber: real members and invite links. */
 export function CloudChamber({ db, matrix }: { db: Snapshot; matrix: React.ReactNode }) {
+  const { t } = useLang();
+  const roleName = (r: Role) => t(`role.${r}`, undefined, ROLE_LABEL[r]);
+  const shareText = (chamber: string, role: Role, link: string) =>
+    t('chamber.shareText', { chamber, role: roleName(role), link }, "You're invited to join {chamber} on Legal Brain as {role}. Open this link to join: {link}");
   const toast = useToast();
   const cloud = useCloud();
   const me = db.me;
@@ -87,22 +88,24 @@ export function CloudChamber({ db, matrix }: { db: Snapshot; matrix: React.React
     }
   };
 
-  const copyLink = async (code: string) => toast.show((await copy(inviteLink(code))) ? 'Invite link copied' : 'Select the link and copy it');
+  const copyLink = async (code: string) => toast.show((await copy(inviteLink(code))) ? t('chamber.linkCopied', undefined, 'Invite link copied') : t('chamber.linkSelectCopy', undefined, 'Select the link and copy it'));
 
   const leave = () => {
     if (senior && seniors === 1 && members.length > 1) {
-      setErr('You are the only senior. Make another member senior before leaving, so someone can still manage the chamber.');
+      setErr(t('chamber.leaveOnlySenior', undefined, 'You are the only senior. Make another member senior before leaving, so someone can still manage the chamber.'));
       return;
     }
     setConfirm({
-      title: `Leave ${db.chamber.name}?`,
+      title: t('chamber.leaveConfirmTitle', { chamber: db.chamber.name }, 'Leave {chamber}?'),
       body: (
         <>
-          <p>You will stop seeing this chamber’s cases on every device. A senior can invite you again later.</p>
-          {members.length === 1 && <p className="text-danger">You are the last member — nobody will be able to open this chamber after you leave.</p>}
+          <p>{t('chamber.leaveConfirmBody', undefined, 'You will stop seeing this chamber’s cases on every device. A senior can invite you again later.')}</p>
+          {members.length === 1 && (
+            <p className="text-danger">{t('chamber.leaveLastMember', undefined, 'You are the last member — nobody will be able to open this chamber after you leave.')}</p>
+          )}
         </>
       ),
-      confirm: 'Leave chamber',
+      confirm: t('chamber.leave', undefined, 'Leave chamber'),
       danger: true,
       run: () =>
         void (async () => {
@@ -118,7 +121,10 @@ export function CloudChamber({ db, matrix }: { db: Snapshot; matrix: React.React
 
   return (
     <>
-      <PageHeader title={db.chamber.name} subtitle="Your chamber — members share cases, dates and documents. Fees are visible to seniors only." />
+      <PageHeader
+        title={db.chamber.name}
+        subtitle={t('chamber.subtitleCloud', undefined, 'Your chamber — members share cases, dates and documents. Fees are visible to seniors only.')}
+      />
       {err && (
         <p role="alert" className="mb-4 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">
           {err}
@@ -131,33 +137,38 @@ export function CloudChamber({ db, matrix }: { db: Snapshot; matrix: React.React
             rowKey={(m) => m.id}
             columns={[
               {
-                header: 'Member',
+                header: t('chamber.col.member', undefined, 'Member'),
                 cell: (m) => (
                   <span className="font-medium">
                     {m.name}
-                    {m.id === me.id && <span className="ms-1 text-xs font-normal text-ink-soft">(you)</span>}
+                    {m.id === me.id && <span className="ms-1 text-xs font-normal text-ink-soft">{t('chamber.you', undefined, '(you)')}</span>}
                   </span>
                 ),
               },
-              { header: 'Email', cell: (m) => <span className="text-ink-soft">{m.email}</span> },
+              { header: t('chamber.col.email', undefined, 'Email'), cell: (m) => <span className="text-ink-soft">{m.email}</span> },
               {
-                header: 'Role',
+                header: t('chamber.col.role', undefined, 'Role'),
                 cell: (m) =>
                   senior && m.id !== me.id ? (
                     <select
                       className="rounded-lg border border-line bg-paper px-2 py-1 text-sm"
-                      aria-label={`Role of ${m.name}`}
+                      aria-label={t('chamber.roleOf', { name: m.name }, 'Role of {name}')}
                       value={m.role}
-                      onChange={(e) => void act(() => setMemberRole(chamberId, m.id, e.target.value as Role), `${m.name} is now ${ROLE_LABEL[e.target.value as Role]}`)}
+                      onChange={(e) =>
+                        void act(
+                          () => setMemberRole(chamberId, m.id, e.target.value as Role),
+                          t('chamber.nowRole', { name: m.name, role: roleName(e.target.value as Role) }, '{name} is now {role}'),
+                        )
+                      }
                     >
                       {ROLES.map((r) => (
                         <option key={r} value={r}>
-                          {ROLE_LABEL[r]}
+                          {roleName(r)}
                         </option>
                       ))}
                     </select>
                   ) : (
-                    <Badge tone={tone(m.role)}>{ROLE_LABEL[m.role]}</Badge>
+                    <Badge tone={tone(m.role)}>{roleName(m.role)}</Badge>
                   ),
               },
               {
@@ -167,15 +178,15 @@ export function CloudChamber({ db, matrix }: { db: Snapshot; matrix: React.React
                     <button
                       type="button"
                       className="rounded p-1.5 text-ink-soft hover:bg-danger/10 hover:text-danger"
-                      aria-label={`Remove ${m.name}`}
-                      title="Remove from chamber"
+                      aria-label={t('chamber.removeAria', { name: m.name }, 'Remove {name}')}
+                      title={t('chamber.removeTitle', undefined, 'Remove from chamber')}
                       onClick={() =>
                         setConfirm({
-                          title: `Remove ${m.name}?`,
-                          body: <p>{m.name} will immediately lose access to this chamber’s cases on every device.</p>,
-                          confirm: 'Remove member',
+                          title: t('chamber.removeConfirmTitle', { name: m.name }, 'Remove {name}?'),
+                          body: <p>{t('chamber.removeBody', { name: m.name }, '{name} will immediately lose access to this chamber’s cases on every device.')}</p>,
+                          confirm: t('chamber.removeConfirm', undefined, 'Remove member'),
                           danger: true,
-                          run: () => void act(() => removeMember(chamberId, m.id), `${m.name} removed`),
+                          run: () => void act(() => removeMember(chamberId, m.id), t('chamber.removed', { name: m.name }, '{name} removed')),
                         })
                       }
                     >
@@ -193,33 +204,48 @@ export function CloudChamber({ db, matrix }: { db: Snapshot; matrix: React.React
             <Card>
               <CardTitle>
                 <span className="inline-flex items-center gap-2">
-                  <UserPlus className="h-5 w-5 text-bronze" /> Invite a member
+                  <UserPlus className="h-5 w-5 text-bronze" /> {t('chamber.invite.title', undefined, 'Invite a member')}
                 </span>
               </CardTitle>
               <form className="space-y-3" onSubmit={makeInvite}>
                 <label className="block text-sm">
-                  <span className="mb-1 block font-medium">Role</span>
+                  <span className="mb-1 block font-medium">{t('chamber.field.role', undefined, 'Role')}</span>
                   <select className={inputCls} value={newRole} onChange={(e) => setNewRole(e.target.value as Role)}>
-                    <option value="junior">Junior</option>
-                    <option value="clerk">Clerk</option>
-                    <option value="senior">Senior (co-owner)</option>
+                    <option value="junior">{t('chamber.roleJunior', undefined, 'Junior')}</option>
+                    <option value="clerk">{t('chamber.roleClerk', undefined, 'Clerk')}</option>
+                    <option value="senior">{t('chamber.roleSeniorCo', undefined, 'Senior (co-owner)')}</option>
                   </select>
                 </label>
                 <label className="block text-sm">
-                  <span className="mb-1 block font-medium">Note (optional)</span>
-                  <input className={inputCls} placeholder="e.g. for Bilal" maxLength={80} value={note} onChange={(e) => setNote(e.target.value)} />
+                  <span className="mb-1 block font-medium">{t('chamber.note', undefined, 'Note (optional)')}</span>
+                  <input
+                    className={inputCls}
+                    placeholder={t('chamber.notePlaceholder', undefined, 'e.g. for Bilal')}
+                    maxLength={80}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                  />
                 </label>
                 <button type="submit" disabled={busy} className={`${btn.primary} w-full`}>
-                  <Link2 className="h-4 w-4" aria-hidden /> {busy ? 'Creating…' : 'Create invite link'}
+                  <Link2 className="h-4 w-4" aria-hidden /> {busy ? t('chamber.creating', undefined, 'Creating…') : t('chamber.createLink', undefined, 'Create invite link')}
                 </button>
               </form>
               {made && (
                 <div className="mt-4 space-y-2 rounded-xl border border-bronze/30 bg-bronze/10 p-3">
-                  <p className="text-xs font-medium">Send this link to your {ROLE_LABEL[made.role].toLowerCase()} (works once, for 14 days):</p>
-                  <input readOnly aria-label="Invite link" className={`${inputCls} font-mono text-xs`} value={inviteLink(made.code)} onFocus={(e) => e.currentTarget.select()} />
+                  <p className="text-xs font-medium">
+                    {t('chamber.sendThisLink', { role: roleName(made.role).toLowerCase() }, 'Send this link to your {role} (works once, for 14 days):')}
+                  </p>
+                  <input
+                    readOnly
+                    aria-label={t('chamber.inviteLinkAria', undefined, 'Invite link')}
+                    className={`${inputCls} font-mono text-xs`}
+                    value={inviteLink(made.code)}
+                    onFocus={(e) => e.currentTarget.select()}
+                    dir="ltr"
+                  />
                   <div className="flex flex-wrap gap-2">
                     <button type="button" className={btn.ghost} onClick={() => void copyLink(made.code)}>
-                      <Copy className="h-4 w-4" aria-hidden /> Copy
+                      <Copy className="h-4 w-4" aria-hidden /> {t('chamber.copy', undefined, 'Copy')}
                     </button>
                     <a
                       className={btn.bronze}
@@ -234,27 +260,32 @@ export function CloudChamber({ db, matrix }: { db: Snapshot; matrix: React.React
               )}
               {invites.length > 0 && (
                 <div className="mt-5">
-                  <h3 className="mb-2 text-sm font-semibold">Pending invites</h3>
+                  <h3 className="mb-2 text-sm font-semibold">{t('chamber.pending', undefined, 'Pending invites')}</h3>
                   <ul className="divide-y divide-line text-sm">
                     {invites.map((i) => (
                       <li key={i.code} className="flex items-center gap-2 py-2">
-                        <Badge tone={tone(i.role)}>{ROLE_LABEL[i.role]}</Badge>
+                        <Badge tone={tone(i.role)}>{roleName(i.role)}</Badge>
                         <span className="min-w-0 flex-1 truncate text-ink-soft">
-                          {i.note || 'No note'} · until {formatPk(i.expires_at)}
+                          {i.note || t('chamber.noNote', undefined, 'No note')} · {t('chamber.until', { date: formatPk(i.expires_at) }, 'until {date}')}
                         </span>
-                        <button type="button" className="rounded p-1.5 text-ink-soft hover:bg-line" aria-label="Copy invite link" onClick={() => void copyLink(i.code)}>
+                        <button
+                          type="button"
+                          className="rounded p-1.5 text-ink-soft hover:bg-line"
+                          aria-label={t('chamber.copyInviteAria', undefined, 'Copy invite link')}
+                          onClick={() => void copyLink(i.code)}
+                        >
                           <Copy className="h-4 w-4" />
                         </button>
                         <button
                           type="button"
                           className="rounded p-1.5 text-ink-soft hover:bg-danger/10 hover:text-danger"
-                          aria-label="Revoke invite"
+                          aria-label={t('chamber.revokeAria', undefined, 'Revoke invite')}
                           onClick={() =>
                             void act(async () => {
                               await revokeInvite(i.code);
                               if (made?.code === i.code) setMade(null);
                               await loadInvites();
-                            }, 'Invite revoked')
+                            }, t('chamber.revoked', undefined, 'Invite revoked'))
                           }
                         >
                           <Trash2 className="h-4 w-4" />
@@ -267,14 +298,16 @@ export function CloudChamber({ db, matrix }: { db: Snapshot; matrix: React.React
             </Card>
           ) : (
             <Card>
-              <p className="text-sm text-ink-soft">Only a senior advocate can invite or remove members.</p>
+              <p className="text-sm text-ink-soft">{t('chamber.onlySenior', undefined, 'Only a senior advocate can invite or remove members.')}</p>
             </Card>
           )}
           <Card>
-            <CardTitle>Leave chamber</CardTitle>
-            <p className="text-sm text-ink-soft">Stop being a member of {db.chamber.name}. Your account stays; you can join or create another chamber.</p>
+            <CardTitle>{t('chamber.leave', undefined, 'Leave chamber')}</CardTitle>
+            <p className="text-sm text-ink-soft">
+              {t('chamber.leaveBody', { chamber: db.chamber.name }, 'Stop being a member of {chamber}. Your account stays; you can join or create another chamber.')}
+            </p>
             <button type="button" className={`${btn.ghost} mt-3`} onClick={leave}>
-              <LogOut className="h-4 w-4" aria-hidden /> Leave chamber
+              <LogOut className="h-4 w-4" aria-hidden /> {t('chamber.leave', undefined, 'Leave chamber')}
             </button>
           </Card>
         </div>

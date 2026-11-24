@@ -17,6 +17,7 @@ import { formatPk } from '../../../lib/dates';
 import { BOOK_FOLDER, removeDocument } from '../../../lib/docText';
 import { ACTION_LABEL, ALL_ACTIONS, accessFor, accessOf, ROLE_LABEL, SENIOR_ONLY, type Action } from '../../../lib/permissions';
 import { listMembers, snapshot, type Snapshot } from '../../../lib/repo';
+import { useLang } from '../../../lib/i18n';
 import { useData } from '../../../lib/useData';
 import type { Accent, Member, Role } from '../../../types';
 
@@ -32,12 +33,12 @@ const EDITABLE_ROLES: Role[] = ['junior', 'clerk'];
 
 function Look({ accent }: { accent: Accent }) {
   const toast = useToast();
+  const { t } = useLang();
   return (
     <Card>
-      <CardTitle>Colour scheme</CardTitle>
+      <CardTitle>{t('studio.look.title', undefined, 'Colour scheme')}</CardTitle>
       <p className="mb-5 max-w-2xl text-sm text-ink-soft">
-        Pick the colours your whole chamber sees. It restyles every screen, in both light and dark. Each person still chooses light or dark for themselves with the moon button
-        at the top.
+        {t('studio.look.intro', undefined, "Pick the colours your whole chamber sees. It restyles every screen, in both light and dark. Each person still chooses light or dark for themselves with the moon button at the top.")}
       </p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {ACCENTS.map((a) => {
@@ -49,16 +50,16 @@ function Look({ accent }: { accent: Accent }) {
               aria-pressed={on}
               onClick={() => {
                 saveSettings({ accent: a.id });
-                toast.show(`${a.label} colour scheme applied for everyone`);
+                toast.show(t('studio.look.applied', { name: t(`studio.accent.${a.id}`, undefined, a.label) }, `${a.label} colour scheme applied for everyone`));
               }}
               className={`card-fx lift rounded-2xl border p-4 text-start ${on ? 'border-bronze ring-2 ring-bronze/30' : 'border-line'} bg-paper`}
             >
               <span className="flex items-center gap-2">
                 <span className="h-9 w-9 rounded-xl shadow-inner" style={{ background: `linear-gradient(135deg, ${a.light}, ${a.dark})` }} aria-hidden />
-                <span className="font-serif text-lg font-semibold">{a.label}</span>
-                {on && <Check className="ms-auto h-4 w-4 text-bronze" aria-label="In use" />}
+                <span className="font-serif text-lg font-semibold">{t(`studio.accent.${a.id}`, undefined, a.label)}</span>
+                {on && <Check className="ms-auto h-4 w-4 text-bronze" aria-label={t('studio.inUse', undefined, 'In use')} />}
               </span>
-              <span className="mt-2 block text-xs text-ink-soft">{a.note}</span>
+              <span className="mt-2 block text-xs text-ink-soft">{t(`studio.accent.${a.id}.note`, undefined, a.note)}</span>
             </button>
           );
         })}
@@ -69,6 +70,7 @@ function Look({ accent }: { accent: Accent }) {
 
 function Profile({ db }: { db: Snapshot }) {
   const toast = useToast();
+  const { t } = useLang();
   const cur = settingsOf(db)?.profile ?? {};
   const [tagline, setTagline] = useState(cur.tagline ?? '');
   const [address, setAddress] = useState(cur.address ?? '');
@@ -80,37 +82,37 @@ function Profile({ db }: { db: Snapshot }) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <Card>
-        <CardTitle>Letterhead details</CardTitle>
-        <p className="mb-4 text-sm text-ink-soft">Printed at the top of fee receipts and case status reports your chamber sends to clients.</p>
+        <CardTitle>{t('studio.profile.letterhead', undefined, 'Letterhead details')}</CardTitle>
+        <p className="mb-4 text-sm text-ink-soft">{t('studio.profile.intro', undefined, "Printed at the top of fee receipts and case status reports your chamber sends to clients.")}</p>
         <div className="mb-5 flex flex-wrap items-center gap-4 rounded-xl border border-line bg-paper p-4">
           <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-line bg-white">
             {logo ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logo} alt="Chamber logo" className="max-h-full max-w-full object-contain" />
+              <img src={logo} alt={t('studio.logo.alt', undefined, 'Chamber logo')} className="max-h-full max-w-full object-contain" />
             ) : (
               <Building2 className="h-6 w-6 text-ink-soft/50" aria-hidden />
             )}
           </span>
           <span className="min-w-0 flex-1 text-sm">
-            <span className="block font-medium">Chamber logo</span>
-            <span className="block text-xs text-ink-soft">A PNG or JPEG picture. It is shrunk to fit and printed at the top of receipts and case reports.</span>
+            <span className="block font-medium">{t('studio.logo.alt', undefined, 'Chamber logo')}</span>
+            <span className="block text-xs text-ink-soft">{t('studio.logo.help', undefined, "A PNG or JPEG picture. It is shrunk to fit and printed at the top of receipts and case reports.")}</span>
           </span>
           <label className={`${btn.ghost} cursor-pointer`}>
-            {logo ? 'Change logo' : 'Upload logo'}
+            {logo ? t('studio.logo.change', undefined, 'Change logo') : t('studio.logo.upload', undefined, 'Upload logo')}
             <input
               type="file"
               accept="image/png,image/jpeg,image/webp"
               className="sr-only"
-              aria-label="Upload chamber logo"
+              aria-label={t('studio.logo.uploadAria', undefined, 'Upload chamber logo')}
               onChange={async (e) => {
                 const f = e.target.files?.[0];
                 e.target.value = '';
                 if (!f) return;
                 try {
                   setLogo(await logoFromFile(f));
-                  toast.show('Logo saved');
+                  toast.show(t('studio.logo.saved', undefined, 'Logo saved'));
                 } catch (err) {
-                  toast.show(err instanceof Error ? err.message : 'That picture could not be read');
+                  toast.show(err instanceof Error ? err.message : t('studio.logo.unreadable', undefined, 'That picture could not be read'));
                 }
               }}
             />
@@ -121,10 +123,10 @@ function Profile({ db }: { db: Snapshot }) {
               className={btn.ghost}
               onClick={() => {
                 setLogo(null);
-                toast.show('Logo removed');
+                toast.show(t('studio.logo.removed', undefined, 'Logo removed'));
               }}
             >
-              Remove
+              {t('studio.remove', undefined, 'Remove')}
             </button>
           )}
         </div>
@@ -133,34 +135,34 @@ function Profile({ db }: { db: Snapshot }) {
           onSubmit={(e) => {
             e.preventDefault();
             saveProfile({ tagline, address, phone, email });
-            toast.show('Letterhead saved');
+            toast.show(t('studio.profile.saved', undefined, 'Letterhead saved'));
           }}
         >
           <label className={field}>
-            <span className="mb-1 block font-medium">Line under the name</span>
+            <span className="mb-1 block font-medium">{t('studio.profile.tagline', undefined, 'Line under the name')}</span>
             <input className={inputCls} value={tagline} maxLength={80} placeholder="Advocates & Legal Consultants" onChange={(e) => setTagline(e.target.value)} />
           </label>
           <label className={field}>
-            <span className="mb-1 block font-medium">Address</span>
+            <span className="mb-1 block font-medium">{t('studio.profile.address', undefined, 'Address')}</span>
             <input className={inputCls} value={address} maxLength={120} placeholder="Office 4, Court Road, Lahore" onChange={(e) => setAddress(e.target.value)} />
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className={field}>
-              <span className="mb-1 block font-medium">Phone</span>
+              <span className="mb-1 block font-medium">{t('studio.profile.phone', undefined, 'Phone')}</span>
               <input className={inputCls} value={phone} maxLength={40} placeholder="0300 1234567" onChange={(e) => setPhone(e.target.value)} />
             </label>
             <label className={field}>
-              <span className="mb-1 block font-medium">Email</span>
+              <span className="mb-1 block font-medium">{t('studio.profile.email', undefined, 'Email')}</span>
               <input className={inputCls} type="email" value={email} maxLength={80} placeholder="chamber@example.pk" onChange={(e) => setEmail(e.target.value)} />
             </label>
           </div>
           <button type="submit" className={btn.bronze}>
-            Save letterhead
+            {t('studio.profile.save', undefined, 'Save letterhead')}
           </button>
         </form>
       </Card>
       <Card>
-        <CardTitle>Preview</CardTitle>
+        <CardTitle>{t('studio.profile.preview', undefined, 'Preview')}</CardTitle>
         <div className="rounded-xl border border-line bg-white p-6 text-center text-[#2a2a2a] shadow-inner">
           {logo && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -170,7 +172,7 @@ function Profile({ db }: { db: Snapshot }) {
           <p className="text-xs italic text-[#666]">{preview.tagline}</p>
           {preview.contact && <p className="mt-0.5 text-[11px] text-[#666]">{preview.contact}</p>}
           <div className="mx-auto my-3 h-px bg-bronze" />
-          <p className="font-serif text-sm font-bold tracking-wide">FEE RECEIPT</p>
+          <p className="font-serif text-sm font-bold tracking-wide">{t('studio.profile.feeReceipt', undefined, 'FEE RECEIPT')}</p>
         </div>
       </Card>
     </div>
@@ -179,6 +181,7 @@ function Profile({ db }: { db: Snapshot }) {
 
 function People({ db }: { db: Snapshot }) {
   const toast = useToast();
+  const { t } = useLang();
   const members = useData(() => listMembers());
   const [open, setOpen] = useState<string | null>(null);
   const settings = settingsOf(db);
@@ -186,13 +189,12 @@ function People({ db }: { db: Snapshot }) {
   if (!members) return null;
   return (
     <Card>
-      <CardTitle>Rights for one person</CardTitle>
+      <CardTitle>{t('studio.people.title', undefined, 'Rights for one person')}</CardTitle>
       <p className="mb-4 max-w-2xl text-sm text-ink-soft">
-        Need a clerk who can also edit cases, or a junior who must not see the law books? Give that one person their own rights. It replaces their role&apos;s rights for them
-        alone; everyone else keeps following their role.
+        {t('studio.people.intro', undefined, 'Need a clerk who can also edit cases, or a junior who must not see the law books? Give that one person their own rights. It replaces their role\'s rights for them alone; everyone else keeps following their role.')}
       </p>
       {others.length === 0 ? (
-        <p className="text-sm text-ink-soft">Nobody else has joined your chamber yet. Invite people from the Chamber page.</p>
+        <p className="text-sm text-ink-soft">{t('studio.people.none', undefined, 'Nobody else has joined your chamber yet. Invite people from the Chamber page.')}</p>
       ) : (
         <ul className="divide-y divide-line">
           {others.map((m: Member) => {
@@ -204,11 +206,11 @@ function People({ db }: { db: Snapshot }) {
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{m.name || m.email}</span>
-                    <span className="text-xs text-ink-soft">{ROLE_LABEL[m.role]}</span>
+                    <span className="text-xs text-ink-soft">{t(`role.${m.role}`, undefined, ROLE_LABEL[m.role])}</span>
                   </span>
-                  {own ? <Badge tone="bronze">Own rights</Badge> : <Badge tone="neutral">Follows role</Badge>}
+                  {own ? <Badge tone="bronze">{t('studio.people.own', undefined, 'Own rights')}</Badge> : <Badge tone="neutral">{t('studio.people.follows', undefined, 'Follows role')}</Badge>}
                   <button className={btn.ghost} aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : m.id)}>
-                    {isOpen ? 'Close' : 'Set rights'}
+                    {isOpen ? t('studio.people.close', undefined, 'Close') : t('studio.people.set', undefined, 'Set rights')}
                   </button>
                 </div>
                 {isOpen && (
@@ -220,7 +222,7 @@ function People({ db }: { db: Snapshot }) {
                             type="checkbox"
                             className="mt-0.5 h-4 w-4 accent-[var(--bronze)]"
                             checked={eff.has(a)}
-                            aria-label={`${m.name || m.email}: ${ACTION_LABEL[a].title}`}
+                            aria-label={`${m.name || m.email}: ${t(`studio.act.${a}.title`, undefined, ACTION_LABEL[a].title)}`}
                             onChange={() => {
                               const next = new Set(eff);
                               if (next.has(a)) next.delete(a);
@@ -229,8 +231,8 @@ function People({ db }: { db: Snapshot }) {
                             }}
                           />
                           <span>
-                            <span className="block font-medium">{ACTION_LABEL[a].title}</span>
-                            <span className="block text-xs text-ink-soft">{ACTION_LABEL[a].hint}</span>
+                            <span className="block font-medium">{t(`studio.act.${a}.title`, undefined, ACTION_LABEL[a].title)}</span>
+                            <span className="block text-xs text-ink-soft">{t(`studio.act.${a}.hint`, undefined, ACTION_LABEL[a].hint)}</span>
                           </span>
                         </label>
                       ))}
@@ -240,10 +242,10 @@ function People({ db }: { db: Snapshot }) {
                         className={`${btn.ghost} mt-4`}
                         onClick={() => {
                           setMemberAccess(m.id, null);
-                          toast.show(`${m.name || m.email} now follows the ${ROLE_LABEL[m.role]} rights`);
+                          toast.show(t('studio.people.nowFollows', { name: m.name || m.email, role: t(`role.${m.role}`, undefined, ROLE_LABEL[m.role]) }, `${m.name || m.email} now follows the ${ROLE_LABEL[m.role]} rights`));
                         }}
                       >
-                        <RotateCcw className="h-4 w-4" /> Back to the {ROLE_LABEL[m.role]} rights
+                        <RotateCcw className="h-4 w-4" /> {t('studio.people.back', { role: t(`role.${m.role}`, undefined, ROLE_LABEL[m.role]) }, `Back to the ${ROLE_LABEL[m.role]} rights`)}
                       </button>
                     )}
                   </div>
@@ -259,6 +261,7 @@ function People({ db }: { db: Snapshot }) {
 
 function Access({ db }: { db: Snapshot }) {
   const toast = useToast();
+  const { t } = useLang();
   const [, force] = useState(0);
   const sets: Record<Role, ReadonlySet<Action>> = { senior: accessFor('senior'), junior: accessFor('junior'), clerk: accessFor('clerk') };
 
@@ -273,19 +276,19 @@ function Access({ db }: { db: Snapshot }) {
   return (
     <div className="space-y-6">
       <Card>
-        <CardTitle>What each role can do</CardTitle>
+        <CardTitle>{t('studio.access.title', undefined, 'What each role can do')}</CardTitle>
         <p className="mb-5 max-w-2xl text-sm text-ink-soft">
-          Tick what your juniors and clerks are allowed to do. Changes reach everyone the next time their app syncs. You, as senior advocate, always keep full access.
+          {t('studio.access.intro', undefined, "Tick what your juniors and clerks are allowed to do. Changes reach everyone the next time their app syncs. You, as senior advocate, always keep full access.")}
         </p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[460px] text-sm">
             <thead>
               <tr className="text-start text-xs uppercase tracking-wide text-ink-soft">
-                <th className="py-2 text-start font-medium">Right</th>
-                <th className="py-2 text-center font-medium">{ROLE_LABEL.senior}</th>
+                <th className="py-2 text-start font-medium">{t('studio.access.right', undefined, 'Right')}</th>
+                <th className="py-2 text-center font-medium">{t('role.senior', undefined, ROLE_LABEL.senior)}</th>
                 {EDITABLE_ROLES.map((r) => (
                   <th key={r} className="py-2 text-center font-medium">
-                    {ROLE_LABEL[r]}
+                    {t(`role.${r}`, undefined, ROLE_LABEL[r])}
                   </th>
                 ))}
               </tr>
@@ -296,23 +299,23 @@ function Access({ db }: { db: Snapshot }) {
                 return (
                   <tr key={a} className="border-t border-line">
                     <td className="py-3 pe-3">
-                      <span className="block font-medium">{ACTION_LABEL[a].title}</span>
-                      <span className="block text-xs text-ink-soft">{ACTION_LABEL[a].hint}</span>
+                      <span className="block font-medium">{t(`studio.act.${a}.title`, undefined, ACTION_LABEL[a].title)}</span>
+                      <span className="block text-xs text-ink-soft">{t(`studio.act.${a}.hint`, undefined, ACTION_LABEL[a].hint)}</span>
                     </td>
                     <td className="py-3 text-center">
-                      <Check className="mx-auto h-4 w-4 text-ok" aria-label="Senior always has this" />
+                      <Check className="mx-auto h-4 w-4 text-ok" aria-label={t('studio.access.seniorAlways', undefined, 'Senior always has this')} />
                     </td>
                     {EDITABLE_ROLES.map((r) => (
                       <td key={r} className="py-3 text-center">
                         {locked ? (
-                          <Lock className="mx-auto h-4 w-4 text-ink-soft/50" aria-label="Only the senior advocate" />
+                          <Lock className="mx-auto h-4 w-4 text-ink-soft/50" aria-label={t('studio.access.seniorOnly', undefined, 'Only the senior advocate')} />
                         ) : (
                           <input
                             type="checkbox"
                             className="h-4 w-4 accent-[var(--bronze)]"
                             checked={sets[r].has(a)}
                             onChange={() => toggle(r, a)}
-                            aria-label={`${ROLE_LABEL[r]}: ${ACTION_LABEL[a].title}`}
+                            aria-label={`${t(`role.${r}`, undefined, ROLE_LABEL[r])}: ${t(`studio.act.${a}.title`, undefined, ACTION_LABEL[a].title)}`}
                           />
                         )}
                       </td>
@@ -329,20 +332,19 @@ function Access({ db }: { db: Snapshot }) {
             onClick={() => {
               resetAccess();
               force((n) => n + 1);
-              toast.show('Access rights set back to the defaults');
+              toast.show(t('studio.access.resetDone', undefined, 'Access rights set back to the defaults'));
             }}
           >
-            <RotateCcw className="h-4 w-4" /> Reset to defaults
+            <RotateCcw className="h-4 w-4" /> {t('studio.access.reset', undefined, 'Reset to defaults')}
           </button>
           <Link href="/app/chamber/" className={btn.ghost}>
-            <Users className="h-4 w-4" /> Invite people or change someone&apos;s role
+            <Users className="h-4 w-4" /> {t('studio.access.invite', undefined, "Invite people or change someone's role")}
           </Link>
         </div>
       </Card>
       <People db={db} />
       <Notice>
-        These rights control what each person sees and can do in the app. Fees and billing files are also protected on the server for everyone except seniors. A clerk who is
-        technically skilled could still change other shared data outside the app, so only add people you trust to the chamber.
+        {t('studio.access.note', undefined, "These rights control what each person sees and can do in the app. Fees and billing files are also protected on the server for everyone except seniors, and the other shared data is checked on the server against each person's rights. Only add people you trust to the chamber.")}
       </Notice>
     </div>
   );
@@ -350,6 +352,7 @@ function Access({ db }: { db: Snapshot }) {
 
 function Reminders({ db }: { db: Snapshot }) {
   const toast = useToast();
+  const { t } = useLang();
   const { cloud } = useRole();
   const [busy, setBusy] = useState(false);
   const on = settingsOf(db)?.emailReminders === true;
@@ -361,13 +364,13 @@ function Reminders({ db }: { db: Snapshot }) {
       const r = await sendMyDigest(id);
       toast.show(
         r === 'sent'
-          ? 'Test email sent to you. Check your inbox (and spam).'
+          ? t('studio.rem.sent', undefined, 'Test email sent to you. Check your inbox (and spam).')
           : r === 'nothing'
-            ? 'No hearings today or tomorrow, so there was nothing to email.'
-            : 'Email is not switched on at the server yet.',
+            ? t('studio.rem.nothing', undefined, 'No hearings today or tomorrow, so there was nothing to email.')
+            : t('studio.rem.nokey', undefined, 'Email is not switched on at the server yet.'),
       );
     } catch (e) {
-      toast.show(e instanceof Error ? e.message : 'Could not send the test email');
+      toast.show(e instanceof Error ? e.message : t('studio.rem.fail', undefined, 'Could not send the test email'));
     } finally {
       setBusy(false);
     }
@@ -375,29 +378,29 @@ function Reminders({ db }: { db: Snapshot }) {
   return (
     <div className="space-y-6">
       <Card>
-        <CardTitle>Morning hearing emails</CardTitle>
+        <CardTitle>{t('studio.rem.title', undefined, 'Morning hearing emails')}</CardTitle>
         <p className="mb-4 max-w-2xl text-sm text-ink-soft">
-          Every morning at 7:30 (Pakistan time) each member of your chamber gets one email listing the hearings today and tomorrow, even if they never open the app. No hearings,
-          no email.
+          {t('studio.rem.intro', undefined, "Every morning at 7:30 (Pakistan time) each member of your chamber gets one email listing the hearings today and tomorrow, even if they never open the app. No hearings, no email.")}
         </p>
         <label className="flex items-center gap-3 text-sm font-medium">
-          <input type="checkbox" className="h-4 w-4 accent-[var(--bronze)]" checked={on} onChange={(e) => setEmailReminders(e.target.checked)} aria-label="Send morning hearing emails" />
-          Send morning hearing emails to the whole chamber
+          <input type="checkbox" className="h-4 w-4 accent-[var(--bronze)]" checked={on} onChange={(e) => setEmailReminders(e.target.checked)} aria-label={t('studio.rem.aria', undefined, 'Send morning hearing emails')} />
+          {t('studio.rem.label', undefined, 'Send morning hearing emails to the whole chamber')}
         </label>
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <button className={btn.ghost} disabled={!cloud || busy} onClick={() => void test()}>
-            <Bell className="h-4 w-4" /> {busy ? 'Sending…' : 'Email me today’s hearings now'}
+            <Bell className="h-4 w-4" /> {busy ? t('studio.rem.sending', undefined, 'Sending…') : t('studio.rem.now', undefined, "Email me today's hearings now")}
           </button>
-          {!cloud && <span className="text-xs text-ink-soft">Available once you are signed in to your shared chamber.</span>}
+          {!cloud && <span className="text-xs text-ink-soft">{t('studio.rem.needCloud', undefined, 'Available once you are signed in to your shared chamber.')}</span>}
         </div>
       </Card>
-      <Notice>Emails go to the address each person signed up with. They are sent from reminders@wakeelpropk.com.</Notice>
+      <Notice>{t('studio.rem.note', undefined, 'Emails go to the address each person signed up with. They are sent from reminders@wakeelpropk.com.')}</Notice>
     </div>
   );
 }
 
 function Files({ db }: { db: Snapshot }) {
   const toast = useToast();
+  const { t } = useLang();
   const { open, download } = useDocFile(toast);
   const used = storageUsed(db.docs);
   const pct = Math.min(100, Math.round((used / PLAN_BYTES) * 100));
@@ -407,29 +410,29 @@ function Files({ db }: { db: Snapshot }) {
   return (
     <div className="space-y-6">
       <Card>
-        <CardTitle>Storage</CardTitle>
+        <CardTitle>{t('studio.files.storage', undefined, 'Storage')}</CardTitle>
         <div className="mb-2 flex items-baseline justify-between text-sm">
           <span>
-            <strong className="font-serif text-2xl">{formatBytes(used)}</strong> shared with your chamber
+            <strong className="font-serif text-2xl">{formatBytes(used)}</strong> {t('studio.files.shared', undefined, 'shared with your chamber')}
           </span>
-          <span className="text-ink-soft">of {formatBytes(PLAN_BYTES)}</span>
+          <span className="text-ink-soft">{t('studio.files.of', { size: formatBytes(PLAN_BYTES) }, `of ${formatBytes(PLAN_BYTES)}`)}</span>
         </div>
-        <div className="h-2.5 overflow-hidden rounded-full bg-line/60" role="img" aria-label={`${pct}% of storage used`}>
+        <div className="h-2.5 overflow-hidden rounded-full bg-line/60" role="img" aria-label={t('studio.files.pct', { pct }, `${pct}% of storage used`)}>
           <div className="h-full rounded-full bg-bronze" style={{ width: `${Math.max(pct, used ? 2 : 0)}%` }} />
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
           <Link href="/app/documents/" className={btn.bronze}>
-            <FolderOpen className="h-4 w-4" /> Upload PDFs and files
+            <FolderOpen className="h-4 w-4" /> {t('studio.files.uploadPdf', undefined, 'Upload PDFs and files')}
           </Link>
           <Link href="/app/library/" className={btn.ghost}>
-            <Library className="h-4 w-4" /> Upload law books
+            <Library className="h-4 w-4" /> {t('studio.files.uploadBooks', undefined, 'Upload law books')}
           </Link>
         </div>
       </Card>
       <Card>
-        <CardTitle>By folder</CardTitle>
+        <CardTitle>{t('studio.files.byFolder', undefined, 'By folder')}</CardTitle>
         {folders.length === 0 ? (
-          <p className="text-sm text-ink-soft">No files uploaded yet.</p>
+          <p className="text-sm text-ink-soft">{t('studio.files.none', undefined, 'No files uploaded yet.')}</p>
         ) : (
           <ul className="flex flex-wrap gap-2">
             {folders.map((f) => (
@@ -444,7 +447,7 @@ function Files({ db }: { db: Snapshot }) {
       </Card>
       {biggest.length > 0 && (
         <Card>
-          <CardTitle>Largest files</CardTitle>
+          <CardTitle>{t('studio.files.largest', undefined, 'Largest files')}</CardTitle>
           <ul className="divide-y divide-line">
             {biggest.map((d) => (
               <li key={d.id} className="flex items-center gap-3 py-2.5 text-sm">
@@ -454,20 +457,20 @@ function Files({ db }: { db: Snapshot }) {
                     {d.folder} · {formatBytes(d.size ?? d.sizeKb * 1024)} · {formatPk(d.uploadedOn)}
                   </span>
                 </span>
-                <button className="rounded-lg p-1.5 text-ink-soft hover:bg-line/50 hover:text-ink" aria-label={`Open ${d.name}`} onClick={() => void open(d)}>
+                <button className="rounded-lg p-1.5 text-ink-soft hover:bg-line/50 hover:text-ink" aria-label={t('studio.files.open', { name: d.name }, `Open ${d.name}`)} onClick={() => void open(d)}>
                   <ExternalLink className="h-4 w-4" />
                 </button>
-                <button className="rounded-lg p-1.5 text-ink-soft hover:bg-line/50 hover:text-ink" aria-label={`Download ${d.name}`} onClick={() => void download(d)}>
+                <button className="rounded-lg p-1.5 text-ink-soft hover:bg-line/50 hover:text-ink" aria-label={t('studio.files.download', { name: d.name }, `Download ${d.name}`)} onClick={() => void download(d)}>
                   <Download className="h-4 w-4" />
                 </button>
                 {d.folder !== BOOK_FOLDER && (
                   <button
                     className="rounded-lg p-1.5 text-ink-soft hover:bg-danger/10 hover:text-danger"
-                    aria-label={`Delete ${d.name}`}
+                    aria-label={t('studio.files.delete', { name: d.name }, `Delete ${d.name}`)}
                     onClick={async () => {
-                      if (!window.confirm(`Delete "${d.name}" for everyone in your chamber? This cannot be undone.`)) return;
+                      if (!window.confirm(t('studio.files.confirm', { name: d.name }, `Delete "${d.name}" for everyone in your chamber? This cannot be undone.`))) return;
                       await removeDocument(d);
-                      toast.show('File deleted');
+                      toast.show(t('studio.files.deleted', undefined, 'File deleted'));
                     }}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -483,12 +486,13 @@ function Files({ db }: { db: Snapshot }) {
 }
 
 function StudioBody({ db }: { db: Snapshot }) {
+  const { t } = useLang();
   const [tab, setTab] = useState<Tab>('look');
   const accent = settingsOf(db)?.accent ?? 'bronze';
   return (
     <RoleGate action="studio">
-      <PageHeader title="Chamber Studio" subtitle="Colours, who can do what, and your files — set up once for the whole chamber." />
-      <div role="tablist" aria-label="Studio sections" className="mb-6 flex flex-wrap gap-2">
+      <PageHeader title={t('studio.title', undefined, 'Chamber Studio')} subtitle={t('studio.subtitle', undefined, 'Colours, who can do what, and your files — set up once for the whole chamber.')} />
+      <div role="tablist" aria-label={t('studio.sections', undefined, 'Studio sections')} className="mb-6 flex flex-wrap gap-2">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -499,7 +503,7 @@ function StudioBody({ db }: { db: Snapshot }) {
               tab === id ? 'border-bronze bg-bronze text-ivory shadow-sm' : 'border-line bg-paper text-ink hover:border-bronze/40'
             }`}
           >
-            <Icon className="h-4 w-4" aria-hidden /> {label}
+            <Icon className="h-4 w-4" aria-hidden /> {t(`studio.tab.${id}`, undefined, label)}
           </button>
         ))}
       </div>
