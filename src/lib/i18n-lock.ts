@@ -1,0 +1,63 @@
+import type { Entry } from './i18n-dict';
+
+/** English and Urdu strings for the lock feature. Keys are prefixed `lock.`. */
+export const LOCK = {
+  // Unlock screen
+  'lock.title': { en: 'Enter your PIN', ur: 'اپنا پن درج کریں' },
+  'lock.subtitle': { en: 'Legal Brain is locked on this device', ur: 'اس ڈیوائس پر لیگل برین مقفل ہے' },
+  'lock.screen': { en: 'App locked', ur: 'ایپ مقفل ہے' },
+  'lock.entered': { en: '{n} of {total} digits entered', ur: '{total} میں سے {n} ہندسے درج ہو گئے' },
+  'lock.delete': { en: 'Delete last digit', ur: 'آخری ہندسہ مٹائیں' },
+  'lock.wrong': { en: 'Wrong PIN. Try again.', ur: 'غلط پن۔ دوبارہ کوشش کریں۔' },
+  'lock.wait': { en: 'Too many wrong tries. Wait {s} seconds.', ur: 'بہت زیادہ غلط کوششیں ہو گئیں۔ {s} سیکنڈ انتظار کریں۔' },
+  'lock.forgotCloud': { en: 'Forgot PIN? Sign out', ur: 'پن بھول گئے؟ سائن آؤٹ کریں' },
+  'lock.forgotDemo': { en: 'Forgot PIN? Remove the lock', ur: 'پن بھول گئے؟ لاک ہٹا دیں' },
+  'lock.forgotTitle': { en: 'Forgot your PIN?', ur: 'پن بھول گئے؟' },
+  'lock.forgotBodyCloud': {
+    en: 'Signing out removes the PIN from this device. Your chamber data stays safe on the server, and you can sign in again with your email and password.',
+    ur: 'سائن آؤٹ کرنے سے اس ڈیوائس سے پن ہٹ جائے گا۔ چیمبر کا ڈیٹا سرور پر محفوظ رہے گا، اور آپ اپنی ای میل اور پاس ورڈ سے دوبارہ سائن اِن کر سکتے ہیں۔',
+  },
+  'lock.forgotBodyDemo': {
+    en: 'This removes the PIN lock from this device. Nothing else is deleted.',
+    ur: 'اس سے اس ڈیوائس سے پن کا لاک ہٹ جائے گا۔ باقی کچھ بھی نہیں مٹے گا۔',
+  },
+  'lock.forgotConfirmCloud': { en: 'Sign out', ur: 'سائن آؤٹ کریں' },
+  'lock.forgotConfirmDemo': { en: 'Remove lock', ur: 'لاک ہٹا دیں' },
+  'lock.cancel': { en: 'Cancel', ur: 'منسوخ کریں' },
+  'lock.signOutFailed': { en: 'Could not sign out. Check your internet and try again.', ur: 'سائن آؤٹ نہیں ہو سکا۔ انٹرنیٹ دیکھ کر دوبارہ کوشش کریں۔' },
+
+  // Settings dialog
+  'lock.menu': { en: 'App lock', ur: 'ایپ لاک' },
+  'lock.settingsTitle': { en: 'App lock', ur: 'ایپ لاک' },
+  'lock.intro': {
+    en: 'Ask for a PIN when this phone or computer opens Legal Brain, so a lost or borrowed device cannot show client files. The PIN stays on this device only.',
+    ur: 'جب یہ فون یا کمپیوٹر لیگل برین کھولے تو پن مانگا جائے، تاکہ گم یا مانگی ہوئی ڈیوائس پر موکلوں کی فائلیں نظر نہ آئیں۔ پن صرف اسی ڈیوائس پر رہتا ہے۔',
+  },
+  'lock.statusOn': { en: 'App lock is on', ur: 'ایپ لاک چالو ہے' },
+  'lock.statusOff': { en: 'App lock is off', ur: 'ایپ لاک بند ہے' },
+  'lock.newPin': { en: 'Choose a PIN (4 to 6 digits)', ur: 'پن منتخب کریں (4 سے 6 ہندسے)' },
+  'lock.again': { en: 'Enter the PIN again', ur: 'پن دوبارہ درج کریں' },
+  'lock.current': { en: 'Current PIN', ur: 'موجودہ پن' },
+  'lock.newPinChange': { en: 'New PIN (4 to 6 digits)', ur: 'نیا پن (4 سے 6 ہندسے)' },
+  'lock.turnOn': { en: 'Turn on app lock', ur: 'ایپ لاک چالو کریں' },
+  'lock.autoLabel': { en: 'Lock the app', ur: 'ایپ کب مقفل ہو' },
+  'lock.after0': { en: 'Every time it is reopened', ur: 'ہر بار دوبارہ کھولنے پر' },
+  'lock.after1': { en: 'After 1 minute away', ur: '1 منٹ دور رہنے کے بعد' },
+  'lock.after5': { en: 'After 5 minutes away', ur: '5 منٹ دور رہنے کے بعد' },
+  'lock.after15': { en: 'After 15 minutes away', ur: '15 منٹ دور رہنے کے بعد' },
+  'lock.change': { en: 'Change PIN', ur: 'پن بدلیں' },
+  'lock.save': { en: 'Save new PIN', ur: 'نیا پن محفوظ کریں' },
+  'lock.turnOff': { en: 'Turn off app lock', ur: 'ایپ لاک بند کریں' },
+  'lock.turnOffHint': { en: 'Enter your current PIN to turn the lock off.', ur: 'لاک بند کرنے کے لیے اپنا موجودہ پن درج کریں۔' },
+  'lock.lockNow': { en: 'Lock now', ur: 'ابھی مقفل کریں' },
+  'lock.close': { en: 'Close', ur: 'بند کریں' },
+  'lock.back': { en: 'Back', ur: 'واپس' },
+  'lock.errFormat': { en: 'The PIN must be 4 to 6 digits.', ur: 'پن 4 سے 6 ہندسوں کا ہونا چاہیے۔' },
+  'lock.errMismatch': { en: 'The two PINs do not match.', ur: 'دونوں پن آپس میں نہیں ملتے۔' },
+  'lock.errCurrent': { en: 'The current PIN is wrong.', ur: 'موجودہ پن غلط ہے۔' },
+  'lock.errStorage': { en: 'This browser would not save the lock. Check that private browsing is off.', ur: 'یہ براؤزر لاک محفوظ نہیں کر سکا۔ دیکھیں کہ پرائیویٹ براؤزنگ بند ہو۔' },
+  'lock.toastOn': { en: 'App lock is on', ur: 'ایپ لاک چالو ہو گیا' },
+  'lock.toastOff': { en: 'App lock is off', ur: 'ایپ لاک بند ہو گیا' },
+  'lock.toastChanged': { en: 'PIN changed', ur: 'پن بدل گیا' },
+  'lock.toastSaved': { en: 'Saved', ur: 'محفوظ ہو گیا' },
+} satisfies Record<string, Entry>;

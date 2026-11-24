@@ -8,6 +8,7 @@ import { dismissUndone } from '../../lib/cloud/sync';
 import { LanguageProvider, useLang } from '../../lib/i18n';
 import type { Role } from '../../types';
 import { Loading } from '../ui/Loading';
+import { AppLock } from './AppLock';
 import { CloudProvider, useCloud } from './CloudProvider';
 import { ChamberSetup, Unreachable } from './CloudGate';
 import { CommandPalette } from './CommandPalette';
@@ -190,7 +191,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <CloudProvider>
         <RoleProvider>
           <LanguageProvider>
-            <Shell>{children}</Shell>
+            <AppLock>
+              <Shell>{children}</Shell>
+            </AppLock>
           </LanguageProvider>
         </RoleProvider>
       </CloudProvider>

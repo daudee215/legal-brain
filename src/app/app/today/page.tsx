@@ -7,7 +7,9 @@ import { useState } from 'react';
 import { AutoCauseListAlert } from '../../../components/causelist/AutoCauseListPanel';
 import { useAutoCauseLists } from '../../../components/causelist/useAutoCauseLists';
 import { OutcomeDialog } from '../../../components/outcome/OutcomeDialog';
+import { PromisesDueCard } from '../../../components/fees/PromisesDueCard';
 import { ClientReminders } from '../../../components/reminders/ClientReminders';
+import { ExportHearingsButton } from '../../../components/reminders/CalendarButtons';
 import { useRole } from '../../../components/shell/RoleProvider';
 import { Badge, btn, Card, CardTitle, EmptyState, StatusBadge } from '../../../components/ui';
 import { Loading } from '../../../components/ui/Loading';
@@ -155,15 +157,20 @@ export default function TodayPage() {
               {overdue.length > 0 && ` ${overdue.length} date${overdue.length === 1 ? '' : 's'} passed with no outcome.`}
             </p>
           </div>
-          <a href={waLink(null, briefing)} target="_blank" rel="noopener noreferrer" className={btn.bronze}>
-            <MessageCircle className="h-4 w-4" /> Share briefing on WhatsApp
-          </a>
+          <div className="flex flex-wrap gap-3">
+            <a href={waLink(null, briefing)} target="_blank" rel="noopener noreferrer" className={btn.bronze}>
+              <MessageCircle className="h-4 w-4" /> Share briefing on WhatsApp
+            </a>
+            <ExportHearingsButton className="inline-flex items-center justify-center gap-2 rounded-lg bg-ivory px-4 py-2 text-sm font-medium text-night transition hover:-translate-y-px" />
+          </div>
         </div>
       </section>
 
       <AutoCauseListAlert auto={auto} />
 
       {remindFirst && remindCard}
+
+      <PromisesDueCard />
 
       {clashes.map((g, gi) => (
         <motion.div

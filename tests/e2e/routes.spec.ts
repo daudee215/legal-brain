@@ -70,3 +70,27 @@ test('the Safety tab explains it needs a shared chamber when running as a demo',
   await page.getByRole('tab', { name: 'Safety' }).click();
   await expect(page.getByText(/available once you are signed in to your shared chamber/)).toBeVisible();
 });
+
+test('a case offers a hearing prep sheet, calendar entry, camera scan and promised payments', async ({ page }) => {
+  await page.goto('/app/cases/');
+  await page.getByRole('link', { name: /Zahid Traders/ }).first().click();
+  await expect(page.getByRole('button', { name: /Hearing prep sheet/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Add to calendar/ })).toBeVisible();
+  await page.getByRole('tab', { name: /Documents/ }).click();
+  await expect(page.getByRole('button', { name: /Scan with camera/ })).toBeVisible();
+  await page.getByRole('tab', { name: /Fees/ }).click();
+  await expect(page.getByText('Promised payments').first()).toBeVisible();
+});
+
+test('Today can export hearings to the calendar and Documents can scan with the camera', async ({ page }) => {
+  await page.goto('/app/today/');
+  await expect(page.getByRole('button', { name: /Export hearings to calendar/ })).toBeVisible();
+  await page.goto('/app/documents/');
+  await page.getByRole('button', { name: /Scan with camera/ }).click();
+  await expect(page.getByRole('button', { name: /Take photo/ }).or(page.getByText(/Take photo/)).first()).toBeVisible();
+});
+
+test('Tools has the monthly practice report', async ({ page }) => {
+  await page.goto('/app/tools/');
+  await expect(page.getByText('Monthly practice report').first()).toBeVisible();
+});

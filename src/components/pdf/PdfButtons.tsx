@@ -1,11 +1,13 @@
 'use client';
 
-import { FileDown, Languages, Loader2, Receipt } from 'lucide-react';
+import { ClipboardList, FileDown, Languages, Loader2, Receipt } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { letterheadOf } from '../../lib/chamberSettings';
 import { todayKey } from '../../lib/dates';
 import { downloadBlob } from '../../lib/files';
+import { useLang } from '../../lib/i18n';
+import { buildPrepInput, hearingPrepPdf } from '../../lib/pdfBriefs';
 import { caseStatusPdf, feeReceiptPdf } from '../../lib/pdfDocs';
 import { getDb } from '../../lib/store';
 import { getCase, getChamber, getClient, getCourt, getFeeLedger } from '../../lib/repo';
@@ -103,6 +105,26 @@ export function CaseStatusButton({ caseId, label = 'Status PDF', className }: { 
           date: todayKey(),
         });
         downloadBlob(bytes, `Case status - ${safeName(c.caseNo)}.pdf`);
+      }}
+    />
+  );
+}
+
+/**
+ * One-page English prep sheet for the next hearing (last hearings, open tasks, diary notes, documents, blank
+ * lines to write on). The fee line is printed only when `withFee` is set — pass `can(role, 'billing')`.
+ */
+export function HearingPrepButton({ caseId, label, className, withFee = false }: { caseId: string; label?: string; className?: string; withFee?: boolean }) {
+  const { t } = useLang();
+  return (
+    <PdfButton
+      label={label ?? t('briefs.prepButton', undefined, 'Hearing prep sheet')}
+      className={className}
+      icon={<ClipboardList className="h-4 w-4" />}
+      run={async () => {
+        const input = buildPrepInput(getDb(), caseId, { withFee });
+        if (!input) throw new Error(t('briefs.prepError', undefined, 'Could not make the prep sheet'));
+        downloadBlob(await hearingPrepPdf(input), `Hearing prep - ${safeName(input.caseNo)}.pdf`);
       }}
     />
   );

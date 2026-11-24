@@ -9,8 +9,11 @@ import { OutcomeDialog } from '../../../../components/outcome/OutcomeDialog';
 import { DeadlinesForCase } from '../../../../components/deadlines/DeadlinesForCase';
 import { ExpensesPanel } from '../../../../components/fees/ExpensesPanel';
 import { PaymentForm } from '../../../../components/fees/PaymentForm';
+import { PromisedPayments } from '../../../../components/fees/PromisedPayments';
 import { hasFile, UploadBadge, useDocFile } from '../../../../components/docs/DocFiles';
-import { CaseStatusButton, FeeReceiptButton, StatusSheetLink } from '../../../../components/pdf/PdfButtons';
+import { ScanButton } from '../../../../components/docs/ScanToPdf';
+import { CaseStatusButton, FeeReceiptButton, HearingPrepButton, StatusSheetLink } from '../../../../components/pdf/PdfButtons';
+import { CaseCalendarButton } from '../../../../components/reminders/CalendarButtons';
 import { useRole } from '../../../../components/shell/RoleProvider';
 import { Badge, btn, Card, CardTitle, EmptyState, StatusBadge } from '../../../../components/ui';
 import { Loading } from '../../../../components/ui/Loading';
@@ -39,6 +42,7 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
   const [upErr, setUpErr] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('overview');
   const [paying, setPaying] = useState(false);
+  const [payFor, setPayFor] = useState<{ id: string; amount: number; note: string } | null>(null);
   const [recording, setRecording] = useState(false);
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get('tab') as Tab | null;
@@ -150,6 +154,9 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
             </a>
           )}
           {daysToNext !== null && daysToNext >= 0 && (
+            <CaseCalendarButton c={c} className="inline-flex items-center gap-2 rounded-lg bg-ivory px-4 py-2 text-sm font-medium text-night transition hover:-translate-y-0.5" />
+          )}
+          {daysToNext !== null && daysToNext >= 0 && (
             <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-ivory/80">
               {daysToNext === 0 ? 'Listed today' : daysToNext === 1 ? 'Listed tomorrow' : `Listed in ${daysToNext} days`}
             </span>
@@ -251,6 +258,7 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
               <div className="mt-2 flex flex-wrap gap-2">
                 <StatusSheetLink caseId={c.id} />
                 <CaseStatusButton caseId={c.id} className={btn.ghost} />
+                <HearingPrepButton caseId={c.id} className={btn.ghost} withFee={seeFees} />
               </div>
             </Card>
           </div>
@@ -289,7 +297,8 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
           <Card>
             <CardTitle
               action={
-                <span className="flex items-center gap-3">
+                <span className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+                  <ScanButton caseId={id} onSaved={toast.show} />
                   {canUpload && (
                     <label className="inline-flex cursor-pointer items-center gap-1.5 text-sm text-bronze hover:underline">
                       <UploadCloud className="h-4 w-4" aria-hidden /> Upload file
@@ -394,7 +403,7 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
           <Card>
             <CardTitle
               action={
-                <button className={btn.primary} onClick={() => setPaying((v) => !v)} aria-expanded={paying}>
+                <button className={btn.primary} onClick={() => { setPayFor(null); setPaying((v) => !v); }} aria-expanded={paying}>
                   <Plus className="h-4 w-4" /> Record payment
                 </button>
               }
@@ -403,10 +412,14 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
             </CardTitle>
             {paying && (
               <PaymentForm
+                key={payFor?.id ?? 'new'}
                 caseId={c.id}
                 agreed={fee?.agreed}
+                initialAmount={payFor?.amount}
+                initialNote={payFor?.note}
                 onDone={(m) => {
                   setPaying(false);
+                  setPayFor(null);
                   toast.show(m);
                 }}
               />
@@ -474,6 +487,24 @@ function CaseDetailBody({ id, db }: { id: string; db: Snapshot }) {
               </>
             )}
           </Card>
+        )}
+        {active === 'fees' && seeFees && (
+          <div className="mt-6">
+            <PromisedPayments
+              caseId={c.id}
+              promises={fee?.promises}
+              client={client}
+              caseTitle={c.title}
+              caseNo={c.caseNo}
+              chamberName={db.chamber.name}
+              notify={toast.show}
+              onMarkReceived={(p, note) => {
+                setPayFor({ id: p.id, amount: p.amount, note });
+                setPaying(true);
+                setTimeout(() => document.getElementById('payment-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+              }}
+            />
+          </div>
         )}
         {active === 'fees' && seeFees && (
           <div className="mt-6">

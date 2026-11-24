@@ -3,6 +3,7 @@
  * Phase 2 swaps the bodies for Supabase calls (with the same signatures).
  */
 import type { Case, CaseCategory, CaseStatus, Client, DiaryEntry, Expense, FeePayment, Precedent, Task } from '../types';
+import { autoKeep } from './promises';
 import { getDb, uid, updateDb } from './store';
 
 const nowIso = () => new Date().toISOString();
@@ -127,6 +128,7 @@ export function addPayment(caseId: string, p: FeePayment) {
       db.fees.push(f);
     }
     f.payments.push(p);
+    if (f.promises?.length) f.promises = autoKeep(f);
   });
 }
 

@@ -1,19 +1,31 @@
 'use client';
 
-import { CalendarPlus, Calculator } from 'lucide-react';
+import { CalendarPlus, Calculator, FileBarChart, FileDown, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useRole } from '../../../components/shell/RoleProvider';
 import { btn, Card, CardTitle, inputCls, Notice, PageHeader } from '../../../components/ui';
 import { useToast } from '../../../components/ui/Toast';
 import { formatPk, todayKey, weekday } from '../../../lib/dates';
+import { downloadBlob } from '../../../lib/files';
+import { useLang } from '../../../lib/i18n';
 import { limitationDeadline, REMEDIES } from '../../../lib/limitation';
+import { buildReportInput, currentMonth, isMonthKey, practiceReportPdf } from '../../../lib/pdfBriefs';
+import { can } from '../../../lib/permissions';
+import { getDb } from '../../../lib/store';
 
 export default function ToolsPage() {
   const toast = useToast();
   const [order, setOrder] = useState('');
   const [remedy, setRemedy] = useState(REMEDIES[1].id);
   const [copy, setCopy] = useState('0');
+  const { t } = useLang();
+  const { role } = useRole();
+  const seeFees = can(role, 'billing');
+  const [month, setMonth] = useState('');
+  const [repBusy, setRepBusy] = useState(false);
   useEffect(() => {
     setOrder(todayKey());
+    setMonth(currentMonth());
   }, []);
 
   const r = REMEDIES.find((x) => x.id === remedy)!;
@@ -67,6 +79,45 @@ export default function ToolsPage() {
             </button>
           </div>
         )}
+      </Card>
+      <Card className="mt-6 max-w-3xl">
+        <CardTitle>
+          <span className="inline-flex items-center gap-2">
+            <FileBarChart className="h-5 w-5 text-bronze" /> {t('briefs.reportTitle', undefined, 'Monthly practice report')}
+          </span>
+        </CardTitle>
+        <p className="mb-4 text-sm text-ink-soft">
+          {t('briefs.reportHint', undefined, 'One PDF for the month: new cases, hearings held, cases decided, and what is pending now by category and court.')}
+        </p>
+        {seeFees && (
+          <p className="mb-4 text-xs text-ink-soft">{t('briefs.reportFeesNote', undefined, 'This report also lists fees received in the month and the total still outstanding.')}</p>
+        )}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <label className="block flex-1 text-sm">
+            <span className="mb-1 block font-medium">{t('briefs.month', undefined, 'Month')}</span>
+            <input type="month" className={inputCls} value={month} onChange={(e) => setMonth(e.target.value)} />
+          </label>
+          <button
+            type="button"
+            className={btn.bronze}
+            disabled={repBusy}
+            onClick={async () => {
+              if (!isMonthKey(month)) return toast.show(t('briefs.pickMonth', undefined, 'Choose a month first'));
+              setRepBusy(true);
+              try {
+                const bytes = await practiceReportPdf(buildReportInput(getDb(), month, { withFees: seeFees }));
+                downloadBlob(bytes, `Practice report ${month}.pdf`);
+                toast.show(t('briefs.reportDone', undefined, 'Report downloaded'));
+              } catch {
+                toast.show(t('briefs.reportError', undefined, 'Could not make the report'));
+              } finally {
+                setRepBusy(false);
+              }
+            }}
+          >
+            {repBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />} {t('briefs.download', undefined, 'Download report PDF')}
+          </button>
+        </div>
       </Card>
       {toast.node}
     </>

@@ -7,10 +7,10 @@ import { PDFDocument, rgb, StandardFonts, type PDFFont, type PDFPage } from 'pdf
 import { formatPk, formatTime } from './dates';
 
 export const A4: [number, number] = [595.28, 841.89];
-const INK = rgb(0.11, 0.1, 0.09);
-const SOFT = rgb(0.4, 0.38, 0.35);
-const BRONZE = rgb(0.62, 0.45, 0.24);
-const LINE = rgb(0.85, 0.82, 0.77);
+export const INK = rgb(0.11, 0.1, 0.09);
+export const SOFT = rgb(0.4, 0.38, 0.35);
+export const BRONZE = rgb(0.62, 0.45, 0.24);
+export const LINE = rgb(0.85, 0.82, 0.77);
 
 const okCache = new WeakMap<PDFFont, Map<string, boolean>>();
 /** Replace characters the font cannot encode with "?" so drawing never throws. */
@@ -104,7 +104,7 @@ export function amountInWords(amount: number): string {
 export const rupees = (n: number) => `Rs ${n.toLocaleString('en-PK')}`;
 
 /** A simple top-down writer that starts new pages as needed. */
-class Writer {
+export class Writer {
   page!: PDFPage;
   y = 0;
   constructor(
@@ -161,7 +161,7 @@ class Writer {
 }
 
 /** Draw the chamber logo (a PNG/JPEG data URL) centred at the top of the page. A bad image is skipped, never an error. */
-async function drawLogo(w: Writer, dataUrl?: string, maxH = 46) {
+export async function drawLogo(w: Writer, dataUrl?: string, maxH = 46) {
   const m = /^data:image\/(png|jpe?g);base64,(.+)$/i.exec(dataUrl ?? '');
   if (!m) return;
   try {
@@ -178,7 +178,7 @@ async function drawLogo(w: Writer, dataUrl?: string, maxH = 46) {
   }
 }
 
-async function times(doc: PDFDocument) {
+export async function times(doc: PDFDocument) {
   return {
     regular: await doc.embedFont(StandardFonts.TimesRoman),
     bold: await doc.embedFont(StandardFonts.TimesRomanBold),

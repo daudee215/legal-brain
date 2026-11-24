@@ -17,8 +17,10 @@ import { useLang } from '../../../lib/i18n';
 import { Loading } from '../../../components/ui/Loading';
 import type { DocFile } from '../../../types';
 import { tooBigMessage } from '../../../lib/cloud/storage';
+import { DOC_FOLDERS, ScanToPdf } from '../../../components/docs/ScanToPdf';
+import { Camera } from 'lucide-react';
 
-const FOLDERS = ['All', 'Pleadings', 'Orders', 'Evidence', 'Correspondence', 'Personal'];
+const FOLDERS = ['All', ...DOC_FOLDERS];
 
 function size(kb: number) {
   return kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb} KB`;
@@ -49,6 +51,7 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<DocSearchHit[] | null>(null);
+  const [scanOpen, setScanOpen] = useState(false);
   // Law-book PDFs belong to a private shelf, not the chamber's case files.
   const files = db.docs.filter((d) => d.folder !== BOOK_FOLDER);
   const rows = files.filter((d) => folder === 'All' || d.folder === folder);
@@ -226,6 +229,11 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
                       }}
                     />
                   </label>
+                  <div className="mt-3">
+                    <button type="button" className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-line bg-paper px-4 text-sm font-medium text-ink hover:border-bronze/40 hover:bg-line/40" onClick={() => setScanOpen(true)}>
+                      <Camera className="h-4 w-4 text-bronze" aria-hidden /> {t('scan.button', undefined, 'Scan with camera')}
+                    </button>
+                  </div>
                 </>
               )}
               <div className="mx-auto mt-4 grid max-w-md gap-2 text-start text-sm sm:grid-cols-2">
@@ -340,6 +348,7 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
           />
         </div>
       </div>
+      <ScanToPdf open={scanOpen} onClose={() => setScanOpen(false)} defaultFolder={upFolder} caseId={upCase || undefined} onSaved={toast.show} />
       {toast.node}
     </>
   );

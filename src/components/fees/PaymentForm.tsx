@@ -10,16 +10,17 @@ import { btn, inputCls } from '../ui';
 const MODES: FeePayment['mode'][] = ['Cash', 'Cheque', 'Bank transfer', 'Online'];
 
 /** Set the agreed fee and/or record a payment received from the client. */
-export function PaymentForm({ caseId, agreed, onDone }: { caseId: string; agreed?: number; onDone: (msg: string) => void }) {
+export function PaymentForm({ caseId, agreed, initialAmount, initialNote, onDone }: { caseId: string; agreed?: number; initialAmount?: number; initialNote?: string; onDone: (msg: string) => void }) {
   const [fee, setFee] = useState(agreed ? String(agreed) : '');
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState(initialAmount ? String(initialAmount) : '');
   const [mode, setMode] = useState<FeePayment['mode']>('Cash');
   const [date, setDate] = useState(todayKey());
-  const [note, setNote] = useState('');
+  const [note, setNote] = useState(initialNote ?? '');
   const [err, setErr] = useState('');
 
   return (
     <motion.form
+      id="payment-form"
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: 'auto' }}
       className="mb-5 overflow-hidden rounded-xl border border-bronze/30 bg-bronze/5 p-4"

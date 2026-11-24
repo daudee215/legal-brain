@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Cloud, CloudOff, Languages, LogOut, Menu, Moon, RefreshCw, Search, Sun } from 'lucide-react';
+import { Cloud, CloudOff, Languages, Lock, LogOut, Menu, Moon, RefreshCw, Search, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { hasUnsyncedChanges } from '../../lib/cloud/sync';
@@ -10,6 +10,7 @@ import { usePathname } from 'next/navigation';
 import { useLang } from '../../lib/i18n';
 import type { Role } from '../../types';
 import { NAV, isActive } from './nav';
+import { AppLockSettings } from './AppLockSettings';
 import { NotificationsMenu } from './Notifications';
 import { useRole } from './RoleProvider';
 import { useCloud } from './CloudProvider';
@@ -130,6 +131,7 @@ function AccountMenu({ initials, name }: { initials: string; name: string }) {
   const { email, sync, signOut } = useCloud();
   const { t } = useLang();
   const [open, setOpen] = useState(false);
+  const [lockOpen, setLockOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -177,11 +179,23 @@ function AccountMenu({ initials, name }: { initials: string; name: string }) {
           <Link role="menuitem" href="/app/settings/" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm text-ink hover:bg-line/50">
             {t('account.settings')}
           </Link>
+          <button
+            role="menuitem"
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              setLockOpen(true);
+            }}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm text-ink hover:bg-line/50"
+          >
+            <Lock className="h-4 w-4" aria-hidden /> {t('lock.menu')}
+          </button>
           <button role="menuitem" type="button" onClick={() => void out()} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm text-danger hover:bg-danger/10">
             <LogOut className="h-4 w-4" aria-hidden /> {t('account.signOut')}
           </button>
         </div>
       )}
+      <AppLockSettings open={lockOpen} onClose={() => setLockOpen(false)} />
     </div>
   );
 }

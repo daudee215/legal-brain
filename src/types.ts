@@ -234,11 +234,21 @@ export interface FeePayment {
   mode: 'Cash' | 'Cheque' | 'Bank transfer' | 'Online';
   note?: string;
 }
+/** A client's promise to pay `amount` by `dueOn` (day key). `keptOn` is set once later payments cover it. */
+export interface FeePromise {
+  id: string;
+  amount: number;
+  dueOn: string;
+  note?: string;
+  madeOn: string;
+  keptOn?: string;
+}
 /** Professional fee agreed for a case and what the client has paid so far (PKR). */
 export interface FeeLedger {
   caseId: string;
   agreed: number;
   payments: FeePayment[];
+  promises?: FeePromise[];
 }
 export interface ActivityItem {
   date: string;
