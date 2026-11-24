@@ -181,6 +181,10 @@ export function numberPages(doc: PDFDocument, font: PDFFont, size = 9) {
 export interface FeeReceiptInput {
   receiptNo: string;
   chamberName: string;
+  /** Line under the name; defaults to "Advocates & Legal Consultants". */
+  tagline?: string;
+  /** Address, phone and email, printed as one line. */
+  contact?: string;
   clientName: string;
   caseTitle: string;
   caseNo: string;
@@ -196,7 +200,8 @@ export async function feeReceiptPdf(r: FeeReceiptInput): Promise<Uint8Array> {
   const f = await times(doc);
   const w = new Writer(doc, f, { top: 64, bottom: 64, left: 64, right: 64 });
   w.text(r.chamberName, { size: 20, font: f.bold, align: 'center' });
-  w.text('Advocates & Legal Consultants', { size: 10, font: f.italic, color: SOFT, align: 'center', gap: 10 });
+  w.text(r.tagline || 'Advocates & Legal Consultants', { size: 10, font: f.italic, color: SOFT, align: 'center', gap: r.contact ? 2 : 10 });
+  if (r.contact) w.text(r.contact, { size: 9, color: SOFT, align: 'center', gap: 10 });
   w.rule(BRONZE, 1.2);
   w.text('FEE RECEIPT', { size: 15, font: f.bold, align: 'center', gap: 8 });
   w.pairs([
@@ -229,6 +234,8 @@ export async function feeReceiptPdf(r: FeeReceiptInput): Promise<Uint8Array> {
 
 export interface CaseStatusInput {
   chamberName: string;
+  tagline?: string;
+  contact?: string;
   clientName: string;
   caseTitle: string;
   caseNo: string;
@@ -248,6 +255,8 @@ export async function caseStatusPdf(c: CaseStatusInput): Promise<Uint8Array> {
   const f = await times(doc);
   const w = new Writer(doc, f);
   w.text(c.chamberName, { size: 18, font: f.bold, align: 'center' });
+  if (c.tagline) w.text(c.tagline, { size: 10, font: f.italic, color: SOFT, align: 'center', gap: c.contact ? 2 : 6 });
+  if (c.contact) w.text(c.contact, { size: 9, color: SOFT, align: 'center', gap: 6 });
   w.text('CASE STATUS REPORT', { size: 12, font: f.bold, color: BRONZE, align: 'center', gap: 6 });
   w.rule(BRONZE, 1.2);
   w.pairs([

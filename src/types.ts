@@ -149,11 +149,20 @@ export interface AppNotification {
 export type Accent = 'bronze' | 'emerald' | 'navy' | 'burgundy' | 'teal';
 
 /** The senior advocate's choices for the whole chamber: colour scheme and what each role may do. */
+export interface ChamberProfile {
+  tagline?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+}
+
 export interface ChamberSettings {
   id: string;
   accent: Accent;
   /** Rights per role, replacing the defaults. Absent = defaults. */
   access?: Partial<Record<Role, import('./lib/permissions').Action[]>>;
+  /** Letterhead details printed on receipts and case reports. */
+  profile?: ChamberProfile;
   updatedOn: string;
 }
 

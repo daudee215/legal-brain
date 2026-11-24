@@ -3,9 +3,11 @@
 import { FileDown, Languages, Loader2, Receipt } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { letterheadOf } from '../../lib/chamberSettings';
 import { todayKey } from '../../lib/dates';
 import { downloadBlob } from '../../lib/files';
 import { caseStatusPdf, feeReceiptPdf } from '../../lib/pdfDocs';
+import { getDb } from '../../lib/store';
 import { getCase, getChamber, getClient, getCourt, getFeeLedger } from '../../lib/repo';
 import { btn } from '../ui';
 
@@ -59,6 +61,7 @@ export function FeeReceiptButton({ caseId, paymentIndex, label = 'Receipt', clas
         const bytes = await feeReceiptPdf({
           receiptNo,
           chamberName: chamber.name,
+          ...letterheadOf(getDb()),
           clientName: client?.name ?? '—',
           caseTitle: c.title,
           caseNo: c.caseNo,
@@ -86,6 +89,7 @@ export function CaseStatusButton({ caseId, label = 'Status PDF', className }: { 
         const [client, court, chamber, fee] = await Promise.all([getClient(c.clientId), getCourt(c.courtId), getChamber(), getFeeLedger(caseId)]);
         const bytes = await caseStatusPdf({
           chamberName: chamber.name,
+          ...letterheadOf(getDb()),
           clientName: client?.name ?? '—',
           caseTitle: c.title,
           caseNo: c.caseNo,

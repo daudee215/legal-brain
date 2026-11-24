@@ -1,15 +1,15 @@
 'use client';
 
-import { Check, Download, ExternalLink, FolderOpen, Library, Lock, Palette, RotateCcw, ShieldCheck, Trash2, Users } from 'lucide-react';
+import { Building2, Check, Download, ExternalLink, FolderOpen, Library, Lock, Palette, RotateCcw, ShieldCheck, Trash2, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useDocFile } from '../../../components/docs/DocFiles';
 import { RoleGate } from '../../../components/shell/RoleGate';
-import { Badge, btn, Card, CardTitle, Notice, PageHeader } from '../../../components/ui';
+import { Badge, btn, Card, CardTitle, inputCls, Notice, PageHeader } from '../../../components/ui';
 import { Loading } from '../../../components/ui/Loading';
 import { useToast } from '../../../components/ui/Toast';
 import { formatBytes, PLAN_BYTES, storageUsed } from '../../../lib/cloud/storage';
-import { ACCENTS, resetAccess, saveSettings, setRoleAccess, settingsOf } from '../../../lib/chamberSettings';
+import { ACCENTS, letterheadOf, resetAccess, saveProfile, saveSettings, setRoleAccess, settingsOf } from '../../../lib/chamberSettings';
 import { formatPk } from '../../../lib/dates';
 import { BOOK_FOLDER, removeDocument } from '../../../lib/docText';
 import { ACTION_LABEL, ALL_ACTIONS, accessFor, ROLE_LABEL, SENIOR_ONLY, type Action } from '../../../lib/permissions';
@@ -17,9 +17,10 @@ import { snapshot, type Snapshot } from '../../../lib/repo';
 import { useData } from '../../../lib/useData';
 import type { Accent, Role } from '../../../types';
 
-type Tab = 'look' | 'access' | 'files';
+type Tab = 'look' | 'profile' | 'access' | 'files';
 const TABS: { id: Tab; label: string; icon: typeof Palette }[] = [
   { id: 'look', label: 'Look and feel', icon: Palette },
+  { id: 'profile', label: 'Chamber profile', icon: Building2 },
   { id: 'access', label: 'Access rights', icon: ShieldCheck },
   { id: 'files', label: 'Files and storage', icon: FolderOpen },
 ];
@@ -59,6 +60,65 @@ function Look({ accent }: { accent: Accent }) {
         })}
       </div>
     </Card>
+  );
+}
+
+function Profile({ db }: { db: Snapshot }) {
+  const toast = useToast();
+  const cur = settingsOf(db)?.profile ?? {};
+  const [tagline, setTagline] = useState(cur.tagline ?? '');
+  const [address, setAddress] = useState(cur.address ?? '');
+  const [phone, setPhone] = useState(cur.phone ?? '');
+  const [email, setEmail] = useState(cur.email ?? '');
+  const preview = letterheadOf({ settings: [{ id: 'main', accent: 'bronze', updatedOn: '', profile: { tagline, address, phone, email } }] });
+  const field = 'block text-sm';
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <Card>
+        <CardTitle>Letterhead details</CardTitle>
+        <p className="mb-4 text-sm text-ink-soft">Printed at the top of fee receipts and case status reports your chamber sends to clients.</p>
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            saveProfile({ tagline, address, phone, email });
+            toast.show('Letterhead saved');
+          }}
+        >
+          <label className={field}>
+            <span className="mb-1 block font-medium">Line under the name</span>
+            <input className={inputCls} value={tagline} maxLength={80} placeholder="Advocates & Legal Consultants" onChange={(e) => setTagline(e.target.value)} />
+          </label>
+          <label className={field}>
+            <span className="mb-1 block font-medium">Address</span>
+            <input className={inputCls} value={address} maxLength={120} placeholder="Office 4, Court Road, Lahore" onChange={(e) => setAddress(e.target.value)} />
+          </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className={field}>
+              <span className="mb-1 block font-medium">Phone</span>
+              <input className={inputCls} value={phone} maxLength={40} placeholder="0300 1234567" onChange={(e) => setPhone(e.target.value)} />
+            </label>
+            <label className={field}>
+              <span className="mb-1 block font-medium">Email</span>
+              <input className={inputCls} type="email" value={email} maxLength={80} placeholder="chamber@example.pk" onChange={(e) => setEmail(e.target.value)} />
+            </label>
+          </div>
+          <button type="submit" className={btn.bronze}>
+            Save letterhead
+          </button>
+        </form>
+      </Card>
+      <Card>
+        <CardTitle>Preview</CardTitle>
+        <div className="rounded-xl border border-line bg-white p-6 text-center text-[#2a2a2a] shadow-inner">
+          <p className="font-serif text-xl font-bold">{db.chamber.name}</p>
+          <p className="text-xs italic text-[#666]">{preview.tagline}</p>
+          {preview.contact && <p className="mt-0.5 text-[11px] text-[#666]">{preview.contact}</p>}
+          <div className="mx-auto my-3 h-px bg-bronze" />
+          <p className="font-serif text-sm font-bold tracking-wide">FEE RECEIPT</p>
+        </div>
+      </Card>
+    </div>
   );
 }
 
@@ -260,6 +320,7 @@ function StudioBody({ db }: { db: Snapshot }) {
         ))}
       </div>
       {tab === 'look' && <Look accent={accent} />}
+      {tab === 'profile' && <Profile db={db} />}
       {tab === 'access' && <Access />}
       {tab === 'files' && <Files db={db} />}
     </RoleGate>

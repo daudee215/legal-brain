@@ -1,4 +1,4 @@
-import type { Accent, ChamberSettings, Db, Role } from '../types';
+import type { Accent, ChamberProfile, ChamberSettings, Db, Role } from '../types';
 import { todayKey } from './dates';
 import { setCustomAccess, type Action } from './permissions';
 import { getDb, updateDb } from './store';
@@ -25,7 +25,7 @@ export function applyChamberSettings(s: ChamberSettings | undefined) {
 /** A short string that changes whenever what should be applied changes. */
 export const settingsKey = (s: ChamberSettings | undefined) => JSON.stringify([s?.accent ?? 'bronze', s?.access ?? null]);
 
-export function saveSettings(patch: Partial<Pick<ChamberSettings, 'accent' | 'access'>>) {
+export function saveSettings(patch: Partial<Pick<ChamberSettings, 'accent' | 'access' | 'profile'>>) {
   updateDb((db) => {
     const cur = db.settings?.[0];
     const next: ChamberSettings = { id: 'main', accent: 'bronze', ...cur, ...patch, updatedOn: todayKey() };
@@ -49,3 +49,18 @@ export function resetAccess() {
   });
 }
 
+
+const clean = (s?: string) => (s ?? '').replace(/s+/g, ' ').trim();
+
+/** Save the letterhead details (blank fields are dropped). */
+export function saveProfile(p: ChamberProfile) {
+  const out: ChamberProfile = {};
+  for (const k of ['tagline', 'address', 'phone', 'email'] as const) if (clean(p[k])) out[k] = clean(p[k]);
+  saveSettings({ profile: out });
+}
+
+/** What the PDF headers print under the chamber name. */
+export function letterheadOf(db: Pick<Db, 'settings'>): { tagline: string; contact: string } {
+  const p = settingsOf(db)?.profile ?? {};
+  return { tagline: p.tagline || 'Advocates & Legal Consultants', contact: [p.address, p.phone, p.email].filter(Boolean).join('  |  ') };
+}
