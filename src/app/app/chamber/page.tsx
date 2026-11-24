@@ -11,6 +11,7 @@ import { snapshot, type Snapshot } from '../../../lib/repo';
 import { useData } from '../../../lib/useData';
 import { Loading } from '../../../components/ui/Loading';
 import { CloudChamber } from './CloudChamber';
+import { RoleGate } from '../../../components/shell/RoleGate';
 
 const MATRIX_ROWS: { label: string; action?: Action }[] = [
   { label: 'View cases, cause lists, laws, case law, news' },
@@ -130,8 +131,16 @@ function ChamberPageBody({ db }: { db: Snapshot }) {
   );
 }
 
-export default function ChamberPage() {
+function ChamberPageInner() {
   const db = useData(() => snapshot());
   if (!db) return <Loading />;
   return <ChamberPageBody db={db} />;
+}
+
+export default function ChamberPage() {
+  return (
+    <RoleGate action="team.view">
+      <ChamberPageInner />
+    </RoleGate>
+  );
 }

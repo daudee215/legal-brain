@@ -4,6 +4,7 @@ export const ROUTES = [
   '/signup/',
   '/join/',
   '/forgot/',
+  '/app/studio/',
   '/reset/',
   '/app/',
   '/app/laws/',

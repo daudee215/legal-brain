@@ -7,7 +7,7 @@
 import { seed } from '../../data/seed';
 import type { Chamber, Db, Member } from '../../types';
 
-export const DATA_KEYS = ['cases', 'clients', 'causeList', 'diary', 'notifications', 'books', 'docs', 'tasks', 'deadlines', 'precedents'] as const;
+export const DATA_KEYS = ['cases', 'clients', 'causeList', 'diary', 'notifications', 'books', 'docs', 'tasks', 'deadlines', 'precedents', 'settings'] as const;
 export const BILLING_KEYS = ['fees', 'expenses'] as const;
 
 export type Half = Record<string, unknown[]>;
@@ -15,7 +15,7 @@ export type Half = Record<string, unknown[]>;
 export function splitDb(db: Db): { data: Half; billing: Half } {
   const data: Half = {};
   const billing: Half = {};
-  for (const k of DATA_KEYS) data[k] = db[k] as unknown[];
+  for (const k of DATA_KEYS) data[k] = (db[k] ?? []) as unknown[];
   for (const k of BILLING_KEYS) billing[k] = db[k] as unknown[];
   return { data, billing };
 }
@@ -40,6 +40,7 @@ export function composeDb(p: { chamber: Chamber; me: Member; data: Half; billing
     tasks: arr(p.data, 'tasks'),
     deadlines: arr(p.data, 'deadlines'),
     precedents: arr(p.data, 'precedents'),
+    settings: arr(p.data, 'settings'),
     fees: arr(p.billing, 'fees'),
     expenses: arr(p.billing, 'expenses'),
   };

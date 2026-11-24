@@ -23,6 +23,23 @@ test('clerk is blocked from the AI assistant', async ({ page }) => {
   await expect(page.getByText(/doesn.t have access/)).toBeVisible();
 });
 
+for (const path of ['/app/chamber/', '/app/settings/', '/app/studio/', '/app/precedents/']) {
+  test(`clerk is blocked from ${path}`, async ({ page }) => {
+    await page.goto('/app/');
+    await page.getByLabel('Preview as', { exact: true }).selectOption('clerk');
+    await page.goto(path);
+    await expect(page.getByText(/doesn.t have access/)).toBeVisible();
+  });
+}
+
+test('the senior can pick a colour scheme and it applies across the app', async ({ page }) => {
+  await page.goto('/app/studio/');
+  await page.getByRole('button', { name: /Emerald/ }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-accent', 'emerald');
+  await page.goto('/app/');
+  await expect(page.locator('html')).toHaveAttribute('data-accent', 'emerald');
+});
+
 test('assistant answers a suggested question with citations', async ({ page }) => {
   await page.goto('/app/assistant/');
   await page.getByRole('button', { name: /grounds for post-arrest bail/ }).click();

@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Hourglass,
   Settings,
+  SlidersHorizontal,
   Smartphone,
   Briefcase,
   Calculator,
@@ -48,15 +49,16 @@ export const NAV: NavItem[] = [
   { href: '/app/laws/', label: 'Laws & Statutes', icon: BookOpen, group: 'Research', hint: 'Acts, codes, ordinances' },
   { href: '/app/case-law/', label: 'Case Law', icon: Gavel, group: 'Research', hint: 'Judgments & precedents' },
   { href: '/app/assistant/', label: 'AI Assistant', icon: Sparkles, action: 'assistant', group: 'Research', hint: 'Ask with citations' },
-  { href: '/app/precedents/', label: 'Precedents', icon: BookMarked, group: 'Research', hint: 'Your citation bank' },
+  { href: '/app/precedents/', label: 'Precedents', icon: BookMarked, action: 'precedents', group: 'Research', hint: 'Your citation bank' },
   { href: '/app/library/', label: 'Law Books', icon: Library, action: 'library', group: 'Research', hint: 'Your private library' },
   { href: '/app/news/', label: 'Legal News', icon: Newspaper, group: 'Research', hint: 'News & notifications' },
   { href: '/app/drafting/', label: 'Legal Drafting', icon: FilePen, action: 'drafting', group: 'Office', hint: 'Petitions & applications' },
   { href: '/app/paper-book/', label: 'Paper Book', icon: BookCopy, action: 'drafting', group: 'Office', hint: 'Merge, index, number PDFs' },
-  { href: '/app/chamber/', label: 'Chamber', icon: Users, group: 'Office', hint: 'Team & roles' },
+  { href: '/app/chamber/', label: 'Chamber', icon: Users, action: 'team.view', group: 'Office', hint: 'Team & roles' },
   { href: '/app/tools/', label: 'Tools', icon: Calculator, group: 'Office', hint: 'Limitation & fee calculators' },
   { href: '/app/munshi/', label: 'Munshi Mode', icon: Smartphone, group: 'Office', hint: 'Simple Urdu screen for the clerk' },
-  { href: '/app/settings/', label: 'Data & Backup', icon: Settings, group: 'Office', hint: 'Start fresh, import, export' },
+  { href: '/app/studio/', label: 'Chamber Studio', icon: SlidersHorizontal, action: 'studio', group: 'Office', hint: 'Colours, access rights, law books' },
+  { href: '/app/settings/', label: 'Data & Backup', icon: Settings, action: 'chamber.manage', group: 'Office', hint: 'Start fresh, import, export' },
 ];
 
 export function isActive(pathname: string, href: string): boolean {

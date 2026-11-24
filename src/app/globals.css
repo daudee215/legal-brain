@@ -325,3 +325,41 @@ html[lang='ur'] [class*='tracking-'] {
   line-height: 2;
   letter-spacing: 0;
 }
+
+/* ---------------------------------------------------------------------------
+   Chamber colour schemes. The senior advocate picks one in Chamber Studio; it is set as
+   <html data-accent="..."> on every member's device. Bronze is the default (no attribute).
+   Each scheme restyles the whole app in light and dark by redefining the same tokens.
+   --------------------------------------------------------------------------- */
+html[data-accent='emerald'] {
+  --cream: #eef2ec; --paper: #f8faf6; --ink: #1f2e26; --ink-soft: #52645a; --bronze: #2f6b4f; --bronze-soft: #8dbca3;
+  --line: #d6e0d5; --night: #16251d; --night-2: #1f3327; --glow: 47 107 79;
+}
+html.dark[data-accent='emerald'] {
+  --cream: #0d1410; --paper: #141d18; --ink: #e8f0ea; --ink-soft: #9db0a4; --bronze: #6fbf94; --bronze-soft: #a6d6bb;
+  --line: #24332a; --night: #101a14; --night-2: #18251d; --glow: 111 191 148;
+}
+html[data-accent='navy'] {
+  --cream: #eceff4; --paper: #f7f9fc; --ink: #1a2538; --ink-soft: #566178; --bronze: #2f4f86; --bronze-soft: #9db3d6;
+  --line: #d5dbe6; --night: #141d30; --night-2: #1d2943; --glow: 47 79 134;
+}
+html.dark[data-accent='navy'] {
+  --cream: #0c1019; --paper: #131a27; --ink: #e8edf6; --ink-soft: #9aa6bd; --bronze: #7ea2e0; --bronze-soft: #aec4ec;
+  --line: #232d42; --night: #0f1522; --night-2: #172034; --glow: 126 162 224;
+}
+html[data-accent='burgundy'] {
+  --cream: #f3ecea; --paper: #fbf7f5; --ink: #3a1f24; --ink-soft: #6b4f55; --bronze: #8a2f3c; --bronze-soft: #d19aa3;
+  --line: #e6d5d6; --night: #2c1519; --night-2: #3a1d22; --glow: 138 47 60;
+}
+html.dark[data-accent='burgundy'] {
+  --cream: #140c0e; --paper: #1d1316; --ink: #f3e8ea; --ink-soft: #b89fa4; --bronze: #e0848f; --bronze-soft: #efb3bb;
+  --line: #36242a; --night: #1f1114; --night-2: #2a1a1e; --glow: 224 132 143;
+}
+html[data-accent='teal'] {
+  --cream: #ebf2f2; --paper: #f6fafa; --ink: #1b2e30; --ink-soft: #536568; --bronze: #1f6f78; --bronze-soft: #8cc3c8;
+  --line: #d3e1e2; --night: #12262a; --night-2: #1a343a; --glow: 31 111 120;
+}
+html.dark[data-accent='teal'] {
+  --cream: #0a1213; --paper: #111b1d; --ink: #e6f0f1; --ink-soft: #98aeb1; --bronze: #5fc0c9; --bronze-soft: #9ddde2;
+  --line: #1f3235; --night: #0e1a1c; --night-2: #152427; --glow: 95 192 201;
+}

@@ -8,18 +8,65 @@ export type Action =
   | 'diary.write'
   | 'chamber.manage'
   | 'billing'
-  | 'library';
+  | 'library'
+  | 'precedents'
+  | 'team.view'
+  | 'studio';
 
-const ALL: Action[] = ['cases.edit', 'drafting', 'assistant', 'documents.upload', 'diary.write', 'chamber.manage', 'billing', 'library'];
+export const ALL_ACTIONS: Action[] = [
+  'cases.edit',
+  'drafting',
+  'assistant',
+  'documents.upload',
+  'diary.write',
+  'chamber.manage',
+  'billing',
+  'library',
+  'precedents',
+  'team.view',
+  'studio',
+];
 
-const MATRIX: Record<Role, ReadonlySet<Action>> = {
-  senior: new Set(ALL),
-  junior: new Set(ALL.filter((a) => a !== 'chamber.manage' && a !== 'billing')),
-  clerk: new Set<Action>(['documents.upload', 'diary.write']),
+/** Things only the senior advocate can ever hold: nobody can lock the senior out of running the chamber. */
+export const SENIOR_ONLY: Action[] = ['chamber.manage', 'studio'];
+
+export const DEFAULT_ACCESS: Record<Role, Action[]> = {
+  senior: ALL_ACTIONS,
+  junior: ALL_ACTIONS.filter((a) => a !== 'chamber.manage' && a !== 'billing' && a !== 'studio'),
+  clerk: ['documents.upload', 'diary.write'],
 };
 
+/** The senior advocate's own changes to what each role may do (saved with the chamber, applied on every device). */
+let custom: Partial<Record<Role, Action[]>> | null = null;
+
+export function setCustomAccess(map: Partial<Record<Role, Action[]>> | null | undefined) {
+  custom = map && Object.keys(map).length ? map : null;
+}
+
+/** What a role may do right now: the senior's customisation if there is one, else the defaults. */
+export function accessFor(role: Role): ReadonlySet<Action> {
+  if (role === 'senior') return new Set(ALL_ACTIONS);
+  const base = custom?.[role] ?? DEFAULT_ACCESS[role];
+  return new Set(base.filter((a) => !SENIOR_ONLY.includes(a)));
+}
+
 export function can(role: Role, action: Action): boolean {
-  return MATRIX[role].has(action);
+  return accessFor(role).has(action);
 }
 
 export const ROLE_LABEL: Record<Role, string> = { senior: 'Senior', junior: 'Junior', clerk: 'Clerk' };
+
+/** Plain-language names for the rights a senior can grant, used by the Chamber and Studio pages. */
+export const ACTION_LABEL: Record<Action, { title: string; hint: string }> = {
+  'cases.edit': { title: 'Add and edit cases', hint: 'Create matters, change dates and status' },
+  drafting: { title: 'Legal drafting and paper books', hint: 'Petitions, applications, merged bundles' },
+  assistant: { title: 'AI assistant', hint: 'Ask questions with citations' },
+  'documents.upload': { title: 'Upload documents', hint: 'Add pleadings, orders and evidence' },
+  'diary.write': { title: 'Write in the diary', hint: 'Hearing notes and client reminders' },
+  billing: { title: 'See fees and billing', hint: 'Fee ledgers, expenses, receipts' },
+  library: { title: 'Law books shelf', hint: 'Use the private law-book library' },
+  precedents: { title: 'Precedent bank', hint: 'Saved citations and principles' },
+  'team.view': { title: 'See the chamber team page', hint: 'Who is in the chamber and their roles' },
+  'chamber.manage': { title: 'Invite and manage members', hint: 'Senior only, cannot be granted' },
+  studio: { title: 'Chamber Studio', hint: 'Senior only, cannot be granted' },
+};

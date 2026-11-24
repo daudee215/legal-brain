@@ -14,6 +14,7 @@ import { useData } from '../../../lib/useData';
 import { cloudEnabled } from '../../../lib/cloud/client';
 import { storageUsed } from '../../../lib/cloud/storage';
 import { CloudSignInCard, CloudSyncCard } from './CloudCards';
+import { RoleGate } from '../../../components/shell/RoleGate';
 
 function savedAt(): string | null {
   try {
@@ -198,7 +199,7 @@ function ImportCases({ onDone }: { onDone: (m: string) => void }) {
   );
 }
 
-export default function SettingsPage() {
+function SettingsPageInner() {
   const toast = useToast();
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [err, setErr] = useState('');
@@ -402,5 +403,13 @@ export default function SettingsPage() {
       <ConfirmDialog c={confirm} onClose={() => setConfirm(null)} />
       {toast.node}
     </>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <RoleGate action="chamber.manage">
+      <SettingsPageInner />
+    </RoleGate>
   );
 }

@@ -146,8 +146,21 @@ export interface AppNotification {
   read: boolean;
   href?: string;
 }
+export type Accent = 'bronze' | 'emerald' | 'navy' | 'burgundy' | 'teal';
+
+/** The senior advocate's choices for the whole chamber: colour scheme and what each role may do. */
+export interface ChamberSettings {
+  id: string;
+  accent: Accent;
+  /** Rights per role, replacing the defaults. Absent = defaults. */
+  access?: Partial<Record<Role, import('./lib/permissions').Action[]>>;
+  updatedOn: string;
+}
+
 export interface Book {
   id: string;
+  /** The uploaded PDF in Documents storage, when this book has a file. */
+  docId?: string;
   title: string;
   author: string;
   ownerId: string;
@@ -197,6 +210,7 @@ export interface Db {
   deadlines: Deadline[];
   precedents: Precedent[];
   expenses: Expense[];
+  settings?: ChamberSettings[];
 }
 
 export interface FeePayment {

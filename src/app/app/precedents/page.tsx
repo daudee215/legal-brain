@@ -12,6 +12,7 @@ import { searchItems } from '../../../lib/search';
 import { getDb, updateDb } from '../../../lib/store';
 import { useData } from '../../../lib/useData';
 import type { Case, Precedent } from '../../../types';
+import { RoleGate } from '../../../components/shell/RoleGate';
 
 type Draft = { citation: string; title: string; court: string; year: string; tags: string; note: string; caseIds: string[] };
 const EMPTY: Draft = { citation: '', title: '', court: '', year: '', tags: '', note: '', caseIds: [] };
@@ -106,7 +107,7 @@ function PrecedentForm({ initial, cases, onSave, onCancel }: { initial: Draft; c
   );
 }
 
-export default function PrecedentsPage() {
+function PrecedentsPageInner() {
   const toast = useToast();
   const reduce = useReducedMotion();
   const [q, setQ] = useState('');
@@ -281,5 +282,13 @@ export default function PrecedentsPage() {
       )}
       {toast.node}
     </>
+  );
+}
+
+export default function PrecedentsPage() {
+  return (
+    <RoleGate action="precedents">
+      <PrecedentsPageInner />
+    </RoleGate>
   );
 }

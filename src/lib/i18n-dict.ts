@@ -38,6 +38,7 @@ export const DICT = {
   'nav./app/chamber/': { en: 'Chamber', ur: 'چیمبر' },
   'nav./app/tools/': { en: 'Tools', ur: 'اوزار' },
   'nav./app/munshi/': { en: 'Munshi Mode', ur: 'منشی موڈ' },
+  'nav./app/studio/': { en: 'Chamber Studio', ur: 'چیمبر اسٹوڈیو' },
   'nav./app/settings/': { en: 'Data & Backup', ur: 'ڈیٹا اور بیک اپ' },
 
   // Sidebar chrome

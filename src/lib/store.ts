@@ -100,6 +100,7 @@ function upgrade(db: Db): Db {
     deadlines: db.deadlines ?? [],
     precedents: db.precedents ?? [],
     expenses: db.expenses ?? [],
+    settings: db.settings ?? [],
   };
 }
 

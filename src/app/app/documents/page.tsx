@@ -8,7 +8,7 @@ import { Badge, DataTable, EmptyState, inputCls, PageHeader } from '../../../com
 import { useToast } from '../../../components/ui/Toast';
 import { formatPk } from '../../../lib/dates';
 import { hasFile, UploadBadge, useDocFile } from '../../../components/docs/DocFiles';
-import { removeDocument, searchDocs, uploadDocument, type DocSearchHit } from '../../../lib/docText';
+import { BOOK_FOLDER, removeDocument, searchDocs, uploadDocument, type DocSearchHit } from '../../../lib/docText';
 import { can } from '../../../lib/permissions';
 import { getMode } from '../../../lib/store';
 import { snapshot, type Snapshot } from '../../../lib/repo';
@@ -47,7 +47,9 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<DocSearchHit[] | null>(null);
-  const rows = db.docs.filter((d) => folder === 'All' || d.folder === folder);
+  // Law-book PDFs belong to a private shelf, not the chamber's case files.
+  const files = db.docs.filter((d) => d.folder !== BOOK_FOLDER);
+  const rows = files.filter((d) => folder === 'All' || d.folder === folder);
   const canUpload = can(role, 'documents.upload');
   const inCloud = getMode() === 'cloud';
   const { open, download, fetching } = useDocFile(toast);
@@ -59,7 +61,7 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
     }
     let alive = true;
     const t = setTimeout(() => {
-      searchDocs(db.docs, q, { fetchMissing: inCloud }).then((h) => {
+      searchDocs(files, q, { fetchMissing: inCloud }).then((h) => {
         if (alive) setHits(h);
       });
     }, 250);
@@ -123,7 +125,7 @@ function DocumentsPageBody({ db }: { db: Snapshot }) {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
         <nav aria-label="Folders" className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
           {FOLDERS.map((f) => {
-            const n = f === 'All' ? db.docs.length : db.docs.filter((d) => d.folder === f).length;
+            const n = f === 'All' ? files.length : files.filter((d) => d.folder === f).length;
             return (
               <button
                 key={f}

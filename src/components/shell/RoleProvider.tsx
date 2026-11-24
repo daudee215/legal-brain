@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { applyChamberSettings, settingsKey, settingsOf } from '../../lib/chamberSettings';
 import { listMembers } from '../../lib/repo';
 import { getDb, subscribe } from '../../lib/store';
 import type { Member, Role } from '../../types';
@@ -27,6 +28,9 @@ export function RoleProvider({ children, initialRole = 'senior' }: { children: R
   const { view } = useCloud();
   const cloud = view === 'on';
   const [me, setMe] = useState<Member | null>(null);
+  // Bumped when the senior changes colours or access rights, so every `can()` check re-runs.
+  const [settingsV, setSettingsV] = useState(0);
+  const lastSettings = useRef('');
 
   useEffect(() => {
     try {
@@ -36,15 +40,26 @@ export function RoleProvider({ children, initialRole = 'senior' }: { children: R
       /* storage unavailable — keep default */
     }
     let alive = true;
-    const load = () =>
-      listMembers().then((m) => {
+    const load = () => {
+      const s = settingsOf(getDb());
+      const key = settingsKey(s);
+      if (key !== lastSettings.current) {
+        lastSettings.current = key;
+        applyChamberSettings(s);
+        setSettingsV((v) => v + 1);
+      }
+      return listMembers().then((m) => {
         if (alive) setMembers(m);
       });
+    };
     void load();
     const off = subscribe(() => void load());
     return () => {
       alive = false;
       off();
+      // Leaving the app: the website goes back to its own colours.
+      lastSettings.current = '';
+      applyChamberSettings(undefined);
     };
   }, []);
 
@@ -68,7 +83,8 @@ export function RoleProvider({ children, initialRole = 'senior' }: { children: R
     if (cloud && me) return { role: me.role, setRole: () => {}, member: me, ready: true, cloud: true };
     const member = members?.find((m) => m.role === role) ?? { id: '', name: '', email: '', role };
     return { role, setRole, member, ready: members !== null && view !== 'loading' && !(cloud && !me), cloud: false };
-  }, [role, setRole, members, cloud, me, view]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role, setRole, members, cloud, me, view, settingsV]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

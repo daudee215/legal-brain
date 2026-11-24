@@ -113,6 +113,9 @@ export async function searchDocs(docs: DocFile[], q: string, opts: { fetchMissin
   return out;
 }
 
+/** Law-book PDFs live in this folder; the general Documents page hides it so a shelf stays private. */
+export const BOOK_FOLDER = 'Law Books';
+
 export interface DocMeta {
   folder: string;
   caseId?: string;

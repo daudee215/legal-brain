@@ -13,7 +13,7 @@ describe('Sidebar', () => {
         <Sidebar />
       </RoleProvider>,
     );
-    expect(NAV).toHaveLength(20);
+    expect(NAV).toHaveLength(21);
     for (const n of NAV) expect(screen.getByText(n.label)).toBeInTheDocument();
   });
   it('hides AI Assistant and Legal Drafting from a clerk', () => {
@@ -25,5 +25,14 @@ describe('Sidebar', () => {
     expect(screen.queryByText('AI Assistant')).toBeNull();
     expect(screen.queryByText('Legal Drafting')).toBeNull();
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
+  });
+  it('hides Chamber, Chamber Studio, Data & Backup and Precedents from a clerk', () => {
+    render(
+      <RoleProvider initialRole="clerk">
+        <Sidebar />
+      </RoleProvider>,
+    );
+    for (const label of ['Chamber', 'Chamber Studio', 'Data & Backup', 'Precedents']) expect(screen.queryByText(label)).toBeNull();
+    expect(screen.getByText('Documents')).toBeInTheDocument();
   });
 });

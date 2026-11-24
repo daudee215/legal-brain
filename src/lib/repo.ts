@@ -163,6 +163,7 @@ export async function snapshot(db: Db = getDb()) {
     books: await listBooks(me.id, db),
     docs: await listDocs(undefined, db),
     fees: db.fees,
+    settings: db.settings ?? [],
   };
 }
 export type Snapshot = Awaited<ReturnType<typeof snapshot>>;
