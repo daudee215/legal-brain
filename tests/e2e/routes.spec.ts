@@ -64,3 +64,9 @@ test('the reminders tab can switch morning emails on', async ({ page }) => {
   await box.check();
   await expect(box).toBeChecked();
 });
+
+test('the Safety tab explains it needs a shared chamber when running as a demo', async ({ page }) => {
+  await page.goto('/app/studio/');
+  await page.getByRole('tab', { name: 'Safety' }).click();
+  await expect(page.getByText(/available once you are signed in to your shared chamber/)).toBeVisible();
+});

@@ -14,10 +14,12 @@ export interface Entry {
 import { CHAMBER } from './i18n-chamber';
 import { DOCS } from './i18n-docs';
 import { LIBRARY } from './i18n-library';
+import { SAFETY } from './i18n-safety';
 import { STUDIO } from './i18n-studio';
 
 export const DICT = {
   ...STUDIO,
+  ...SAFETY,
   ...CHAMBER,
   ...DOCS,
   ...LIBRARY,

@@ -1,8 +1,8 @@
 'use client';
 
-import { Bell, Building2, Check, Download, ExternalLink, FolderOpen, Library, Lock, Palette, RotateCcw, ShieldCheck, Trash2, Users } from 'lucide-react';
+import { Bell, Building2, History, Check, Download, ExternalLink, FolderOpen, Library, Lock, Palette, RotateCcw, ShieldCheck, Trash2, Users } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDocFile } from '../../../components/docs/DocFiles';
 import { RoleGate } from '../../../components/shell/RoleGate';
 import { Badge, btn, Card, CardTitle, inputCls, Notice, PageHeader } from '../../../components/ui';
@@ -17,16 +17,19 @@ import { formatPk } from '../../../lib/dates';
 import { BOOK_FOLDER, removeDocument } from '../../../lib/docText';
 import { ACTION_LABEL, ALL_ACTIONS, accessFor, accessOf, ROLE_LABEL, SENIOR_ONLY, type Action } from '../../../lib/permissions';
 import { listMembers, snapshot, type Snapshot } from '../../../lib/repo';
+import { backupSummaryText, lineText, type ActivityRow, type BackupRow } from '../../../lib/activityText';
+import { listActivity, listBackups, restoreBackup, takeBackupNow } from '../../../lib/cloud/safety';
 import { useLang } from '../../../lib/i18n';
 import { useData } from '../../../lib/useData';
 import type { Accent, Member, Role } from '../../../types';
 
-type Tab = 'look' | 'profile' | 'access' | 'reminders' | 'files';
+type Tab = 'look' | 'profile' | 'access' | 'reminders' | 'safety' | 'files';
 const TABS: { id: Tab; label: string; icon: typeof Palette }[] = [
   { id: 'look', label: 'Look and feel', icon: Palette },
   { id: 'profile', label: 'Chamber profile', icon: Building2 },
   { id: 'access', label: 'Access rights', icon: ShieldCheck },
   { id: 'reminders', label: 'Reminders', icon: Bell },
+  { id: 'safety', label: 'Safety', icon: History },
   { id: 'files', label: 'Files and storage', icon: FolderOpen },
 ];
 const EDITABLE_ROLES: Role[] = ['junior', 'clerk'];
@@ -398,6 +401,128 @@ function Reminders({ db }: { db: Snapshot }) {
   );
 }
 
+const stamp = (iso: string) =>
+  new Date(iso).toLocaleString('en-GB', { timeZone: 'Asia/Karachi', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+
+function Safety() {
+  const toast = useToast();
+  const { t } = useLang();
+  const { cloud } = useRole();
+  const [backups, setBackups] = useState<BackupRow[] | null>(null);
+  const [activity, setActivity] = useState<ActivityRow[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const id = getSyncStatus().chamberId;
+    if (!id) return;
+    try {
+      const [b, a] = await Promise.all([listBackups(id), listActivity(id)]);
+      setBackups(b);
+      setActivity(a);
+      setFailed(false);
+    } catch {
+      setFailed(true);
+    }
+  }, []);
+  useEffect(() => {
+    if (cloud) void load();
+  }, [cloud, load]);
+
+  if (!cloud) return <Notice>{t('studio.safe.needCloud', undefined, 'Restore points and the activity log are available once you are signed in to your shared chamber.')}</Notice>;
+
+  const saveNow = async () => {
+    const id = getSyncStatus().chamberId;
+    if (!id) return;
+    setBusy('save');
+    try {
+      const n = await takeBackupNow(id);
+      toast.show(n > 0 ? t('studio.safe.saved', undefined, 'Restore point saved') : t('studio.safe.unchanged', undefined, 'Nothing changed since the last restore point'));
+      await load();
+    } catch (e) {
+      toast.show(e instanceof Error ? e.message : t('studio.safe.error', undefined, 'Could not load this yet.'));
+    } finally {
+      setBusy(null);
+    }
+  };
+  const restore = async (b: BackupRow) => {
+    if (!window.confirm(t('studio.safe.confirm', { when: stamp(b.taken_at) }, 'Put your chamber back to ' + stamp(b.taken_at) + '?'))) return;
+    setBusy(b.id);
+    try {
+      await restoreBackup(b.id);
+      toast.show(t('studio.safe.restoredToast', undefined, 'Restored. Reloading…'));
+      window.setTimeout(() => window.location.reload(), 1200);
+    } catch (e) {
+      toast.show(e instanceof Error ? e.message : 'Could not restore');
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {failed && <Notice>{t('studio.safe.error', undefined, 'Could not load this yet. The safety tables may not be set up on the server.')}</Notice>}
+      <Card>
+        <CardTitle>{t('studio.safe.pointsTitle', undefined, 'Restore points')}</CardTitle>
+        <p className="mb-4 max-w-2xl text-sm text-ink-soft">
+          {t('studio.safe.pointsIntro', undefined, 'Every night the chamber saves a copy of all its data, and keeps the last 40. If a case is deleted or something goes wrong, go back to an earlier copy here. Going back saves the current state first, so you can undo it too.')}
+        </p>
+        <div className="mb-4 flex flex-wrap gap-2">
+          <button className={btn.bronze} disabled={busy !== null} onClick={() => void saveNow()}>
+            <History className="h-4 w-4" /> {busy === 'save' ? t('studio.safe.saving', undefined, 'Saving…') : t('studio.safe.saveNow', undefined, 'Save a restore point now')}
+          </button>
+          <button className={btn.ghost} onClick={() => void load()}>
+            {t('studio.safe.refresh', undefined, 'Refresh')}
+          </button>
+        </div>
+        {backups === null ? (
+          !failed && <p className="text-sm text-ink-soft">{t('studio.safe.loading', undefined, 'Loading…')}</p>
+        ) : backups.length === 0 ? (
+          <p className="text-sm text-ink-soft">{t('studio.safe.none', undefined, 'No restore points yet. The first one is saved tonight.')}</p>
+        ) : (
+          <ul className="divide-y divide-line">
+            {backups.map((b) => (
+              <li key={b.id} className="flex flex-wrap items-center gap-3 py-3 text-sm">
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium">
+                    {stamp(b.taken_at)} <Badge tone="neutral">{t(`studio.safe.reason.${b.reason}`, undefined, b.reason)}</Badge>
+                  </span>
+                  <span className="block text-xs text-ink-soft">
+                    {t(`studio.safe.kind.${b.kind}`, undefined, b.kind)}
+                    {b.kind === 'data' && backupSummaryText(b.summary, t) ? ` — ${backupSummaryText(b.summary, t)}` : ''}
+                  </span>
+                </span>
+                <button className={btn.ghost} disabled={busy !== null} onClick={() => void restore(b)}>
+                  <RotateCcw className="h-4 w-4" /> {busy === b.id ? t('studio.safe.restoring', undefined, 'Restoring…') : t('studio.safe.restore', undefined, 'Go back to this')}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+      <Card>
+        <CardTitle>{t('studio.safe.activityTitle', undefined, 'Recent activity')}</CardTitle>
+        <p className="mb-4 text-sm text-ink-soft">{t('studio.safe.activityIntro', undefined, 'Who added, changed or removed what, newest first. Kept for 120 days.')}</p>
+        {activity === null ? null : activity.length === 0 ? (
+          <p className="text-sm text-ink-soft">{t('studio.safe.activityNone', undefined, 'No activity yet.')}</p>
+        ) : (
+          <ul className="divide-y divide-line">
+            {activity.map((a) => (
+              <li key={a.id} className="py-2.5 text-sm">
+                <span className="block text-xs text-ink-soft">{stamp(a.at)}</span>
+                {a.lines.map((l, i) => (
+                  <span key={i} className="block">
+                    {lineText(l, a.user_name, t)}
+                  </span>
+                ))}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    </div>
+  );
+}
+
 function Files({ db }: { db: Snapshot }) {
   const toast = useToast();
   const { t } = useLang();
@@ -511,6 +636,7 @@ function StudioBody({ db }: { db: Snapshot }) {
       {tab === 'profile' && <Profile db={db} />}
       {tab === 'access' && <Access db={db} />}
       {tab === 'reminders' && <Reminders db={db} />}
+      {tab === 'safety' && <Safety />}
       {tab === 'files' && <Files db={db} />}
     </RoleGate>
   );
