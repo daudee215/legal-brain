@@ -154,6 +154,8 @@ export interface ChamberProfile {
   address?: string;
   phone?: string;
   email?: string;
+  /** The chamber's logo as a small PNG or JPEG data URL, printed on PDFs. */
+  logo?: string;
 }
 
 export interface ChamberSettings {
@@ -161,6 +163,10 @@ export interface ChamberSettings {
   accent: Accent;
   /** Rights per role, replacing the defaults. Absent = defaults. */
   access?: Partial<Record<Role, import('./lib/permissions').Action[]>>;
+  /** Rights for one named person (by member id), replacing their role's rights. Absent = follow the role. */
+  memberAccess?: Record<string, import('./lib/permissions').Action[]>;
+  /** Morning hearing emails to every member (sent by the server). */
+  emailReminders?: boolean;
   /** Letterhead details printed on receipts and case reports. */
   profile?: ChamberProfile;
   updatedOn: string;

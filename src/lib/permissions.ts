@@ -38,21 +38,24 @@ export const DEFAULT_ACCESS: Record<Role, Action[]> = {
 
 /** The senior advocate's own changes to what each role may do (saved with the chamber, applied on every device). */
 let custom: Partial<Record<Role, Action[]>> | null = null;
+/** The senior's rights for the person using this device, when they have set some just for them. */
+let mine: Action[] | null = null;
 
-export function setCustomAccess(map: Partial<Record<Role, Action[]>> | null | undefined) {
+export function setCustomAccess(map: Partial<Record<Role, Action[]>> | null | undefined, personal?: Action[] | null) {
   custom = map && Object.keys(map).length ? map : null;
+  mine = Array.isArray(personal) ? personal : null;
 }
 
 /** What a role may do given a set of customisations (the senior's saved settings), else the defaults. */
-export function accessOf(role: Role, customised?: Partial<Record<Role, Action[]>> | null): ReadonlySet<Action> {
+export function accessOf(role: Role, customised?: Partial<Record<Role, Action[]>> | null, personal?: Action[] | null): ReadonlySet<Action> {
   if (role === 'senior') return new Set(ALL_ACTIONS);
-  const base = customised?.[role] ?? DEFAULT_ACCESS[role];
+  const base = (Array.isArray(personal) ? personal : null) ?? customised?.[role] ?? DEFAULT_ACCESS[role];
   return new Set(base.filter((a) => !SENIOR_ONLY.includes(a)));
 }
 
 /** What a role may do right now on this device. */
 export function accessFor(role: Role): ReadonlySet<Action> {
-  return accessOf(role, custom);
+  return accessOf(role, custom, mine);
 }
 
 export function can(role: Role, action: Action): boolean {

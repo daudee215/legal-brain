@@ -160,6 +160,24 @@ class Writer {
   }
 }
 
+/** Draw the chamber logo (a PNG/JPEG data URL) centred at the top of the page. A bad image is skipped, never an error. */
+async function drawLogo(w: Writer, dataUrl?: string, maxH = 46) {
+  const m = /^data:image\/(png|jpe?g);base64,(.+)$/i.exec(dataUrl ?? '');
+  if (!m) return;
+  try {
+    const bytes = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0));
+    const img = /png/i.test(m[1]) ? await w.doc.embedPng(bytes) : await w.doc.embedJpg(bytes);
+    const scale = Math.min(maxH / img.height, 160 / img.width, 1);
+    const iw = img.width * scale;
+    const ih = img.height * scale;
+    w.ensure(ih + 6);
+    w.page.drawImage(img, { x: w.margin.left + (w.width - iw) / 2, y: w.y - ih, width: iw, height: ih });
+    w.y -= ih + 6;
+  } catch {
+    /* unreadable image: print the letterhead without it */
+  }
+}
+
 async function times(doc: PDFDocument) {
   return {
     regular: await doc.embedFont(StandardFonts.TimesRoman),
@@ -185,6 +203,8 @@ export interface FeeReceiptInput {
   tagline?: string;
   /** Address, phone and email, printed as one line. */
   contact?: string;
+  /** Logo as a PNG/JPEG data URL. */
+  logo?: string;
   clientName: string;
   caseTitle: string;
   caseNo: string;
@@ -199,6 +219,7 @@ export async function feeReceiptPdf(r: FeeReceiptInput): Promise<Uint8Array> {
   doc.setTitle(`Fee receipt ${r.receiptNo}`);
   const f = await times(doc);
   const w = new Writer(doc, f, { top: 64, bottom: 64, left: 64, right: 64 });
+  await drawLogo(w, r.logo);
   w.text(r.chamberName, { size: 20, font: f.bold, align: 'center' });
   w.text(r.tagline || 'Advocates & Legal Consultants', { size: 10, font: f.italic, color: SOFT, align: 'center', gap: r.contact ? 2 : 10 });
   if (r.contact) w.text(r.contact, { size: 9, color: SOFT, align: 'center', gap: 10 });
@@ -236,6 +257,7 @@ export interface CaseStatusInput {
   chamberName: string;
   tagline?: string;
   contact?: string;
+  logo?: string;
   clientName: string;
   caseTitle: string;
   caseNo: string;
@@ -254,6 +276,7 @@ export async function caseStatusPdf(c: CaseStatusInput): Promise<Uint8Array> {
   doc.setTitle(`Case status - ${c.caseTitle}`);
   const f = await times(doc);
   const w = new Writer(doc, f);
+  await drawLogo(w, c.logo);
   w.text(c.chamberName, { size: 18, font: f.bold, align: 'center' });
   if (c.tagline) w.text(c.tagline, { size: 10, font: f.italic, color: SOFT, align: 'center', gap: c.contact ? 2 : 6 });
   if (c.contact) w.text(c.contact, { size: 9, color: SOFT, align: 'center', gap: 6 });

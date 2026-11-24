@@ -336,7 +336,7 @@ async function push(): Promise<void> {
       const local = localHalves();
       // The server refuses edits a role may not make; undo them here first so the rest of the save goes through.
       if (cur.me && cur.me.role !== 'senior') {
-        const { data, undone } = undoForbidden(cur.me.role, cur.base.data, local.data);
+        const { data, undone } = undoForbidden(cur.me.role, cur.base.data, local.data, cur.me.id);
         if (undone.length) {
           local.data = data as Half;
           show(local.data, local.billing);

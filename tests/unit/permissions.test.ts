@@ -44,3 +44,14 @@ describe('can', () => {
     });
   });
 });
+
+describe('personal rights', () => {
+  it('replace the role rights for that person, but never grant senior-only actions', async () => {
+    const { accessOf } = await import('../../src/lib/permissions');
+    const mine = accessOf('clerk', undefined, ['cases.edit', 'studio']);
+    expect(mine.has('cases.edit')).toBe(true);
+    expect(mine.has('diary.write')).toBe(false);
+    expect(mine.has('studio')).toBe(false);
+    expect(accessOf('clerk', undefined, null).has('diary.write')).toBe(true);
+  });
+});

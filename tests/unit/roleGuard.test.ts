@@ -102,3 +102,25 @@ describe('undoForbidden', () => {
     expect(undoForbidden('senior', saved(), { ...saved(), cases: [] }).undone).toEqual([]);
   });
 });
+
+describe('rights for one named person', () => {
+  const withMember = (id: string, actions: string[]) => ({ ...saved(), settings: [{ id: 'main', accent: 'bronze', updatedOn: '', memberAccess: { [id]: actions } }] });
+  it('a clerk with personal case-editing rights may add a case; another clerk may not', () => {
+    const base = withMember('u1', ['cases.edit', 'diary.write']);
+    const next = { ...base, cases: [...(base.cases as unknown[]), kase('NEW')] };
+    expect(dataChangeProblem('clerk', base, next, 'u1')).toBeNull();
+    expect(dataChangeProblem('clerk', base, next, 'u2')).toBe('cases');
+    expect(dataChangeProblem('clerk', base, next)).toBe('cases');
+  });
+  it('a junior with fewer personal rights loses what the role would allow', () => {
+    const base = withMember('j1', ['diary.write']);
+    const next = { ...base, precedents: [{ id: 'p' }] };
+    expect(dataChangeProblem('junior', base, next, 'j1')).toBe('precedents');
+    expect(dataChangeProblem('junior', base, next, 'j2')).toBeNull();
+  });
+  it('personal rights can never include senior-only things', () => {
+    const base = withMember('u1', ['studio', 'chamber.manage']);
+    const next = { ...base, settings: [{ id: 'main', accent: 'navy', updatedOn: '', memberAccess: { u1: ['studio'] } }] };
+    expect(dataChangeProblem('clerk', base, next, 'u1')).toBe('settings');
+  });
+});

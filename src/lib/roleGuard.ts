@@ -57,10 +57,10 @@ export function isOutcomeOnly(oldCases: unknown, newCases: unknown): boolean {
 }
 
 /** The first part of the data this role may not change, or null when every change is allowed. */
-export function dataChangeProblem(role: Role, saved: Half, next: Half): string | null {
+export function dataChangeProblem(role: Role, saved: Half, next: Half, userId?: string): string | null {
   if (role === 'senior') return null;
-  const custom = (arr(saved.settings)[0] as ChamberSettings | undefined)?.access;
-  const allowed = accessOf(role, custom);
+  const settings = arr(saved.settings)[0] as ChamberSettings | undefined;
+  const allowed = accessOf(role, settings?.access, userId ? settings?.memberAccess?.[userId] : null);
   const keys = new Set([...Object.keys(saved), ...Object.keys(next)]);
   for (const k of keys) {
     if (same(arr(saved[k]), arr(next[k]))) continue;
@@ -77,12 +77,12 @@ export function dataChangeProblem(role: Role, saved: Half, next: Half): string |
 }
 
 /** Undo every change this role is not allowed to make, key by key. Returns the cleaned copy and what was undone. */
-export function undoForbidden(role: Role, saved: Half, next: Half): { data: Half; undone: string[] } {
+export function undoForbidden(role: Role, saved: Half, next: Half, userId?: string): { data: Half; undone: string[] } {
   const undone: string[] = [];
   let data: Half = next;
   // Each pass finds one offending key; a handful at most.
   for (let i = 0; i < 20; i++) {
-    const k = dataChangeProblem(role, saved, data);
+    const k = dataChangeProblem(role, saved, data, userId);
     if (!k) break;
     undone.push(k);
     data = { ...data, [k]: saved[k] ?? [] };

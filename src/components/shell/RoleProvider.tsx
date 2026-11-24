@@ -42,10 +42,11 @@ export function RoleProvider({ children, initialRole = 'senior' }: { children: R
     let alive = true;
     const load = () => {
       const s = settingsOf(getDb());
-      const key = settingsKey(s);
+      const myId = getDb().me?.id;
+      const key = settingsKey(s, myId);
       if (key !== lastSettings.current) {
         lastSettings.current = key;
-        applyChamberSettings(s);
+        applyChamberSettings(s, myId);
         setSettingsV((v) => v + 1);
       }
       return listMembers().then((m) => {

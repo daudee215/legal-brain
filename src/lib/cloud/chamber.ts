@@ -81,6 +81,11 @@ export async function myChambers(): Promise<{ id: string; name: string; role: Ro
   return (rows ?? []).map((r) => ({ id: r.chamber_id, name: r.chambers?.name ?? 'Chamber', role: r.role }));
 }
 
+/** Email the signed-in person today's and tomorrow's hearings now. Returns 'sent', 'nothing' (no hearings) or 'no-key' (email not set up on the server). */
+export async function sendMyDigest(chamberId: string): Promise<'sent' | 'nothing' | 'no-key'> {
+  return String(check(await supabase().rpc('send_my_digest', { p_chamber: chamberId }))) as 'sent' | 'nothing' | 'no-key';
+}
+
 export async function createChamber(name: string, myName: string): Promise<string> {
   return String(check(await supabase().rpc('create_chamber', { p_name: name.trim(), p_my_name: myName.trim() })));
 }

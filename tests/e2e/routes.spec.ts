@@ -45,3 +45,22 @@ test('assistant answers a suggested question with citations', async ({ page }) =
   await page.getByRole('button', { name: /grounds for post-arrest bail/ }).click();
   await expect(page.getByRole('link', { name: 'S. 497 CrPC' })).toBeVisible();
 });
+
+test('the senior can give one clerk their own rights, and the change can be undone', async ({ page }) => {
+  await page.goto('/app/studio/');
+  await page.getByRole('tab', { name: 'Access rights' }).click();
+  const row = page.getByRole('listitem').filter({ hasText: 'Clerk' }).first();
+  await row.getByRole('button', { name: 'Set rights' }).click();
+  await row.getByRole('checkbox', { name: /Add and edit cases/ }).check();
+  await expect(row.getByText('Own rights')).toBeVisible();
+  await row.getByRole('button', { name: /Back to the Clerk rights/ }).click();
+  await expect(row.getByText('Follows role')).toBeVisible();
+});
+
+test('the reminders tab can switch morning emails on', async ({ page }) => {
+  await page.goto('/app/studio/');
+  await page.getByRole('tab', { name: 'Reminders' }).click();
+  const box = page.getByRole('checkbox', { name: 'Send morning hearing emails' });
+  await box.check();
+  await expect(box).toBeChecked();
+});

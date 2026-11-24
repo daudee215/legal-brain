@@ -2,13 +2,24 @@
 -- Mirrors src/lib/roleGuard.ts (rule table: tests/unit/roleGuard.test.ts). Keep both in step.
 -- Safe to run more than once. Run in the Supabase SQL editor.
 
--- What a role may do, judged against the chamber's CURRENT saved settings (never the sender's claim).
-create or replace function public.role_allows(p_role text, p_action text, p_old jsonb)
+-- Older signatures (before rights for one person existed) are dropped so nothing can call them.
+drop function if exists public.data_change_problem(text, jsonb, jsonb);
+drop function if exists public.role_allows(text, text, jsonb);
+
+-- What a person may do, judged against the chamber's CURRENT saved settings (never the sender's claim).
+-- Their own rights (settings.memberAccess) replace their role's rights; senior-only things can never be granted.
+create or replace function public.role_allows(p_role text, p_action text, p_old jsonb, p_user uuid)
 returns boolean language plpgsql immutable as $$
 declare v_custom jsonb;
 begin
   if p_role = 'senior' then return true; end if;
   if p_action in ('chamber.manage', 'studio') then return false; end if;
+  if p_user is not null then
+    v_custom := p_old #> array['settings', '0', 'memberAccess', p_user::text];
+    if v_custom is not null and jsonb_typeof(v_custom) = 'array' then
+      return v_custom ? p_action;
+    end if;
+  end if;
   v_custom := p_old #> array['settings', '0', 'access', p_role];
   if v_custom is not null and jsonb_typeof(v_custom) = 'array' then
     return v_custom ? p_action;
@@ -50,7 +61,7 @@ begin
 end $$;
 
 -- The first part of the data this role may not change, or null when every change is allowed.
-create or replace function public.data_change_problem(p_role text, p_old jsonb, p_new jsonb)
+create or replace function public.data_change_problem(p_role text, p_old jsonb, p_new jsonb, p_user uuid)
 returns text language plpgsql immutable as $$
 declare
   k text; need text; o jsonb; n jsonb;
@@ -80,8 +91,8 @@ begin
     end;
     if need is null or need = 'SENIOR' then return k; end if;
     if need = 'ANY' then continue; end if;
-    if public.role_allows(p_role, need, p_old) then continue; end if;
-    if k = 'cases' and public.role_allows(p_role, 'diary.write', p_old) and public.cases_outcome_only(o, n) then continue; end if;
+    if public.role_allows(p_role, need, p_old, p_user) then continue; end if;
+    if k = 'cases' and public.role_allows(p_role, 'diary.write', p_old, p_user) and public.cases_outcome_only(o, n) then continue; end if;
     return k;
   end loop;
   return null;
@@ -99,7 +110,7 @@ begin
   if p_kind = 'data' then
     select data, version into v_old, v_ver from public.chamber_data where chamber_id = p_chamber for update;
     if not found or v_ver <> p_expected then return -1; end if;
-    v_problem := public.data_change_problem(v_role, v_old, p_data);
+    v_problem := public.data_change_problem(v_role, v_old, p_data, auth.uid());
     if v_problem is not null then
       raise exception 'forbidden: your role may not change "%"', v_problem using errcode = '42501';
     end if;
@@ -119,10 +130,13 @@ revoke all on function public.save_chamber_doc(uuid, text, jsonb, bigint) from p
 grant execute on function public.save_chamber_doc(uuid, text, jsonb, bigint) to authenticated;
 
 -- Quick self-check (run after applying; each line should return true):
---   select public.data_change_problem('clerk', '{"cases":[]}', '{"cases":[{"id":"a"}]}') = 'cases';
---   select public.data_change_problem('clerk', '{}', '{"diary":[{"id":"d"}]}') is null;
---   select public.data_change_problem('clerk', '{}', '{"settings":[{"id":"m"}]}') = 'settings';
---   select public.data_change_problem('senior', '{}', '{"settings":[{"id":"m"}]}') is null;
+--   select public.data_change_problem('clerk', '{"cases":[]}', '{"cases":[{"id":"a"}]}', null) = 'cases';
+--   select public.data_change_problem('clerk', '{}', '{"diary":[{"id":"d"}]}', null) is null;
+--   select public.data_change_problem('clerk', '{}', '{"settings":[{"id":"m"}]}', null) = 'settings';
+--   select public.data_change_problem('senior', '{}', '{"settings":[{"id":"m"}]}', null) is null;
 --   select public.cases_outcome_only('[{"id":"a","stage":"x","hearings":[1]}]', '[{"id":"a","stage":"y","hearings":[1,2]}]');
 --   select not public.cases_outcome_only('[{"id":"a","hearings":[1,2]}]', '[{"id":"a","hearings":[1]}]');
 --   select not public.cases_outcome_only('[{"id":"a","title":"t"}]', '[{"id":"a","title":"u"}]');
+--   -- one person's own rights (u1 may edit cases, u2 may not):
+--   select public.data_change_problem('clerk', '{"settings":[{"memberAccess":{"00000000-0000-0000-0000-000000000001":["cases.edit"]}}]}', '{"settings":[{"memberAccess":{"00000000-0000-0000-0000-000000000001":["cases.edit"]}}],"cases":[{"id":"a"}]}', '00000000-0000-0000-0000-000000000001') is null;
+--   select public.data_change_problem('clerk', '{"settings":[{"memberAccess":{"00000000-0000-0000-0000-000000000001":["cases.edit"]}}]}', '{"settings":[{"memberAccess":{"00000000-0000-0000-0000-000000000001":["cases.edit"]}}],"cases":[{"id":"a"}]}', '00000000-0000-0000-0000-000000000002') = 'cases';

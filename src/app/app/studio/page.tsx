@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2, Check, Download, ExternalLink, FolderOpen, Library, Lock, Palette, RotateCcw, ShieldCheck, Trash2, Users } from 'lucide-react';
+import { Bell, Building2, Check, Download, ExternalLink, FolderOpen, Library, Lock, Palette, RotateCcw, ShieldCheck, Trash2, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useDocFile } from '../../../components/docs/DocFiles';
@@ -8,20 +8,24 @@ import { RoleGate } from '../../../components/shell/RoleGate';
 import { Badge, btn, Card, CardTitle, inputCls, Notice, PageHeader } from '../../../components/ui';
 import { Loading } from '../../../components/ui/Loading';
 import { useToast } from '../../../components/ui/Toast';
+import { sendMyDigest } from '../../../lib/cloud/chamber';
+import { getSyncStatus } from '../../../lib/cloud/sync';
+import { useRole } from '../../../components/shell/RoleProvider';
 import { formatBytes, PLAN_BYTES, storageUsed } from '../../../lib/cloud/storage';
-import { ACCENTS, letterheadOf, resetAccess, saveProfile, saveSettings, setRoleAccess, settingsOf } from '../../../lib/chamberSettings';
+import { ACCENTS, letterheadOf, logoFromFile, resetAccess, saveProfile, saveSettings, setEmailReminders, setLogo, setMemberAccess, setRoleAccess, settingsOf } from '../../../lib/chamberSettings';
 import { formatPk } from '../../../lib/dates';
 import { BOOK_FOLDER, removeDocument } from '../../../lib/docText';
-import { ACTION_LABEL, ALL_ACTIONS, accessFor, ROLE_LABEL, SENIOR_ONLY, type Action } from '../../../lib/permissions';
-import { snapshot, type Snapshot } from '../../../lib/repo';
+import { ACTION_LABEL, ALL_ACTIONS, accessFor, accessOf, ROLE_LABEL, SENIOR_ONLY, type Action } from '../../../lib/permissions';
+import { listMembers, snapshot, type Snapshot } from '../../../lib/repo';
 import { useData } from '../../../lib/useData';
-import type { Accent, Role } from '../../../types';
+import type { Accent, Member, Role } from '../../../types';
 
-type Tab = 'look' | 'profile' | 'access' | 'files';
+type Tab = 'look' | 'profile' | 'access' | 'reminders' | 'files';
 const TABS: { id: Tab; label: string; icon: typeof Palette }[] = [
   { id: 'look', label: 'Look and feel', icon: Palette },
   { id: 'profile', label: 'Chamber profile', icon: Building2 },
   { id: 'access', label: 'Access rights', icon: ShieldCheck },
+  { id: 'reminders', label: 'Reminders', icon: Bell },
   { id: 'files', label: 'Files and storage', icon: FolderOpen },
 ];
 const EDITABLE_ROLES: Role[] = ['junior', 'clerk'];
@@ -70,6 +74,7 @@ function Profile({ db }: { db: Snapshot }) {
   const [address, setAddress] = useState(cur.address ?? '');
   const [phone, setPhone] = useState(cur.phone ?? '');
   const [email, setEmail] = useState(cur.email ?? '');
+  const logo = cur.logo;
   const preview = letterheadOf({ settings: [{ id: 'main', accent: 'bronze', updatedOn: '', profile: { tagline, address, phone, email } }] });
   const field = 'block text-sm';
   return (
@@ -77,6 +82,52 @@ function Profile({ db }: { db: Snapshot }) {
       <Card>
         <CardTitle>Letterhead details</CardTitle>
         <p className="mb-4 text-sm text-ink-soft">Printed at the top of fee receipts and case status reports your chamber sends to clients.</p>
+        <div className="mb-5 flex flex-wrap items-center gap-4 rounded-xl border border-line bg-paper p-4">
+          <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-line bg-white">
+            {logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logo} alt="Chamber logo" className="max-h-full max-w-full object-contain" />
+            ) : (
+              <Building2 className="h-6 w-6 text-ink-soft/50" aria-hidden />
+            )}
+          </span>
+          <span className="min-w-0 flex-1 text-sm">
+            <span className="block font-medium">Chamber logo</span>
+            <span className="block text-xs text-ink-soft">A PNG or JPEG picture. It is shrunk to fit and printed at the top of receipts and case reports.</span>
+          </span>
+          <label className={`${btn.ghost} cursor-pointer`}>
+            {logo ? 'Change logo' : 'Upload logo'}
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="sr-only"
+              aria-label="Upload chamber logo"
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                e.target.value = '';
+                if (!f) return;
+                try {
+                  setLogo(await logoFromFile(f));
+                  toast.show('Logo saved');
+                } catch (err) {
+                  toast.show(err instanceof Error ? err.message : 'That picture could not be read');
+                }
+              }}
+            />
+          </label>
+          {logo && (
+            <button
+              type="button"
+              className={btn.ghost}
+              onClick={() => {
+                setLogo(null);
+                toast.show('Logo removed');
+              }}
+            >
+              Remove
+            </button>
+          )}
+        </div>
         <form
           className="space-y-4"
           onSubmit={(e) => {
@@ -111,6 +162,10 @@ function Profile({ db }: { db: Snapshot }) {
       <Card>
         <CardTitle>Preview</CardTitle>
         <div className="rounded-xl border border-line bg-white p-6 text-center text-[#2a2a2a] shadow-inner">
+          {logo && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logo} alt="" className="mx-auto mb-2 max-h-12 max-w-[160px] object-contain" />
+          )}
           <p className="font-serif text-xl font-bold">{db.chamber.name}</p>
           <p className="text-xs italic text-[#666]">{preview.tagline}</p>
           {preview.contact && <p className="mt-0.5 text-[11px] text-[#666]">{preview.contact}</p>}
@@ -122,7 +177,87 @@ function Profile({ db }: { db: Snapshot }) {
   );
 }
 
-function Access() {
+function People({ db }: { db: Snapshot }) {
+  const toast = useToast();
+  const members = useData(() => listMembers());
+  const [open, setOpen] = useState<string | null>(null);
+  const settings = settingsOf(db);
+  const others = (members ?? []).filter((m: Member) => m.role !== 'senior');
+  if (!members) return null;
+  return (
+    <Card>
+      <CardTitle>Rights for one person</CardTitle>
+      <p className="mb-4 max-w-2xl text-sm text-ink-soft">
+        Need a clerk who can also edit cases, or a junior who must not see the law books? Give that one person their own rights. It replaces their role&apos;s rights for them
+        alone; everyone else keeps following their role.
+      </p>
+      {others.length === 0 ? (
+        <p className="text-sm text-ink-soft">Nobody else has joined your chamber yet. Invite people from the Chamber page.</p>
+      ) : (
+        <ul className="divide-y divide-line">
+          {others.map((m: Member) => {
+            const own = settings?.memberAccess?.[m.id];
+            const eff = accessOf(m.role, settings?.access, own);
+            const isOpen = open === m.id;
+            return (
+              <li key={m.id} className="py-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium">{m.name || m.email}</span>
+                    <span className="text-xs text-ink-soft">{ROLE_LABEL[m.role]}</span>
+                  </span>
+                  {own ? <Badge tone="bronze">Own rights</Badge> : <Badge tone="neutral">Follows role</Badge>}
+                  <button className={btn.ghost} aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : m.id)}>
+                    {isOpen ? 'Close' : 'Set rights'}
+                  </button>
+                </div>
+                {isOpen && (
+                  <div className="mt-3 rounded-xl border border-line bg-paper p-4">
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {ALL_ACTIONS.filter((a) => !SENIOR_ONLY.includes(a)).map((a) => (
+                        <label key={a} className="flex items-start gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            className="mt-0.5 h-4 w-4 accent-[var(--bronze)]"
+                            checked={eff.has(a)}
+                            aria-label={`${m.name || m.email}: ${ACTION_LABEL[a].title}`}
+                            onChange={() => {
+                              const next = new Set(eff);
+                              if (next.has(a)) next.delete(a);
+                              else next.add(a);
+                              setMemberAccess(m.id, ALL_ACTIONS.filter((x) => next.has(x)));
+                            }}
+                          />
+                          <span>
+                            <span className="block font-medium">{ACTION_LABEL[a].title}</span>
+                            <span className="block text-xs text-ink-soft">{ACTION_LABEL[a].hint}</span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    {own && (
+                      <button
+                        className={`${btn.ghost} mt-4`}
+                        onClick={() => {
+                          setMemberAccess(m.id, null);
+                          toast.show(`${m.name || m.email} now follows the ${ROLE_LABEL[m.role]} rights`);
+                        }}
+                      >
+                        <RotateCcw className="h-4 w-4" /> Back to the {ROLE_LABEL[m.role]} rights
+                      </button>
+                    )}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+function Access({ db }: { db: Snapshot }) {
   const toast = useToast();
   const [, force] = useState(0);
   const sets: Record<Role, ReadonlySet<Action>> = { senior: accessFor('senior'), junior: accessFor('junior'), clerk: accessFor('clerk') };
@@ -204,10 +339,59 @@ function Access() {
           </Link>
         </div>
       </Card>
+      <People db={db} />
       <Notice>
         These rights control what each person sees and can do in the app. Fees and billing files are also protected on the server for everyone except seniors. A clerk who is
         technically skilled could still change other shared data outside the app, so only add people you trust to the chamber.
       </Notice>
+    </div>
+  );
+}
+
+function Reminders({ db }: { db: Snapshot }) {
+  const toast = useToast();
+  const { cloud } = useRole();
+  const [busy, setBusy] = useState(false);
+  const on = settingsOf(db)?.emailReminders === true;
+  const test = async () => {
+    const id = getSyncStatus().chamberId;
+    if (!id) return;
+    setBusy(true);
+    try {
+      const r = await sendMyDigest(id);
+      toast.show(
+        r === 'sent'
+          ? 'Test email sent to you. Check your inbox (and spam).'
+          : r === 'nothing'
+            ? 'No hearings today or tomorrow, so there was nothing to email.'
+            : 'Email is not switched on at the server yet.',
+      );
+    } catch (e) {
+      toast.show(e instanceof Error ? e.message : 'Could not send the test email');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardTitle>Morning hearing emails</CardTitle>
+        <p className="mb-4 max-w-2xl text-sm text-ink-soft">
+          Every morning at 7:30 (Pakistan time) each member of your chamber gets one email listing the hearings today and tomorrow, even if they never open the app. No hearings,
+          no email.
+        </p>
+        <label className="flex items-center gap-3 text-sm font-medium">
+          <input type="checkbox" className="h-4 w-4 accent-[var(--bronze)]" checked={on} onChange={(e) => setEmailReminders(e.target.checked)} aria-label="Send morning hearing emails" />
+          Send morning hearing emails to the whole chamber
+        </label>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <button className={btn.ghost} disabled={!cloud || busy} onClick={() => void test()}>
+            <Bell className="h-4 w-4" /> {busy ? 'Sending…' : 'Email me today’s hearings now'}
+          </button>
+          {!cloud && <span className="text-xs text-ink-soft">Available once you are signed in to your shared chamber.</span>}
+        </div>
+      </Card>
+      <Notice>Emails go to the address each person signed up with. They are sent from reminders@wakeelpropk.com.</Notice>
     </div>
   );
 }
@@ -321,7 +505,8 @@ function StudioBody({ db }: { db: Snapshot }) {
       </div>
       {tab === 'look' && <Look accent={accent} />}
       {tab === 'profile' && <Profile db={db} />}
-      {tab === 'access' && <Access />}
+      {tab === 'access' && <Access db={db} />}
+      {tab === 'reminders' && <Reminders db={db} />}
       {tab === 'files' && <Files db={db} />}
     </RoleGate>
   );
