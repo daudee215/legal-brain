@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRef } from 'react';
 import { EASE, WordsReveal } from '../motion';
+import { BrandMark } from '../shell/Logo';
 import { IMG } from './images';
 
 function ScrollBadge() {
@@ -45,6 +46,8 @@ export function Hero() {
   const imgY = useTransform(scrollYProgress, [0, 1], ['0%', reduce ? '0%' : '18%']);
   const imgScale = useTransform(scrollYProgress, [0, 1], [1, reduce ? 1 : 1.08]);
   const wordX = useTransform(scrollYProgress, [0, 1], ['0%', reduce ? '0%' : '-12%']);
+  const markRotate = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : -10]);
+  const markY = useTransform(scrollYProgress, [0, 1], ['0%', reduce ? '0%' : '10%']);
 
   return (
     <section ref={ref} className="grain relative overflow-hidden pt-28 sm:pt-32">
@@ -65,9 +68,10 @@ export function Hero() {
           Now in preview for Pakistani advocates & chambers
         </motion.p>
 
-        <h1 className="mx-auto max-w-7xl text-balance text-[2rem] font-extrabold uppercase leading-[1.04] tracking-tight sm:text-[2.75rem] lg:text-[3.4rem]">
-          <WordsReveal text="Pakistan’s first unified platform" />
-          <br />
+        <h1 className="mx-auto max-w-7xl text-balance text-[1.8rem] font-extrabold uppercase leading-[1.06] tracking-tight sm:text-[2.75rem] lg:text-[3.4rem]">
+          <WordsReveal text="Pakistan’s first unified platform" />{' '}
+          {/* Two lines from tablet up; on phones the headline balances itself into even lines */}
+          <br className="hidden sm:inline" />
           <WordsReveal text="for legal knowledge and practice." className="bronze-text" delay={0.3} />
         </h1>
 
@@ -102,15 +106,20 @@ export function Hero() {
         </motion.div>
       </div>
 
-      {/* Stage: giant word + statue + side notes */}
+      {/* Stage: calligraphy mark + statue + side notes */}
       <div className="relative mx-auto mt-10 max-w-7xl px-4 lg:px-8">
-        <motion.p
-          style={{ x: wordX }}
+        {/* The Urdu calligraphy mark beside the statue; it drifts and turns gently as you scroll */}
+        <motion.div
           aria-hidden
-          className="text-outline pointer-events-none absolute inset-x-0 bottom-16 select-none whitespace-nowrap text-center font-serif text-[19vw] font-extrabold leading-none tracking-tight lg:text-[230px]"
+          initial={{ opacity: 0, x: -30, scale: 0.94 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          transition={{ duration: 1.8, ease: EASE, delay: 0.6 }}
+          className="pointer-events-none absolute bottom-6 right-1/2 mr-[9rem] hidden h-[26rem] w-[28rem] lg:block"
         >
-          WAKEEL PRO
-        </motion.p>
+          <motion.div style={{ rotate: markRotate, y: markY, x: wordX }} className="h-full w-full">
+            <BrandMark className="h-full w-full bg-bronze/[0.09]" />
+          </motion.div>
+        </motion.div>
 
         <div className="relative grid items-end gap-6 lg:grid-cols-[1fr_auto_1fr]">
           <motion.div

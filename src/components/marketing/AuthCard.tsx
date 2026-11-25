@@ -5,7 +5,7 @@ import { CalendarCheck, ShieldCheck, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { EASE } from '../motion';
-import { Logo } from '../shell/Logo';
+import { BrandMark, Logo } from '../shell/Logo';
 import { IMG } from './images';
 
 export function AuthCard({
@@ -36,6 +36,14 @@ export function AuthCard({
           />
         </motion.div>
         <div className="absolute inset-0 bg-gradient-to-t from-night via-night/70 to-night/30" aria-hidden />
+        <motion.div
+          initial={{ opacity: 0, rotate: -8, scale: 0.94 }}
+          animate={{ opacity: 1, rotate: -4, scale: 1 }}
+          transition={{ duration: 2.4, ease: EASE, delay: 0.3 }}
+          className="absolute -bottom-16 -right-24 h-[34rem] w-[34rem]"
+        >
+          <BrandMark className="h-full w-full bg-[#ead2bd]/[0.07]" />
+        </motion.div>
         <Link href="/" className="relative">
           <Logo light />
         </Link>

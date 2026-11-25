@@ -25,7 +25,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { CountUp, GlowCard, Reveal } from '../motion';
-import { Logo } from '../shell/Logo';
+import { BrandMark, Logo } from '../shell/Logo';
 import { IMG } from './images';
 
 /* ---------- Statement: words light up as you scroll ---------- */
@@ -44,9 +44,21 @@ export function Statement() {
   const text =
     'Wakeel Pro is your trusted legal companion, bringing every document, record and precedent together to help you manage, navigate and organise your cases with ease.';
   const words = text.split(' ');
+  // The mark "inks in" behind the words as they light up: fades, turns upright and settles.
+  const markOpacity = useTransform(scrollYProgress, [0, 0.6, 1], [0, 0.07, 0.055]);
+  const markRotate = useTransform(scrollYProgress, [0, 1], [-14, 0]);
+  const markScale = useTransform(scrollYProgress, [0, 1], [0.82, 1.04]);
+  const markY = useTransform(scrollYProgress, [0, 1], ['8%', '-6%']);
   return (
-    <section id="statement" className="mx-auto max-w-5xl px-4 py-24 text-center lg:px-8 lg:py-32">
-      <div ref={ref} className="font-serif text-3xl font-medium leading-tight sm:text-5xl">
+    <section id="statement" className="relative mx-auto max-w-5xl px-4 py-24 text-center lg:px-8 lg:py-32">
+      <motion.div
+        aria-hidden
+        style={{ opacity: markOpacity, rotate: markRotate, scale: markScale, y: markY }}
+        className="pointer-events-none absolute inset-x-0 top-1/2 mx-auto -mt-[13rem] h-[26rem] w-[26rem] sm:-mt-[17rem] sm:h-[34rem] sm:w-[34rem]"
+      >
+        <BrandMark className="h-full w-full bg-bronze" />
+      </motion.div>
+      <div ref={ref} className="relative font-serif text-3xl font-medium leading-tight sm:text-5xl">
         {words.map((w, i) => (
           <Word key={i} progress={scrollYProgress} range={[i / words.length, (i + 1) / words.length]}>
             {w}
@@ -452,8 +464,18 @@ export function Footer() {
     ['Help', [['#faq', 'FAQ'], ['mailto:hello@wakeelpropk.com', 'Contact']]],
   ];
   return (
-    <footer className="border-t border-line bg-paper/60">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:px-8">
+    <footer className="relative overflow-hidden border-t border-line bg-paper/60">
+      <motion.div
+        aria-hidden
+        initial={{ opacity: 0, rotate: -12, x: 40 }}
+        whileInView={{ opacity: 1, rotate: -4, x: 0 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1] }}
+        className="pointer-events-none absolute -bottom-20 -right-16 h-80 w-80 sm:h-96 sm:w-96"
+      >
+        <BrandMark className="h-full w-full bg-bronze/[0.06]" />
+      </motion.div>
+      <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:px-8">
         <div>
           <Logo />
           <p className="mt-4 max-w-xs text-sm text-ink-soft">The practice dashboard for Pakistani advocates and chambers.</p>

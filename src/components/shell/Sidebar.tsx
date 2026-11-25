@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { useLang } from '../../lib/i18n';
 import { can } from '../../lib/permissions';
 import { getDb } from '../../lib/store';
-import { Logo } from './Logo';
+import { BrandMark, Logo } from './Logo';
 import { isActive, NAV, NAV_GROUPS } from './nav';
 import { useRole } from './RoleProvider';
 
@@ -37,10 +37,12 @@ export function Sidebar({
   return (
     <nav aria-label="Main" className="grain relative flex h-full flex-col overflow-hidden bg-night bg-gradient-to-b from-white/[0.03] to-black/20 text-ivory">
       <div className="pointer-events-none absolute -start-24 -top-24 h-64 w-64 rounded-full bg-bronze/25 blur-3xl" aria-hidden />
+      {/* Watermark: the mark tucked into the bottom corner, cropped by the edge */}
+      <BrandMark className="absolute -bottom-10 -end-16 h-72 w-72 -rotate-6 bg-[#ead2bd]/[0.045]" />
       <div className={`relative flex items-center pb-4 pt-5 ${collapsed ? 'justify-center px-2' : 'px-5'}`}>
         <Link href="/" onClick={onNavigate} aria-label="Wakeel Pro website">
           {collapsed ? (
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-bronze font-serif text-lg font-bold text-ivory">L</span>
+            <BrandMark className="h-9 w-10 bg-[#ead2bd]" />
           ) : (
             <Logo light />
           )}
