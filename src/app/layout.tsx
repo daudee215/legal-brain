@@ -9,17 +9,17 @@ const display = Cormorant_Garamond({ variable: '--font-display', subsets: ['lati
 const reading = Source_Serif_4({ variable: '--font-reading-face', subsets: ['latin'], weight: ['400', '600'], style: ['normal', 'italic'] });
 
 export const metadata: Metadata = {
-  title: 'Legal Brain — Practice dashboard for Pakistani lawyers',
+  title: 'Wakeel Pro — Practice dashboard for Pakistani lawyers',
   description: 'Cases, cause lists, laws, judgments, drafting and an AI assistant — one place for your whole practice.',
   manifest: '/manifest.webmanifest',
   icons: {
     icon: [
-      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '48x48' },
       { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
     ],
     apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
-  appleWebApp: { capable: true, title: 'Legal Brain', statusBarStyle: 'black-translucent' },
+  appleWebApp: { capable: true, title: 'Wakeel Pro', statusBarStyle: 'black-translucent' },
 };
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#3a2a1d' };

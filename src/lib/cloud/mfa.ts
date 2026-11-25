@@ -33,7 +33,7 @@ export class MfaError extends Error {
   }
 }
 
-const ISSUER = 'Legal Brain';
+const ISSUER = 'Wakeel Pro';
 export const CODE_RE = /^\d{6}$/;
 export const isTotpCode = (s: string) => CODE_RE.test(s.trim());
 

@@ -1,4 +1,4 @@
--- Legal Brain — cloud schema (Phase 2).
+-- Wakeel Pro — cloud schema (Phase 2).
 -- Run once in Supabase: Dashboard → SQL Editor → New query → paste → Run. Safe to re-run.
 --
 -- Model: each chamber's practice data is one JSON document, split in two rows so the database itself

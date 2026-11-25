@@ -86,8 +86,8 @@ export const CHAMBER = {
   'chamber.linkCopied': { en: 'Invite link copied', ur: 'دعوتی لنک کاپی ہو گیا' },
   'chamber.linkSelectCopy': { en: 'Select the link and copy it', ur: 'لنک چن کر خود کاپی کر لیں' },
   'chamber.shareText': {
-    en: "You're invited to join {chamber} on Legal Brain as {role}. Open this link to join: {link}",
-    ur: 'آپ کو Legal Brain پر {chamber} میں بطور {role} شامل ہونے کی دعوت ہے۔ شامل ہونے کے لیے یہ لنک کھولیں: {link}',
+    en: "You're invited to join {chamber} on Wakeel Pro as {role}. Open this link to join: {link}",
+    ur: 'آپ کو Wakeel Pro پر {chamber} میں بطور {role} شامل ہونے کی دعوت ہے۔ شامل ہونے کے لیے یہ لنک کھولیں: {link}',
   },
 
   // Leave chamber

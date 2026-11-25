@@ -42,7 +42,7 @@ export function Statement() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.85', 'end 0.35'] });
   const text =
-    'Legal Brain keeps every hearing date, every client file and every precedent one search away — so advocates spend their time arguing, not hunting through paperwork.';
+    'Wakeel Pro keeps every hearing date, every client file and every precedent one search away — so advocates spend their time arguing, not hunting through paperwork.';
   const words = text.split(' ');
   return (
     <section id="statement" className="mx-auto max-w-5xl px-4 py-24 text-center lg:px-8 lg:py-32">
@@ -163,7 +163,7 @@ export function ProductPreview() {
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-bronze-soft">The dashboard</p>
           <h2 className="mt-3 text-4xl font-bold text-ivory sm:text-5xl">Your day in court, at a glance</h2>
           <p className="mx-auto mt-4 max-w-2xl text-ivory/65">
-            Open Legal Brain in the morning and know exactly where to be, what&apos;s pending and what to read — on your laptop or your phone.
+            Open Wakeel Pro in the morning and know exactly where to be, what&apos;s pending and what to read — on your laptop or your phone.
           </p>
         </Reveal>
         <div ref={ref} className="mt-14 [perspective:1400px]">
@@ -380,9 +380,9 @@ export function Pricing() {
 
 /* ---------- FAQ ---------- */
 const FAQS = [
-  ['Is my clients’ data safe?', 'Every chamber’s data is private to that chamber, protected by two-step login, row-level security and encrypted storage. Nobody outside your chamber — including other lawyers on Legal Brain — can see it.'],
+  ['Is my clients’ data safe?', 'Every chamber’s data is private to that chamber, protected by two-step login, row-level security and encrypted storage. Nobody outside your chamber — including other lawyers on Wakeel Pro — can see it.'],
   ['Does it connect to the court websites?', 'Each case links straight to the official case-status page. Automatic syncing of published cause lists is rolling out court by court, starting with the High Courts.'],
-  ['Can I use it on my phone in court?', 'Yes. Legal Brain works on any phone browser and can be installed on your home screen like an app.'],
+  ['Can I use it on my phone in court?', 'Yes. Wakeel Pro works on any phone browser and can be installed on your home screen like an app.'],
   ['Can I upload my own law books and templates?', 'Yes. Your templates and books go on a private shelf for your chamber only, and become fully searchable.'],
   ['Does the AI give legal advice?', 'No. It helps you research and prepare, always citing its sources so you can verify. The judgment is always yours.'],
   ['Will it support Urdu?', 'Urdu search and Urdu drafts are on the roadmap.'],
@@ -475,7 +475,7 @@ export function Footer() {
       </div>
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-2 px-4 py-5 text-xs text-ink-soft lg:px-8">
-          <p>© {new Date().getFullYear()} Legal Brain · wakeelpropk.com · Preview</p>
+          <p>© {new Date().getFullYear()} Wakeel Pro · wakeelpropk.com · Preview</p>
           <p>Photography: Unsplash</p>
         </div>
       </div>

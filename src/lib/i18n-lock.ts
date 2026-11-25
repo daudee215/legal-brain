@@ -4,7 +4,7 @@ import type { Entry } from './i18n-dict';
 export const LOCK = {
   // Unlock screen
   'lock.title': { en: 'Enter your PIN', ur: 'اپنا پن درج کریں' },
-  'lock.subtitle': { en: 'Legal Brain is locked on this device', ur: 'اس ڈیوائس پر لیگل برین مقفل ہے' },
+  'lock.subtitle': { en: 'Wakeel Pro is locked on this device', ur: 'اس ڈیوائس پر وکیل پرو مقفل ہے' },
   'lock.screen': { en: 'App locked', ur: 'ایپ مقفل ہے' },
   'lock.entered': { en: '{n} of {total} digits entered', ur: '{total} میں سے {n} ہندسے درج ہو گئے' },
   'lock.delete': { en: 'Delete last digit', ur: 'آخری ہندسہ مٹائیں' },
@@ -30,8 +30,8 @@ export const LOCK = {
   'lock.menu': { en: 'App lock', ur: 'ایپ لاک' },
   'lock.settingsTitle': { en: 'App lock', ur: 'ایپ لاک' },
   'lock.intro': {
-    en: 'Ask for a PIN when this phone or computer opens Legal Brain, so a lost or borrowed device cannot show client files. The PIN stays on this device only.',
-    ur: 'جب یہ فون یا کمپیوٹر لیگل برین کھولے تو پن مانگا جائے، تاکہ گم یا مانگی ہوئی ڈیوائس پر موکلوں کی فائلیں نظر نہ آئیں۔ پن صرف اسی ڈیوائس پر رہتا ہے۔',
+    en: 'Ask for a PIN when this phone or computer opens Wakeel Pro, so a lost or borrowed device cannot show client files. The PIN stays on this device only.',
+    ur: 'جب یہ فون یا کمپیوٹر وکیل پرو کھولے تو پن مانگا جائے، تاکہ گم یا مانگی ہوئی ڈیوائس پر موکلوں کی فائلیں نظر نہ آئیں۔ پن صرف اسی ڈیوائس پر رہتا ہے۔',
   },
   'lock.statusOn': { en: 'App lock is on', ur: 'ایپ لاک چالو ہے' },
   'lock.statusOff': { en: 'App lock is off', ur: 'ایپ لاک بند ہے' },

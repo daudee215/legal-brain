@@ -1,4 +1,4 @@
--- Legal Brain: shared chamber files (Phase 2b). Run once in the Supabase SQL editor. Safe to re-run.
+-- Wakeel Pro: shared chamber files (Phase 2b). Run once in the Supabase SQL editor. Safe to re-run.
 -- Files live in the private bucket "chamber-files" at <chamber_id>/<file id>.
 -- Anything under <chamber_id>/billing/ (fee receipts, invoices) is for seniors only.
 

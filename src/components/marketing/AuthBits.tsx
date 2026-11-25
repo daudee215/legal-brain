@@ -24,7 +24,7 @@ export function NotConfigured() {
       <p className="flex items-start gap-2">
         <CloudOff className="mt-0.5 h-5 w-5 shrink-0 text-bronze" aria-hidden />
         <span>
-          <strong>Accounts aren’t switched on for this copy of Legal Brain.</strong> Cloud sync needs a Supabase project (NEXT_PUBLIC_SUPABASE_URL and
+          <strong>Accounts aren’t switched on for this copy of Wakeel Pro.</strong> Cloud sync needs a Supabase project (NEXT_PUBLIC_SUPABASE_URL and
           NEXT_PUBLIC_SUPABASE_ANON_KEY at build time).
         </span>
       </p>

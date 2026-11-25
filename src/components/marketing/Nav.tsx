@@ -25,7 +25,7 @@ export function MarketingNav() {
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${solid ? 'border-b border-line/70 bg-cream/80 py-3 backdrop-blur-xl' : 'py-5'}`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 lg:px-8">
-        <Link href="/" aria-label="Legal Brain home">
+        <Link href="/" aria-label="Wakeel Pro home">
           <Logo />
         </Link>
         <nav className="hidden items-center gap-1 rounded-full border border-line/80 bg-paper/60 px-2 py-1 text-sm text-ink-soft backdrop-blur md:flex" aria-label="Site">
@@ -39,7 +39,7 @@ export function MarketingNav() {
           <Link href="/login/" className="hidden rounded-md px-3 py-2 text-sm font-medium text-ink hover:bg-line/50 sm:inline-flex">
             Log in
           </Link>
-          <Link href="/signup/" className="rounded-md bg-night px-4 py-2 text-sm font-medium text-ivory shadow-lg shadow-night/20 transition hover:-translate-y-0.5 hover:bg-night/90">
+          <Link href="/signup/" className="whitespace-nowrap rounded-md bg-night px-3 py-2 text-sm sm:px-4 font-medium text-ivory shadow-lg shadow-night/20 transition hover:-translate-y-0.5 hover:bg-night/90">
             Get started
           </Link>
           <button className="rounded-md p-2 md:hidden" aria-label="Open site menu" onClick={() => setOpen(true)}>

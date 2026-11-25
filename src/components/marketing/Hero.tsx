@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Award, Play, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Award, Play, Scale, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRef } from 'react';
@@ -29,12 +29,11 @@ function ScrollBadge() {
 function Laurel({ title, sub }: { title: string; sub: string }) {
   return (
     <div className="flex items-center gap-2 text-ink">
-      <span className="font-serif text-3xl leading-none text-bronze">❦</span>
-      <div className="text-center leading-tight">
+      <Scale className="h-5 w-5 shrink-0 text-bronze" aria-hidden />
+      <div className="text-left leading-tight">
         <p className="text-[10px] font-semibold uppercase tracking-wider">{title}</p>
         <p className="text-[10px] text-ink-soft">{sub}</p>
       </div>
-      <span className="-scale-x-100 font-serif text-3xl leading-none text-bronze">❦</span>
     </div>
   );
 }
@@ -66,10 +65,10 @@ export function Hero() {
           Now in preview for Pakistani advocates & chambers
         </motion.p>
 
-        <h1 className="mx-auto max-w-5xl text-[2.6rem] font-extrabold uppercase leading-[0.98] tracking-tight sm:text-7xl lg:text-[5.5rem]">
-          <WordsReveal text="Your entire practice." />
+        <h1 className="mx-auto max-w-7xl text-balance text-[2rem] font-extrabold uppercase leading-[1.04] tracking-tight sm:text-[2.75rem] lg:text-[3.4rem]">
+          <WordsReveal text="Pakistan’s first unified platform" />
           <br />
-          <WordsReveal text="One brain." className="bronze-text" delay={0.3} />
+          <WordsReveal text="for legal knowledge and practice." className="bronze-text" delay={0.3} />
         </h1>
 
         <motion.p
@@ -110,7 +109,7 @@ export function Hero() {
           aria-hidden
           className="text-outline pointer-events-none absolute inset-x-0 bottom-16 select-none whitespace-nowrap text-center font-serif text-[19vw] font-extrabold leading-none tracking-tight lg:text-[230px]"
         >
-          LEGAL BRAIN
+          WAKEEL PRO
         </motion.p>
 
         <div className="relative grid items-end gap-6 lg:grid-cols-[1fr_auto_1fr]">
@@ -135,7 +134,8 @@ export function Hero() {
             transition={{ duration: 1.2, ease: EASE, delay: 0.2 }}
             className="relative order-1 mx-auto h-[380px] w-[280px] overflow-hidden rounded-t-[999px] border border-line/60 shadow-[0_40px_120px_-30px_rgba(110,68,35,0.55)] sm:h-[460px] sm:w-[340px] lg:order-2"
           >
-            <motion.div style={{ y: imgY, scale: imgScale }} className="absolute inset-0">
+            {/* Taller than the arch so the parallax drift never uncovers an empty strip at the top */}
+            <motion.div style={{ y: imgY, scale: imgScale }} className="absolute inset-x-0 -top-[24%] bottom-0 origin-bottom">
               <Image src={IMG.justice} alt="Bronze statue of Lady Justice holding the scales" fill priority sizes="340px" className="object-cover object-[68%_30%] [filter:sepia(.55)_saturate(1.25)_contrast(1.05)_brightness(.98)]" />
             </motion.div>
             <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/10 to-transparent" />
@@ -148,7 +148,7 @@ export function Hero() {
             className="order-3 hidden justify-end gap-4 pb-24 lg:flex"
           >
             <Laurel title="Made for" sub="Pakistani courts" />
-            <Laurel title="Chamber" sub="ready" />
+            <Laurel title="Every legal resource" sub="in one place" />
           </motion.div>
         </div>
 

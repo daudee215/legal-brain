@@ -175,7 +175,7 @@ export function CommandPalette({ open, setOpen }: { open: boolean; setOpen: (v: 
                   <kbd className="rounded border border-line px-1">↑</kbd> <kbd className="rounded border border-line px-1">↓</kbd> to move ·{' '}
                   <kbd className="rounded border border-line px-1">↵</kbd> to open
                 </span>
-                <span className="font-serif text-bronze">Legal Brain</span>
+                <span className="font-serif text-bronze">Wakeel Pro</span>
               </div>
             </Command>
           </motion.div>

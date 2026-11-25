@@ -400,7 +400,7 @@ const notifications: Db['notifications'] = [
   { id: 'n4', date: d(-2, '12:00'), kind: 'news', title: 'High Courts to expand e-filing', read: true, href: '/app/news/' },
   { id: 'n5', date: d(-3, '10:00'), kind: 'system', title: 'Bilal Ahmed joined your chamber', read: true, href: '/app/chamber/' },
   { id: 'n6', date: d(-5, '09:00'), kind: 'hearing', title: 'Judgment reserved in Pak Agro v. FBR', read: true, href: '/app/cases/k8/' },
-  { id: 'n7', date: d(-8, '09:00'), kind: 'system', title: 'Welcome to Legal Brain', read: true },
+  { id: 'n7', date: d(-8, '09:00'), kind: 'system', title: 'Welcome to Wakeel Pro', read: true },
   { id: 'n8', date: d(-9, '15:00'), kind: 'judgment', title: 'Limitation: SC on condonation of delay', read: true, href: '/app/case-law/j10/' },
 ];
 

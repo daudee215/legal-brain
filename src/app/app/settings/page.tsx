@@ -215,7 +215,7 @@ function SettingsPageInner() {
 
   const download = () => {
     const stamp = new Date().toISOString().slice(0, 10);
-    downloadText(`legal-brain-backup-${stamp}.json`, exportBackup());
+    downloadText(`wakeel-pro-backup-${stamp}.json`, exportBackup());
     toast.show('Backup downloaded');
   };
 

@@ -144,7 +144,7 @@ function save(db: Db) {
     try {
       window.localStorage.setItem(KEY, raw);
     } catch {
-      throw new Error('This device is out of storage space for Legal Brain. Export a backup and remove old files.');
+      throw new Error('This device is out of storage space for Wakeel Pro. Export a backup and remove old files.');
     }
   }
   cache = { raw, db };
@@ -200,10 +200,10 @@ export function importBackup(json: string) {
   try {
     parsed = JSON.parse(json);
   } catch {
-    throw new Error('That file is not a Legal Brain backup.');
+    throw new Error('That file is not a Wakeel Pro backup.');
   }
   const db = (parsed as Saved)?.db;
-  if (!isDb(db)) throw new Error('That file is not a Legal Brain backup.');
+  if (!isDb(db)) throw new Error('That file is not a Wakeel Pro backup.');
   save(upgrade(db));
 }
 

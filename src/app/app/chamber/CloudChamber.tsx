@@ -32,7 +32,7 @@ export function CloudChamber({ db, matrix }: { db: Snapshot; matrix: React.React
   const { t } = useLang();
   const roleName = (r: Role) => t(`role.${r}`, undefined, ROLE_LABEL[r]);
   const shareText = (chamber: string, role: Role, link: string) =>
-    t('chamber.shareText', { chamber, role: roleName(role), link }, "You're invited to join {chamber} on Legal Brain as {role}. Open this link to join: {link}");
+    t('chamber.shareText', { chamber, role: roleName(role), link }, "You're invited to join {chamber} on Wakeel Pro as {role}. Open this link to join: {link}");
   const toast = useToast();
   const cloud = useCloud();
   const me = db.me;

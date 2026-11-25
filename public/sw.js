@@ -1,10 +1,10 @@
-/* Legal Brain offline cache.
+/* Wakeel Pro offline cache.
  * - /_next/static/ (hashed, immutable): cache-first.
  * - Page navigations: network-first, falling back to the last cached copy (or the dashboard shell).
  * - Cross-origin requests and non-GET requests are left alone.
  * - /status/ (public client status links): network only, never cached.
  */
-const VERSION = 'lb-v1';
+const VERSION = 'lb-v2';
 const STATIC = `${VERSION}-static`;
 const PAGES = `${VERSION}-pages`;
 const FALLBACK = '/app/';

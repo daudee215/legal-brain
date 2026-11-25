@@ -1,4 +1,4 @@
-# Legal Brain — Project Plan (draft v1, 23 Nov 2026)
+# Wakeel Pro — Project Plan (draft v1, 23 Nov 2026)
 
 **Domain:** wakeelpropk.com (GoDaddy) · **For:** many Pakistani lawyers, each with their own account (a dashboard product) · **Status:** planning, nothing built yet
 
@@ -6,7 +6,7 @@
 
 ## 1. What we're building (as I understand it)
 
-A web product ("Legal Brain") that any Pakistani lawyer signs up for. Each lawyer gets their own private dashboard for their whole practice:
+A web product ("Wakeel Pro") that any Pakistani lawyer signs up for. Each lawyer gets their own private dashboard for their whole practice:
 
 - **Shared by everyone:** laws & statutes, public judgments, court cause-list data, legal news, the standard template library.
 - **Private to each lawyer:** their cases, clients, diary, documents, own templates, own books, AI chats. No lawyer can ever see another's data.

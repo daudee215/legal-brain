@@ -1,4 +1,4 @@
-# Legal Brain
+# Wakeel Pro
 
 Practice dashboard for Pakistani lawyers and chambers — cases, cause lists, laws, judgments, drafting, diary, documents and an AI assistant.
 

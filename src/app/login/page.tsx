@@ -49,7 +49,7 @@ export default function LoginPage() {
       subtitle="Log in to your chamber."
       footer={
         <>
-          New to Legal Brain?{' '}
+          New to Wakeel Pro?{' '}
           <Link href="/signup/" className="font-medium text-bronze hover:underline">
             Create an account
           </Link>

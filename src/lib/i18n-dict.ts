@@ -78,7 +78,7 @@ export const DICT = {
   'nav./app/settings/': { en: 'Data & Backup', ur: 'ڈیٹا اور بیک اپ' },
 
   // Sidebar chrome
-  'shell.website': { en: 'Legal Brain website', ur: 'لیگل برین ویب سائٹ' },
+  'shell.website': { en: 'Wakeel Pro website', ur: 'وکیل پرو ویب سائٹ' },
   'shell.collapse': { en: 'Collapse', ur: 'چھوٹا کریں' },
   'shell.expandSidebar': { en: 'Expand sidebar', ur: 'سائیڈ بار کھولیں' },
   'shell.collapseSidebar': { en: 'Collapse sidebar', ur: 'سائیڈ بار بند کریں' },
