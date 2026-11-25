@@ -42,7 +42,7 @@ export function Statement() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.85', 'end 0.35'] });
   const text =
-    'Wakeel Pro keeps every hearing date, every client file and every precedent one search away — so advocates spend their time arguing, not hunting through paperwork.';
+    'Wakeel Pro is your trusted legal companion, bringing every document, record and precedent together to help you manage, navigate and organise your cases with ease.';
   const words = text.split(' ');
   return (
     <section id="statement" className="mx-auto max-w-5xl px-4 py-24 text-center lg:px-8 lg:py-32">
