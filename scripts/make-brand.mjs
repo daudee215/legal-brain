@@ -126,4 +126,47 @@ sizes.forEach((s, i) => {
 });
 await writeFile(path.join(root, 'src', 'app', 'favicon.ico'), Buffer.concat([header, ...pngs]));
 
+// Link preview card (WhatsApp, Facebook, X, LinkedIn): 1200x630, cream with the lockup and tagline,
+// and a large faint mark bleeding off the right edge.
+{
+  const W = 1200;
+  const H = 630;
+  const bg = Buffer.from(`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="g1" cx="0.12" cy="0.1" r="0.6"><stop offset="0" stop-color="#c9a27a" stop-opacity="0.35"/><stop offset="1" stop-color="#c9a27a" stop-opacity="0"/></radialGradient>
+      <radialGradient id="g2" cx="0.95" cy="0.95" r="0.55"><stop offset="0" stop-color="#8c5e34" stop-opacity="0.18"/><stop offset="1" stop-color="#8c5e34" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="100%" height="100%" fill="${CREAM}"/>
+    <rect width="100%" height="100%" fill="url(#g1)"/>
+    <rect width="100%" height="100%" fill="url(#g2)"/>
+    <rect x="24" y="24" width="${W - 48}" height="${H - 48}" rx="18" fill="none" stroke="#c9a27a" stroke-opacity="0.45" stroke-width="2"/>
+  </svg>`);
+  // A faint copy of the mark: same shape, alpha scaled down to ~8%
+  const faint = { data: Buffer.from(mark.data.map((a) => Math.round(a * 0.08))), info: mark.info };
+  const gh = 560;
+  const ghost = await sharp(await tint(faint, COLORS.bronze)).resize({ height: gh }).png().toBuffer();
+  const gw = (await sharp(ghost).metadata()).width;
+  const gLeft = W - Math.round(gw * 0.74);
+  const gTop = H - gh - 10;
+  // crop whatever would hang off the right edge (composite layers must fit the canvas)
+  const ghostFaded = await sharp(ghost).extract({ left: 0, top: 0, width: W - gLeft, height: gh }).png().toBuffer();
+  const lock = await sharp(await lockup(COLORS.bronze)).resize({ height: 230 }).png().toBuffer();
+  const text = Buffer.from(`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+    <g font-family="Georgia, 'Times New Roman', serif" fill="${COLORS.ink}">
+      <text x="96" y="390" font-size="40" font-weight="700" letter-spacing="1.5">PAKISTAN’S FIRST UNIFIED PLATFORM</text>
+      <text x="96" y="442" font-size="40" font-weight="700" letter-spacing="1.5" fill="${COLORS.bronze}">FOR LEGAL KNOWLEDGE AND PRACTICE.</text>
+      <text x="96" y="520" font-size="24" fill="#6b5a4a" font-family="Arial, Helvetica, sans-serif">Cases · Cause lists · Laws · Judgments · Drafting · AI assistant</text>
+      <text x="96" y="562" font-size="22" fill="${COLORS.bronze}" font-family="Arial, Helvetica, sans-serif" letter-spacing="1">wakeelpropk.com</text>
+    </g>
+  </svg>`);
+  await sharp(bg)
+    .composite([
+      { input: ghostFaded, left: gLeft, top: gTop },
+      { input: lock, left: 72, top: 70 },
+      { input: text, left: 0, top: 0 },
+    ])
+    .png()
+    .toFile(path.join(root, 'public', 'og.png'));
+}
+
 console.log('Wrote brand files to', BRAND);

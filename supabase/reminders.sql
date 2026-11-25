@@ -53,7 +53,7 @@ begin
     else format('%s hearing%s tomorrow', v_n_tomorrow, case when v_n_tomorrow = 1 then '' else 's' end)
   end;
   html := format(
-    '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#2a2a2a"><h2 style="margin:0 0 4px">Good morning%s</h2><p style="margin:0 0 14px;color:#555">%s &mdash; your hearings from Wakeel Pro.</p><table style="width:100%%;border-collapse:collapse;font-size:14px">%s</table><p style="margin-top:18px;font-size:12px;color:#888">Open <a href="https://wakeelpropk.com/app/today/">Today</a> to record outcomes. Chamber: %s. The senior advocate can turn these emails off in Chamber Studio.</p></div>',
+    '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#2a2a2a"><div style="padding:0 0 12px;margin:0 0 18px;border-bottom:2px solid #c9a27a"><img src="https://wakeelpropk.com/brand/lockup-bronze.png" alt="Wakeel Pro" height="44" style="display:block;height:44px;width:auto;border:0"></div><h2 style="margin:0 0 4px">Good morning%s</h2><p style="margin:0 0 14px;color:#555">%s &mdash; your hearings from Wakeel Pro.</p><table style="width:100%%;border-collapse:collapse;font-size:14px">%s</table><p style="margin-top:18px;font-size:12px;color:#888">Open <a href="https://wakeelpropk.com/app/today/">Today</a> to record outcomes. Chamber: %s. The senior advocate can turn these emails off in Chamber Studio.</p></div>',
     case when coalesce(p_name, '') = '' then '' else ', ' || public.html_escape(split_part(p_name, ' ', 1)) end,
     subject, v_rows, public.html_escape(v_chamber)
   );

@@ -7,7 +7,7 @@
 import { PDFDocument, type PDFFont } from 'pdf-lib';
 import type { Case, DiaryEntry, Db, DocFile, Hearing, Task } from '../types';
 import { formatPk, formatTime, pktDateKey, todayKey } from './dates';
-import { BRONZE, INK, LINE, SOFT, Writer, drawLogo, numberPages, pdfSafe, rupees, times, wrapText, type Block } from './pdfDocs';
+import { BRONZE, INK, LINE, SOFT, Writer, brandFooter, drawLogo, numberPages, pdfSafe, rupees, times, wrapText, type Block } from './pdfDocs';
 import { baseDirection, hasArabic, type PdfBuildOpts } from './pdfUrdu';
 import { letterheadOf } from './chamberSettings';
 
@@ -233,6 +233,7 @@ export async function hearingPrepPdf(p: PrepInput, opts: PdfBuildOpts = {}): Pro
     w.y -= 6;
   }
   numberPages(doc, f.regular);
+  await brandFooter(doc);
   return doc.save();
 }
 
@@ -468,6 +469,7 @@ export async function practiceReportPdf(r: PracticeReportInput, opts: PdfBuildOp
   }
   w.text('Figures come from the case records. A decision is dated by the last hearing entry on the case.', { size: 8.5, font: f.italic, color: SOFT });
   numberPages(doc, f.regular);
+  await brandFooter(doc);
   return doc.save();
 }
 

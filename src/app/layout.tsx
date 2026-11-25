@@ -11,6 +11,22 @@ const reading = Source_Serif_4({ variable: '--font-reading-face', subsets: ['lat
 export const metadata: Metadata = {
   title: 'Wakeel Pro — Practice dashboard for Pakistani lawyers',
   description: 'Cases, cause lists, laws, judgments, drafting and an AI assistant — one place for your whole practice.',
+  metadataBase: new URL('https://wakeelpropk.com'),
+  openGraph: {
+    type: 'website',
+    url: '/',
+    siteName: 'Wakeel Pro',
+    title: 'Wakeel Pro — Pakistan’s first unified platform for legal knowledge and practice',
+    description: 'Cases, cause lists, laws, judgments, drafting and an AI assistant — one secure dashboard for you and your chamber.',
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'Wakeel Pro — Pakistan’s first unified platform for legal knowledge and practice' }],
+    locale: 'en_PK',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Wakeel Pro — Pakistan’s first unified platform for legal knowledge and practice',
+    description: 'Cases, cause lists, laws, judgments, drafting and an AI assistant — one secure dashboard for you and your chamber.',
+    images: ['/og.png'],
+  },
   manifest: '/manifest.webmanifest',
   icons: {
     icon: [
