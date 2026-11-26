@@ -22,7 +22,9 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react';
-import type { Action } from '../../lib/permissions';
+import { can, type Action } from '../../lib/permissions';
+import { TEAM_PAGES, type Plan } from '../../lib/plans';
+import type { Role } from '../../types';
 
 export type NavGroup = 'Overview' | 'Practice' | 'Research' | 'Office';
 export const NAV_GROUPS: NavGroup[] = ['Overview', 'Practice', 'Research', 'Office'];
@@ -60,6 +62,11 @@ export const NAV: NavItem[] = [
   { href: '/app/studio/', label: 'Chamber Studio', icon: SlidersHorizontal, action: 'studio', group: 'Office', hint: 'Colours, access rights, law books' },
   { href: '/app/settings/', label: 'Data & Backup', icon: Settings, action: 'chamber.manage', group: 'Office', hint: 'Start fresh, import, export' },
 ];
+
+/** Pages this person sees: their role allows it, and solo practices skip the team pages. */
+export function navFor(role: Role, plan: Plan): NavItem[] {
+  return NAV.filter((n) => (!n.action || can(role, n.action)) && !(plan === 'solo' && TEAM_PAGES.includes(n.href)));
+}
 
 export function isActive(pathname: string, href: string): boolean {
   const p = pathname.endsWith('/') ? pathname : pathname + '/';

@@ -30,6 +30,8 @@ export function friendlyError(e: unknown): string {
   if (/invite not found/i.test(m)) return 'This invite link is not valid.';
   if (/invite already used/i.test(m)) return 'This invite link has already been used. Ask for a new one.';
   if (/invite expired/i.test(m)) return 'This invite link has expired. Ask for a new one.';
+  if (/chamber is full/i.test(m)) return 'This chamber is full for its plan. Ask the senior to remove someone or move to a bigger plan.';
+  if (/too many members for the/i.test(m)) return 'That plan is too small for everyone already in your chamber. Remove members first.';
   if (/different from the old/i.test(m)) return 'Choose a password different from your old one.';
   if (/rate limit/i.test(m)) return 'Too many attempts — please wait a few minutes and try again.';
   if (/Failed to fetch|NetworkError|network/i.test(m)) return 'No internet connection. Your work is kept on this device and will sync when you are back online.';

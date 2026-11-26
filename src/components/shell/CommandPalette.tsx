@@ -9,7 +9,7 @@ import { can, ROLE_LABEL } from '../../lib/permissions';
 import { snapshot } from '../../lib/repo';
 import { useData } from '../../lib/useData';
 import type { Role } from '../../types';
-import { NAV } from './nav';
+import { navFor } from './nav';
 import { useRole } from './RoleProvider';
 import { useTheme } from './ThemeProvider';
 
@@ -20,7 +20,7 @@ const groupCls =
 
 export function CommandPalette({ open, setOpen }: { open: boolean; setOpen: (v: boolean) => void }) {
   const router = useRouter();
-  const { role, setRole } = useRole();
+  const { role, setRole, plan } = useRole();
   const { resolved, toggle } = useTheme();
   const db = useData(() => snapshot(), []);
 
@@ -41,7 +41,7 @@ export function CommandPalette({ open, setOpen }: { open: boolean; setOpen: (v: 
     setOpen(false);
     router.push(href);
   };
-  const pages = NAV.filter((n) => !n.action || can(role, n.action));
+  const pages = navFor(role, plan);
 
   return (
     <AnimatePresence>

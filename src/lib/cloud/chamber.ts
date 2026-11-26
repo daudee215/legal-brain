@@ -3,6 +3,7 @@
  * The chosen chamber is remembered on this device under `lb.chamber`.
  */
 import type { Role } from '../../types';
+import type { Plan } from '../plans';
 import { supabase } from './client';
 import { flushSync, hasUnsyncedChanges, stopSync } from './sync';
 
@@ -86,8 +87,19 @@ export async function sendMyDigest(chamberId: string): Promise<'sent' | 'nothing
   return String(check(await supabase().rpc('send_my_digest', { p_chamber: chamberId }))) as 'sent' | 'nothing' | 'no-key';
 }
 
-export async function createChamber(name: string, myName: string): Promise<string> {
-  return String(check(await supabase().rpc('create_chamber', { p_name: name.trim(), p_my_name: myName.trim() })));
+export async function createChamber(name: string, myName: string, plan: Plan = 'chamber'): Promise<string> {
+  const args = { p_name: name.trim(), p_my_name: myName.trim() };
+  const r = await supabase().rpc('create_chamber', { ...args, p_plan: plan });
+  // Until supabase/plans.sql is run the server only knows the two-argument version: fall back to it.
+  if ((r.error as { code?: string } | null)?.code === 'PGRST202') {
+    return String(check(await supabase().rpc('create_chamber', args)));
+  }
+  return String(check(r));
+}
+
+/** Move a chamber to another plan (senior only; the server refuses one too small for the team). */
+export async function setChamberPlan(chamberId: string, plan: Plan) {
+  check(await supabase().from('chambers').update({ plan }).eq('id', chamberId));
 }
 
 export async function acceptInvite(code: string, myName: string): Promise<string> {

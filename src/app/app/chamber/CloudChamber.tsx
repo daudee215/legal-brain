@@ -13,7 +13,9 @@ import { formatPk } from '../../../lib/dates';
 import { useLang } from '../../../lib/i18n';
 import { ROLE_LABEL } from '../../../lib/permissions';
 import type { Snapshot } from '../../../lib/repo';
+import { PLANS, planOf } from '../../../lib/plans';
 import type { Member, Role } from '../../../types';
+import { PlanCard } from './PlanCard';
 
 const ROLES: Role[] = ['senior', 'junior', 'clerk'];
 const tone = (r: Role) => (r === 'senior' ? 'ink' : r === 'junior' ? 'bronze' : 'neutral') as 'ink' | 'bronze' | 'neutral';
@@ -40,6 +42,8 @@ export function CloudChamber({ db, matrix }: { db: Snapshot; matrix: React.React
   const chamberId = db.chamber.id;
   const members = db.chamber.members;
   const seniors = members.filter((m) => m.role === 'senior').length;
+  const plan = planOf(db.chamber);
+  const full = members.length >= PLANS[plan].seats;
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [err, setErr] = useState('');
   const [invites, setInvites] = useState<Invite[]>([]);
@@ -118,6 +122,20 @@ export function CloudChamber({ db, matrix }: { db: Snapshot; matrix: React.React
         })(),
     });
   };
+
+  if (plan === 'solo') {
+    return (
+      <>
+        <PageHeader
+          title={db.chamber.name}
+          subtitle={t('plan.soloSubtitle', undefined, 'Your solo practice — every case, date and file is yours alone. Move to Chamber when you take on juniors or a clerk.')}
+        />
+        <div className="max-w-xl">
+          <PlanCard chamberId={chamberId} plan={plan} members={members.length} senior={senior} />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -200,7 +218,14 @@ export function CloudChamber({ db, matrix }: { db: Snapshot; matrix: React.React
         </div>
 
         <div className="space-y-6 self-start">
-          {senior ? (
+          <PlanCard chamberId={chamberId} plan={plan} members={members.length} senior={senior} />
+          {senior && full ? (
+            <Card>
+              <p className="text-sm text-ink-soft">
+                {t('plan.fullInvite', { n: PLANS[plan].seats }, 'All {n} places on your plan are taken. Remove a member or move to a bigger plan to invite someone new.')}
+              </p>
+            </Card>
+          ) : senior ? (
             <Card>
               <CardTitle>
                 <span className="inline-flex items-center gap-2">

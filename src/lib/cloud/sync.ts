@@ -20,6 +20,7 @@ import { mergeDocs } from './merge';
 import { BILLING_KEYS, composeDb, DATA_KEYS, splitDb, type Half } from './split';
 import { uploadLocalFiles, type BringResult } from './storage';
 import type { DocFile } from '../../types';
+import { planOf, type Plan } from '../plans';
 
 export type Kind = 'data' | 'billing';
 export interface MemberRow {
@@ -36,7 +37,7 @@ export interface DocRow {
 /** Everything the engine needs from the server. */
 export interface Backend {
   userId(): Promise<string | null>;
-  loadChamber(chamberId: string): Promise<{ id: string; name: string } | null>;
+  loadChamber(chamberId: string): Promise<{ id: string; name: string; plan?: Plan } | null>;
   loadMembers(chamberId: string): Promise<MemberRow[]>;
   /** null when the row is not readable (billing for non-seniors). */
   loadDoc(chamberId: string, kind: Kind): Promise<DocRow | null>;
@@ -59,7 +60,9 @@ export function supabaseBackend(sb: SupabaseClient): Backend {
       return data.session?.user.id ?? null;
     },
     async loadChamber(id) {
-      return check(await sb.from('chambers').select('id,name').eq('id', id).maybeSingle()) as { id: string; name: string } | null;
+      // '*' so this keeps working on a server that hasn't got the plan column yet
+      const row = check(await sb.from('chambers').select('*').eq('id', id).maybeSingle()) as { id: string; name: string; plan?: string } | null;
+      return row ? { id: row.id, name: row.name, plan: planOf(row) } : null;
     },
     async loadMembers(id) {
       return (check(await sb.from('members').select('user_id,role,name,email').eq('chamber_id', id).order('joined_at')) ?? []) as MemberRow[];
@@ -153,7 +156,7 @@ function norm(kind: Kind, h: Half | null | undefined): Half {
 interface Session {
   chamberId: string;
   be: Backend;
-  chamber: { id: string; name: string };
+  chamber: { id: string; name: string; plan?: Plan };
   members: MemberRow[];
   me: Member | null;
   base: { data: Half; billing: Half | null };
@@ -208,7 +211,7 @@ function isNetworkError(e: unknown): boolean {
 function show(data: Half, billing: Half | null) {
   if (!s || !s.me) return;
   const db = composeDb({
-    chamber: { id: s.chamber.id, name: s.chamber.name, members: s.members.map(toMember) },
+    chamber: { id: s.chamber.id, name: s.chamber.name, plan: planOf(s.chamber), members: s.members.map(toMember) },
     me: s.me,
     data,
     billing,

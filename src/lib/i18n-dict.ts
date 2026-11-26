@@ -119,6 +119,8 @@ export const DICT = {
   'account.signOut': { en: 'Sign out', ur: 'لاگ آؤٹ' },
   'account.settings': { en: 'Cloud sync & backup', ur: 'کلاؤڈ اور بیک اپ' },
   'account.chamber': { en: 'Chamber members', ur: 'چیمبر کے اراکین' },
+  'account.plan': { en: 'Your plan', ur: 'آپ کا پلان' },
+  'plan.soloPractice': { en: 'Solo practice', ur: 'انفرادی پریکٹس' },
   'account.unsynced': {
     en: 'Some changes have not reached the server yet (no internet?). Signing out now removes them from this device. Sign out anyway?',
     ur: 'کچھ تبدیلیاں ابھی سرور تک نہیں پہنچیں (انٹرنیٹ؟)۔ ابھی لاگ آؤٹ کرنے سے یہ اس ڈیوائس سے مٹ جائیں گی۔ پھر بھی لاگ آؤٹ کریں؟',

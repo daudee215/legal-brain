@@ -613,12 +613,20 @@ function Files({ db }: { db: Snapshot }) {
 function StudioBody({ db }: { db: Snapshot }) {
   const { t } = useLang();
   const [tab, setTab] = useState<Tab>('look');
+  const { plan } = useRole();
+  const solo = plan === 'solo';
+  // A solo advocate has nobody to grant rights to.
+  const tabs = solo ? TABS.filter((x) => x.id !== 'access') : TABS;
   const accent = settingsOf(db)?.accent ?? 'bronze';
   return (
     <RoleGate action="studio">
-      <PageHeader title={t('studio.title', undefined, 'Chamber Studio')} subtitle={t('studio.subtitle', undefined, 'Colours, who can do what, and your files — set up once for the whole chamber.')} />
+      {solo ? (
+        <PageHeader title={t('studio.titleSolo', undefined, 'Studio')} subtitle={t('studio.subtitleSolo', undefined, 'Colours, your letterhead, reminders and your files.')} />
+      ) : (
+        <PageHeader title={t('studio.title', undefined, 'Chamber Studio')} subtitle={t('studio.subtitle', undefined, 'Colours, who can do what, and your files — set up once for the whole chamber.')} />
+      )}
       <div role="tablist" aria-label={t('studio.sections', undefined, 'Studio sections')} className="mb-6 flex flex-wrap gap-2">
-        {TABS.map(({ id, label, icon: Icon }) => (
+        {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             role="tab"
@@ -634,7 +642,7 @@ function StudioBody({ db }: { db: Snapshot }) {
       </div>
       {tab === 'look' && <Look accent={accent} />}
       {tab === 'profile' && <Profile db={db} />}
-      {tab === 'access' && <Access db={db} />}
+      {tab === 'access' && !solo && <Access db={db} />}
       {tab === 'reminders' && <Reminders db={db} />}
       {tab === 'safety' && <Safety />}
       {tab === 'files' && <Files db={db} />}

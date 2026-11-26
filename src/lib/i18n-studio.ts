@@ -8,6 +8,8 @@ export const STUDIO = {
   "studio.tab.reminders": { en: "Reminders", ur: "یاد دہانیاں" },
   "studio.tab.files": { en: "Files and storage", ur: "فائلیں اور جگہ" },
   "studio.title": { en: "Chamber Studio", ur: "چیمبر اسٹوڈیو" },
+  "studio.titleSolo": { en: "Studio", ur: "اسٹوڈیو" },
+  "studio.subtitleSolo": { en: "Colours, your letterhead, reminders and your files.", ur: "رنگ، آپ کا لیٹر ہیڈ، یاد دہانیاں اور آپ کی فائلیں۔" },
   "studio.subtitle": { en: "Colours, who can do what, and your files — set up once for the whole chamber.", ur: "رنگ، کس کو کیا اجازت ہے، اور آپ کی فائلیں — پورے چیمبر کے لیے ایک بار ترتیب دیں۔" },
   "studio.sections": { en: "Studio sections", ur: "اسٹوڈیو کے حصے" },
   "studio.look.title": { en: "Colour scheme", ur: "رنگوں کی ترتیب" },

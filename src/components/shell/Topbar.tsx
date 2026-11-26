@@ -130,6 +130,7 @@ function SyncIndicator() {
 
 function AccountMenu({ initials, name }: { initials: string; name: string }) {
   const { email, sync, signOut } = useCloud();
+  const { plan } = useRole();
   const { t } = useLang();
   const [open, setOpen] = useState(false);
   const [lockOpen, setLockOpen] = useState(false);
@@ -176,7 +177,7 @@ function AccountMenu({ initials, name }: { initials: string; name: string }) {
           </div>
           <div className="my-1 border-t border-line" />
           <Link role="menuitem" href="/app/chamber/" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm text-ink hover:bg-line/50">
-            {t('account.chamber')}
+            {plan === 'solo' ? t('account.plan', undefined, 'Your plan') : t('account.chamber')}
           </Link>
           <Link role="menuitem" href="/app/settings/" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm text-ink hover:bg-line/50">
             {t('account.settings')}

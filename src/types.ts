@@ -45,6 +45,8 @@ export interface Chamber {
   id: string;
   name: string;
   members: Member[];
+  /** Solo, Chamber or Firm (absent: Chamber). */
+  plan?: import('./lib/plans').Plan;
 }
 export interface Client {
   id: string;

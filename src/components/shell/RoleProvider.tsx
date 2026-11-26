@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { applyChamberSettings, settingsKey, settingsOf } from '../../lib/chamberSettings';
 import { listMembers } from '../../lib/repo';
 import { getDb, subscribe } from '../../lib/store';
+import { planOf, type Plan } from '../../lib/plans';
 import type { Member, Role } from '../../types';
 import { useCloud } from './CloudProvider';
 
@@ -18,6 +19,8 @@ interface RoleCtx {
   ready: boolean;
   /** Signed in to a shared chamber: the role is the real one and can't be previewed. */
   cloud: boolean;
+  /** Solo, Chamber or Firm. The demo is always a chamber. */
+  plan: Plan;
 }
 
 const Ctx = createContext<RoleCtx | null>(null);
@@ -28,6 +31,7 @@ export function RoleProvider({ children, initialRole = 'senior' }: { children: R
   const { view } = useCloud();
   const cloud = view === 'on';
   const [me, setMe] = useState<Member | null>(null);
+  const [plan, setPlan] = useState<Plan>('chamber');
   // Bumped when the senior changes colours or access rights, so every `can()` check re-runs.
   const [settingsV, setSettingsV] = useState(0);
   const lastSettings = useRef('');
@@ -66,9 +70,17 @@ export function RoleProvider({ children, initialRole = 'senior' }: { children: R
 
   // In a cloud chamber, follow the signed-in member (their role can change while the app is open).
   useEffect(() => {
-    if (!cloud) return setMe(null);
-    setMe(getDb().me);
-    return subscribe(() => setMe(getDb().me));
+    if (!cloud) {
+      setMe(null);
+      setPlan('chamber');
+      return;
+    }
+    const read = () => {
+      setMe(getDb().me);
+      setPlan(planOf(getDb().chamber));
+    };
+    read();
+    return subscribe(read);
   }, [cloud]);
 
   const setRole = useCallback((r: Role) => {
@@ -81,11 +93,11 @@ export function RoleProvider({ children, initialRole = 'senior' }: { children: R
   }, []);
 
   const value = useMemo<RoleCtx>(() => {
-    if (cloud && me) return { role: me.role, setRole: () => {}, member: me, ready: true, cloud: true };
+    if (cloud && me) return { role: me.role, setRole: () => {}, member: me, ready: true, cloud: true, plan };
     const member = members?.find((m) => m.role === role) ?? { id: '', name: '', email: '', role };
-    return { role, setRole, member, ready: members !== null && view !== 'loading' && !(cloud && !me), cloud: false };
+    return { role, setRole, member, ready: members !== null && view !== 'loading' && !(cloud && !me), cloud: false, plan: 'chamber' };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role, setRole, members, cloud, me, view, settingsV]);
+  }, [role, setRole, members, cloud, me, view, settingsV, plan]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

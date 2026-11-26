@@ -5,10 +5,9 @@ import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLang } from '../../lib/i18n';
-import { can } from '../../lib/permissions';
 import { getDb } from '../../lib/store';
 import { BrandMark, Logo } from './Logo';
-import { isActive, NAV, NAV_GROUPS } from './nav';
+import { isActive, NAV_GROUPS, navFor } from './nav';
 import { useRole } from './RoleProvider';
 
 export function Sidebar({
@@ -24,10 +23,10 @@ export function Sidebar({
   layoutKey?: string;
 }) {
   const pathname = usePathname() ?? '/app/';
-  const { role, member, cloud } = useRole();
+  const { role, member, cloud, plan } = useRole();
   const { t, dir } = useLang();
   const rtl = dir === 'rtl';
-  const items = NAV.filter((n) => !n.action || can(role, n.action));
+  const items = navFor(role, plan);
   const initials = member.name
     .split(' ')
     .map((p) => p[0])
@@ -70,7 +69,7 @@ export function Sidebar({
                         href={n.href}
                         onClick={onNavigate}
                         aria-current={active ? 'page' : undefined}
-                        title={collapsed ? t(`nav.${n.href}`, undefined, n.label) : undefined}
+                        title={collapsed ? (plan === 'solo' && n.href === '/app/studio/' ? t('studio.titleSolo', undefined, 'Studio') : t(`nav.${n.href}`, undefined, n.label)) : undefined}
                         className={`group relative flex items-center gap-3 rounded-lg py-2 text-sm transition-colors ${
                           collapsed ? 'justify-center px-0' : 'px-3'
                         } ${active ? 'font-semibold text-night' : 'text-ivory/75 hover:bg-white/[0.07] hover:text-ivory'}`}
@@ -86,7 +85,7 @@ export function Sidebar({
                           className={`relative h-4 w-4 shrink-0 transition-transform group-hover:scale-110 ${active ? 'text-bronze' : ''}`}
                           aria-hidden
                         />
-                        <span className={collapsed ? 'sr-only' : 'relative truncate'}>{t(`nav.${n.href}`, undefined, n.label)}</span>
+                        <span className={collapsed ? 'sr-only' : 'relative truncate'}>{(plan === 'solo' && n.href === '/app/studio/' ? t('studio.titleSolo', undefined, 'Studio') : t(`nav.${n.href}`, undefined, n.label))}</span>
                         {n.href === '/app/assistant/' && !collapsed && (
                           <span className="relative ms-auto rounded-full bg-bronze/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-ivory">
                             AI
@@ -124,7 +123,7 @@ export function Sidebar({
               {t('shell.advPrefix')} {member.name}
             </p>
             <p className="truncate text-xs text-ivory/55">
-              {t(`role.${role}`)} · {cloud ? getDb().chamber.name : 'Khan & Associates'}
+              {plan === 'solo' ? t('plan.soloPractice', undefined, 'Solo practice') : t(`role.${role}`)} · {cloud ? getDb().chamber.name : 'Khan & Associates'}
             </p>
           </div>
         )}

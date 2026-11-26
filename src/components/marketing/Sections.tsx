@@ -340,9 +340,9 @@ export function HowItWorks() {
 /* ---------- Pricing preview ---------- */
 export function Pricing() {
   const plans = [
-    { name: 'Solo', tag: 'For individual advocates', feats: ['Unlimited cases & clients', 'Cause list & reminders', 'Laws & case law search', 'Drafting templates'] },
-    { name: 'Chamber', tag: 'For seniors with juniors & clerks', feats: ['Everything in Solo', 'Up to 10 members & roles', 'AI legal assistant', 'Shared documents & diary'], featured: true },
-    { name: 'Firm', tag: 'For multi-partner firms', feats: ['Everything in Chamber', 'Unlimited members', 'Priority support', 'Data import & training'] },
+    { id: 'solo', name: 'Solo', tag: 'For individual advocates', cta: 'Start solo', feats: ['Just you — one private login', 'Unlimited cases & clients', 'Cause list, laws & case law', 'Drafting & AI assistant'] },
+    { id: 'chamber', name: 'Chamber', tag: 'For seniors with juniors & clerks', cta: 'Create your chamber', feats: ['Everything in Solo', 'Up to 10 members & roles', 'Invite links for juniors & clerks', 'Shared documents & diary'], featured: true },
+    { id: 'firm', name: 'Firm', tag: 'For multi-partner firms', cta: 'Set up your firm', feats: ['Everything in Chamber', 'Up to 20 members', 'Several senior partners', 'Data import & training'] },
   ];
   return (
     <section id="pricing" className="bg-paper/60 py-24">
@@ -374,12 +374,12 @@ export function Pricing() {
                   ))}
                 </ul>
                 <Link
-                  href="/signup/"
+                  href={`/signup/?plan=${p.id}`}
                   className={`mt-8 block rounded-md px-4 py-3 text-center text-sm font-medium transition ${
                     p.featured ? 'bg-ivory text-night hover:bg-white' : 'bg-night text-ivory hover:bg-night/90'
                   }`}
                 >
-                  Join the preview
+                  {p.cta}
                 </Link>
               </div>
             </Reveal>

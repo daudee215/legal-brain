@@ -10,7 +10,29 @@ import { chooseChamber, createChamber, currentUser, signOut, signUp } from '../.
 import { cloudEnabled, friendlyError } from '../../lib/cloud/client';
 import { bringSummary } from '../../lib/cloud/storage';
 import { uploadLocal } from '../../lib/cloud/sync';
+import { isPlan, PLAN_IDS, PLANS, type Plan } from '../../lib/plans';
 import { getDb, getMode } from '../../lib/store';
+
+const COPY: Record<Plan, { title: string; subtitle: string; button: string; busy: string }> = {
+  solo: {
+    title: 'Start your solo practice',
+    subtitle: 'Everything for one advocate — cases, cause lists, laws, drafting and the AI assistant. Private to you.',
+    button: 'Create my account',
+    busy: 'Setting up your practice…',
+  },
+  chamber: {
+    title: 'Create your chamber',
+    subtitle: 'One shared, private copy of your practice for you, your juniors and clerks — up to 10 people.',
+    button: 'Create account & chamber',
+    busy: 'Creating your chamber…',
+  },
+  firm: {
+    title: 'Set up your firm',
+    subtitle: 'One private workspace for partners, associates and staff — up to 20 people, each with their own login.',
+    button: 'Create account & firm',
+    busy: 'Setting up your firm…',
+  },
+};
 
 export default function SignupPage() {
   const router = useRouter();
@@ -18,6 +40,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [chamber, setChamber] = useState('');
+  const [plan, setPlan] = useState<Plan>('chamber');
   const [bring, setBring] = useState(false);
   const [mine, setMine] = useState<{ cases: number; files: number } | null>(null);
   const [progress, setProgress] = useState('');
@@ -26,6 +49,9 @@ export default function SignupPage() {
   const [signedIn, setSignedIn] = useState<string | null>(null);
 
   useEffect(() => {
+    // The pricing cards link here with ?plan=solo|chamber|firm
+    const p = new URLSearchParams(window.location.search).get('plan');
+    if (isPlan(p)) setPlan(p);
     if (getMode() === 'mine') {
       setMine({ cases: getDb().cases.length, files: getDb().docs.filter((d) => d.blobKey).length });
       setBring(true);
@@ -41,7 +67,8 @@ export default function SignupPage() {
     try {
       await signUp(name, email, password);
       step = 'chamber';
-      const id = await createChamber(chamber, name);
+      // A solo advocate's letterhead name is optional: their own name stands in.
+      const id = await createChamber(chamber.trim() || `Adv. ${name.trim()}`, name, plan);
       if (bring && mine) {
         step = 'upload';
         const files = await uploadLocal(id, { onFileProgress: (p) => p.total && setProgress(`Uploading files: ${Math.min(p.done + 1, p.total)} of ${p.total}…`) });
@@ -62,8 +89,8 @@ export default function SignupPage() {
 
   return (
     <AuthCard
-      title="Create your chamber"
-      subtitle="One shared, private copy of your practice for every lawyer and clerk in your chamber."
+      title={COPY[plan].title}
+      subtitle={COPY[plan].subtitle}
       footer={
         <>
           Already have an account?{' '}
@@ -71,7 +98,7 @@ export default function SignupPage() {
             Log in
           </Link>
           <br />
-          Got an invite link from your chamber? Open that link to join.
+          Got an invite link from your chamber or firm? Open that link to join.
         </>
       }
       note={cloudEnabled ? <DemoNote /> : undefined}
@@ -101,6 +128,26 @@ export default function SignupPage() {
         </div>
       ) : (
         <form className="space-y-4" onSubmit={submit}>
+          <fieldset>
+            <legend className="mb-1.5 text-sm font-medium">Plan</legend>
+            <div role="radiogroup" aria-label="Plan" className="grid grid-cols-3 gap-1 rounded-xl border border-line bg-cream/60 p-1">
+              {PLAN_IDS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  role="radio"
+                  aria-checked={plan === p}
+                  onClick={() => setPlan(p)}
+                  className={`rounded-lg px-2 py-2 text-center text-sm transition ${plan === p ? 'bg-night font-semibold text-ivory shadow' : 'text-ink-soft hover:bg-paper hover:text-ink'}`}
+                >
+                  {PLANS[p].name}
+                  <span className={`block text-[11px] font-normal ${plan === p ? 'text-ivory/70' : 'text-ink-soft'}`}>
+                    {PLANS[p].seats === 1 ? 'Just you' : `Up to ${PLANS[p].seats}`}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </fieldset>
           <Field label="Your full name" required maxLength={120} placeholder="Advocate's full name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} />
           <Field label="Email" type="email" required placeholder="you@chamber.pk" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           <Field
@@ -113,12 +160,20 @@ export default function SignupPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <Field label="Chamber name" required maxLength={120} placeholder="e.g. Khan & Associates" value={chamber} onChange={(e) => setChamber(e.target.value)} />
+          <Field
+            label={PLANS[plan].orgLabel}
+            required={plan !== 'solo'}
+            maxLength={120}
+            placeholder={PLANS[plan].orgPlaceholder}
+            hint={plan === 'solo' ? 'Optional. Printed at the top of your receipts and briefs; your name is used if you leave it empty.' : undefined}
+            value={chamber}
+            onChange={(e) => setChamber(e.target.value)}
+          />
           {mine && (
             <label className="flex items-start gap-2 rounded-lg border border-line bg-cream/60 p-3 text-sm">
               <input type="checkbox" className="mt-1 accent-bronze" checked={bring} onChange={(e) => setBring(e.target.checked)} />
               <span>
-                Bring this device&apos;s cases into the new chamber
+                Bring this device&apos;s cases into your new account
                 <span className="block text-xs text-ink-soft">
                   {mine.cases} case{mine.cases === 1 ? '' : 's'} with their clients, diary, fees and tasks{mine.files ? `, and ${mine.files} uploaded file${mine.files === 1 ? '' : 's'}` : ''}. Your copy on this device is kept as it is.
                 </span>
@@ -132,7 +187,7 @@ export default function SignupPage() {
             </p>
           )}
           <button type="submit" disabled={busy} className={`${btn.primary} w-full py-2.5`}>
-            {busy ? 'Creating your chamber…' : 'Create account & chamber'}
+            {busy ? COPY[plan].busy : COPY[plan].button}
           </button>
         </form>
       )}
