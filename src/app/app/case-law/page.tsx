@@ -1,43 +1,140 @@
 'use client';
 
+import { ExternalLink } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
-import { Badge, Card, DemoBadge, EmptyState, inputCls, PageHeader } from '../../../components/ui';
-import { formatPk } from '../../../lib/dates';
-import { searchItems } from '../../../lib/search';
-import { snapshot, type Snapshot } from '../../../lib/repo';
-import { useData } from '../../../lib/useData';
+import { useEffect, useMemo, useState } from 'react';
+import { Badge, btn, Card, DemoBadge, EmptyState, inputCls, PageHeader } from '../../../components/ui';
 import { Loading } from '../../../components/ui/Loading';
+import { loadOfficialJudgments, officialHref, type OfficialJudgment } from '../../../lib/caselaw';
+import { formatPk } from '../../../lib/dates';
+import { snapshot, type Snapshot } from '../../../lib/repo';
+import { searchItems } from '../../../lib/search';
+import { useData } from '../../../lib/useData';
+import type { Judgment } from '../../../types';
+
+const PAGE = 25;
+type Source = 'sc' | 'demo';
+
+function readParams() {
+  try {
+    const p = new URLSearchParams(window.location.search);
+    return { q: p.get('q') || '', law: p.get('law') || '', subject: p.get('subject') || '', source: (p.get('source') === 'demo' ? 'demo' : 'sc') as Source };
+  } catch {
+    return { q: '', law: '', subject: '', source: 'sc' as Source };
+  }
+}
+
+function JudgmentCard({ j, court, href, demo, dateKnown = true }: { j: Judgment; court?: string; href: string; demo?: boolean; dateKnown?: boolean }) {
+  return (
+    <Card>
+      <div className="flex flex-wrap items-center gap-2 text-xs text-ink-soft">
+        <Badge tone="ink">{court}</Badge>
+        {j.caseNo && j.caseNo.toLowerCase() !== j.title.toLowerCase() && <span>{j.caseNo}</span>}
+        {j.date && (
+          <>
+            <span aria-hidden>·</span>
+            <span>{dateKnown ? formatPk(j.date) : j.date.slice(0, 4)}</span>
+          </>
+        )}
+        {demo && <DemoBadge text="Demo example" />}
+      </div>
+      <Link href={href} className="mt-2 block font-serif text-lg font-semibold hover:text-bronze">
+        {j.title}
+      </Link>
+      {j.judges.length > 0 && <p className="mt-0.5 text-xs text-ink-soft">{j.judges.join(', ')}</p>}
+      <p className="mt-2 font-reading text-sm text-ink-soft">{j.summary}</p>
+      {j.tags.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {j.tags.map((t) => (
+            <Badge key={t} tone="bronze">
+              {t}
+            </Badge>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
 
 function CaseLawPageBody({ db }: { db: Snapshot }) {
+  const [official, setOfficial] = useState<OfficialJudgment[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [source, setSource] = useState<Source>('sc');
   const [q, setQ] = useState('');
-  const [court, setCourt] = useState('');
   const [year, setYear] = useState('');
-  const years = [...new Set(db.judgments.map((j) => j.date.slice(0, 4)))].sort().reverse();
+  const [subject, setSubject] = useState('');
+  const [law, setLaw] = useState('');
+  const [shown, setShown] = useState(PAGE);
+
+  useEffect(() => {
+    const p = readParams();
+    setQ(p.q);
+    setLaw(p.law);
+    setSubject(p.subject);
+    setSource(p.source);
+    loadOfficialJudgments()
+      .then(setOfficial)
+      .catch(() => setFailed(true));
+  }, []);
+
+  // A fresh search starts from the top of the list again.
+  useEffect(() => setShown(PAGE), [q, year, subject, law, source]);
+
+  const list = useMemo<(Judgment & { dateKnown?: boolean })[]>(() => (source === 'sc' ? (official ?? []) : db.judgments), [source, official, db.judgments]);
+  const years = useMemo(() => [...new Set(list.map((j) => j.date.slice(0, 4)).filter(Boolean))].sort().reverse(), [list]);
+  const subjects = useMemo(() => {
+    const n = new Map<string, number>();
+    list.forEach((j) => j.tags.forEach((t) => n.set(t, (n.get(t) || 0) + 1)));
+    return [...n.entries()].filter(([, c]) => c >= 3 || source === 'demo').sort((a, b) => b[1] - a[1]);
+  }, [list, source]);
   const rows = useMemo(
     () =>
       searchItems(
-        db.judgments.filter((j) => (!court || j.courtId === court) && (!year || j.date.startsWith(year))).sort((a, b) => (a.date < b.date ? 1 : -1)),
+        list
+          .filter((j) => (!year || j.date.startsWith(year)) && (!subject || j.tags.includes(subject)) && (!law || j.statutesCited.includes(law)))
+          .sort((a, b) => (a.date < b.date ? 1 : -1)),
         q,
         (j) => [j.title, j.caseNo, j.summary, ...j.tags, ...j.judges],
       ),
-    [q, court, year, db.judgments],
+    [q, year, subject, law, list],
   );
+  const lawName = law ? db.statutes.find((s) => s.id === law)?.title : '';
+  const courtName = (id: string) => db.courts.find((c) => c.id === id)?.shortName ?? id.toUpperCase();
+  const tabCls = (on: boolean) => `rounded-lg px-4 py-2 text-sm font-semibold transition ${on ? 'bg-night text-ivory' : 'text-ink hover:bg-line/50'}`;
 
   return (
     <>
-      <PageHeader title="Case Law" subtitle="Judgments from the Supreme Court, FCC and High Courts." actions={<DemoBadge />} />
-      <div className="mb-6 grid gap-3 sm:grid-cols-[1fr_200px_140px]">
-        <input className={inputCls} placeholder="Search issue, section, party — e.g. “bail further inquiry”" aria-label="Search judgments" value={q} onChange={(e) => setQ(e.target.value)} />
-        <select className={inputCls} aria-label="Court" value={court} onChange={(e) => setCourt(e.target.value)}>
-          <option value="">All courts</option>
-          {db.courts
-            .filter((c) => c.level !== 'District')
-            .map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
+      <PageHeader
+        title="Case Law"
+        subtitle={
+          official
+            ? `${official.length.toLocaleString()} Supreme Court of Pakistan judgments, from the Court's own website.`
+            : 'Supreme Court of Pakistan judgments, from the Court’s own website.'
+        }
+      />
+      <div role="tablist" aria-label="Judgments" className="mb-4 flex flex-wrap gap-2 border-b border-line pb-3">
+        <button role="tab" aria-selected={source === 'sc'} className={tabCls(source === 'sc')} onClick={() => setSource('sc')}>
+          Supreme Court{official ? ` (${official.length.toLocaleString()})` : ''}
+        </button>
+        <button role="tab" aria-selected={source === 'demo'} className={tabCls(source === 'demo')} onClick={() => setSource('demo')}>
+          Demo examples ({db.judgments.length})
+        </button>
+      </div>
+      <div className="mb-3 grid gap-3 sm:grid-cols-[1fr_190px_120px]">
+        <input
+          className={inputCls}
+          placeholder="Search parties, case no., judge, subject — e.g. “bail 497”"
+          aria-label="Search judgments"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+        <select className={inputCls} aria-label="Subject" value={subject} onChange={(e) => setSubject(e.target.value)}>
+          <option value="">All subjects</option>
+          {subjects.map(([t, c]) => (
+            <option key={t} value={t}>
+              {t} ({c})
+            </option>
+          ))}
         </select>
         <select className={inputCls} aria-label="Year" value={year} onChange={(e) => setYear(e.target.value)}>
           <option value="">Any year</option>
@@ -46,36 +143,53 @@ function CaseLawPageBody({ db }: { db: Snapshot }) {
           ))}
         </select>
       </div>
-      {rows.length === 0 ? (
-        <EmptyState title="No judgments match" body="Try different words, or clear the court and year filters." />
+      {lawName && (
+        <p className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+          Citing <Badge tone="bronze">{lawName}</Badge>
+          <button className="text-ink-soft underline hover:text-ink" onClick={() => setLaw('')}>
+            Clear
+          </button>
+        </p>
+      )}
+      {source === 'sc' && !official && !failed ? (
+        <Loading />
+      ) : source === 'sc' && failed ? (
+        <EmptyState title="Couldn’t load the judgments" body="Check your internet connection and open this page again." />
+      ) : rows.length === 0 ? (
+        <EmptyState title="No judgments match" body="Try different words, or clear the subject and year filters." />
       ) : (
-        <div className="space-y-4">
-          {rows.map((j) => (
-            <Card key={j.id}>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-ink-soft">
-                <Badge tone="ink">{db.courts.find((c) => c.id === j.courtId)?.shortName}</Badge>
-                <span>{j.caseNo}</span>
-                <span>·</span>
-                <span>{formatPk(j.date)}</span>
-              </div>
-              <Link href={`/app/case-law/${j.id}/`} className="mt-2 block font-serif text-lg font-semibold hover:text-bronze">
-                {j.title}
-              </Link>
-              <p className="mt-1 font-reading text-sm text-ink-soft">{j.summary}</p>
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {j.tags.map((t) => (
-                  <Badge key={t} tone="bronze">
-                    {t}
-                  </Badge>
-                ))}
-              </div>
-            </Card>
-          ))}
-        </div>
+        <>
+          <p className="mb-3 text-xs text-ink-soft" aria-live="polite">
+            {rows.length.toLocaleString()} {rows.length === 1 ? 'judgment' : 'judgments'}
+          </p>
+          <div className="space-y-4">
+            {rows.slice(0, shown).map((j) => (
+              <JudgmentCard
+                key={j.id}
+                j={j}
+                court={courtName(j.courtId)}
+                href={source === 'sc' ? officialHref(j.id) : `/app/case-law/${j.id}/`}
+                demo={source === 'demo'}
+                dateKnown={j.dateKnown ?? true}
+              />
+            ))}
+          </div>
+          {rows.length > shown && (
+            <div className="mt-6 text-center">
+              <button className={btn.ghost} onClick={() => setShown((n) => n + PAGE)}>
+                Show more ({(rows.length - shown).toLocaleString()} left)
+              </button>
+            </div>
+          )}
+        </>
       )}
       <p className="mt-8 text-xs text-ink-soft">
-        Demo judgments are invented. Phase 3 imports judgments published on official court websites. Reported law journals (PLD, SCMR etc.) are not included —
-        they are owned by their publishers.
+        Judgments are public documents published by the Supreme Court of Pakistan{' '}
+        <a href="https://www.supremecourt.gov.pk/judgements/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 underline">
+          on its website <ExternalLink className="h-3 w-3" aria-hidden />
+        </a>
+        . Text was taken from the Court&rsquo;s PDFs and may contain conversion errors — check the original before citing. Search covers parties, case numbers, bench,
+        subjects and the opening of each judgment. Reported law journals (PLD, SCMR etc.) are not included; they belong to their publishers.
       </p>
     </>
   );

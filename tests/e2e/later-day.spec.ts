@@ -20,7 +20,7 @@ for (const path of ROUTES) {
 
 test('judgment date on detail page matches the list 3 days after build', async ({ page }) => {
   await page.clock.setFixedTime(LATER);
-  await page.goto('/app/case-law/');
+  await page.goto('/app/case-law/?source=demo');
   const listText = await page.locator('text=Crl. Petition 101/2026').locator('..').innerText();
   const listDate = listText.match(/\d{1,2} [A-Z][a-z]{2} \d{4}/)![0];
   await page.goto('/app/case-law/j1/');

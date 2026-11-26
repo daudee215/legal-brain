@@ -38,6 +38,8 @@
     "@vitejs/plugin-react": "^6.3.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.29",
+    "hyparquet": "^1.8.0",
+    "hyparquet-compressors": "^1.1.1",
     "jsdom": "^31.0.1",
     "serve": "^14.2.8",
     "tailwindcss": "^4",

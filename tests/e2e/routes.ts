@@ -11,6 +11,7 @@ export const ROUTES = [
   '/app/laws/crpc-1898/',
   '/app/case-law/',
   '/app/case-law/j1/',
+  '/app/case-law/read/?id=sc-crl-p-l-a-1290-2021',
   '/app/cause-list/',
   '/app/cases/',
   '/app/cases/k1/',

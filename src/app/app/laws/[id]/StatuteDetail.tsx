@@ -4,6 +4,8 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { Badge, Card, DemoBadge, EmptyState } from '../../../../components/ui';
 import { Loading } from '../../../../components/ui/Loading';
+import { loadOfficialJudgments, officialHref } from '../../../../lib/caselaw';
+import { formatPk } from '../../../../lib/dates';
 import { getStatute, listJudgments } from '../../../../lib/repo';
 import { useData } from '../../../../lib/useData';
 
@@ -11,11 +13,13 @@ export function StatuteDetail({ id }: { id: string }) {
   const data = useData(async () => {
     const s = await getStatute(id);
     if (!s) return { s: undefined } as const;
-    return { s, citing: (await listJudgments()).filter((j) => j.statutesCited.includes(s.id)) };
+    const official = await loadOfficialJudgments().catch(() => []);
+    const sc = official.filter((j) => j.statutesCited.includes(s.id));
+    return { s, citing: (await listJudgments()).filter((j) => j.statutesCited.includes(s.id)), sc };
   }, [id]);
   if (!data) return <Loading />;
   if (!data.s) return <EmptyState title="Law not found" />;
-  const { s, citing } = data;
+  const { s, citing, sc } = data;
 
   return (
     <div className="space-y-6">
@@ -59,9 +63,30 @@ export function StatuteDetail({ id }: { id: string }) {
               </article>
             </Card>
           ))}
+          {sc.length > 0 && (
+            <Card>
+              <h2 className="mb-1 text-lg font-semibold">Supreme Court judgments citing this law</h2>
+              <p className="mb-3 text-xs text-ink-soft">Latest {Math.min(5, sc.length)} of {sc.length.toLocaleString()}</p>
+              <ul className="space-y-2 text-sm">
+                {sc.slice(0, 5).map((j) => (
+                  <li key={j.id}>
+                    <Link href={officialHref(j.id)} className="hover:text-bronze">
+                      {j.title}
+                    </Link>
+                    {j.date && <span className="text-ink-soft"> · {j.dateKnown ? formatPk(j.date) : j.date.slice(0, 4)}</span>}
+                  </li>
+                ))}
+              </ul>
+              {sc.length > 5 && (
+                <Link href={`/app/case-law/?law=${s.id}`} className="mt-3 inline-block text-sm font-medium text-bronze hover:underline">
+                  See all {sc.length.toLocaleString()} →
+                </Link>
+              )}
+            </Card>
+          )}
           {citing.length > 0 && (
             <Card>
-              <h2 className="mb-3 text-lg font-semibold">Judgments citing this law</h2>
+              <h2 className="mb-3 text-lg font-semibold">Demo judgments citing this law</h2>
               <ul className="space-y-2 text-sm">
                 {citing.map((j) => (
                   <li key={j.id}>
