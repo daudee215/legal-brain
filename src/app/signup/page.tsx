@@ -164,7 +164,7 @@ export default function SignupPage() {
               ))}
             </select>
           </label>
-          <Field label="Email" type="email" required placeholder="you@chamber.pk" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Field label="Email" type="email" required placeholder="you@example.pk" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           <Field
             label="Password"
             type="password"

@@ -57,9 +57,16 @@ export const NAV: NavItem[] = [
   { href: '/app/settings/', label: 'Settings', icon: Settings, action: 'studio', group: 'Office', hint: 'Studio, data & backup' },
 ];
 
+/** The translation key for a menu item: a firm's team page is called Firm. */
+export function navLabelKey(href: string, plan: Plan): string {
+  return plan === 'firm' && href === '/app/chamber/' ? 'nav.firm' : `nav.${href}`;
+}
+
 /** Pages this person sees: their role allows it, and solo practices skip the team pages. */
 export function navFor(role: Role, plan: Plan): NavItem[] {
-  return NAV.filter((n) => (!n.action || can(role, n.action)) && !(plan === 'solo' && TEAM_PAGES.includes(n.href)));
+  return NAV.filter((n) => (!n.action || can(role, n.action)) && !(plan === 'solo' && TEAM_PAGES.includes(n.href))).map((n) =>
+    plan === 'firm' && n.href === '/app/chamber/' ? { ...n, label: 'Firm', hint: 'Partners, staff & roles' } : n,
+  );
 }
 
 export function isActive(pathname: string, href: string): boolean {

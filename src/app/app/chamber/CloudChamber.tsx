@@ -141,7 +141,11 @@ export function CloudChamber({ db, matrix }: { db: Snapshot; matrix: React.React
     <>
       <PageHeader
         title={db.chamber.name}
-        subtitle={t('chamber.subtitleCloud', undefined, 'Your chamber — members share cases, dates and documents. Fees are visible to seniors only.')}
+        subtitle={
+          plan === 'firm'
+            ? t('chamber.subtitleFirm', undefined, 'Your firm — partners and staff share cases, dates and documents. Fees are visible to seniors only.')
+            : t('chamber.subtitleCloud', undefined, 'Your chamber — members share cases, dates and documents. Fees are visible to seniors only.')
+        }
       />
       {err && (
         <p role="alert" className="mb-4 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">

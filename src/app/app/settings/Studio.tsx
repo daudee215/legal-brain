@@ -365,7 +365,8 @@ function Access({ db }: { db: Snapshot }) {
 function Reminders({ db }: { db: Snapshot }) {
   const toast = useToast();
   const { t } = useLang();
-  const { cloud } = useRole();
+  const { cloud, plan } = useRole();
+  const solo = plan === 'solo';
   const [busy, setBusy] = useState(false);
   const on = settingsOf(db)?.emailReminders === true;
   const test = async () => {
@@ -392,20 +393,26 @@ function Reminders({ db }: { db: Snapshot }) {
       <Card>
         <CardTitle>{t('studio.rem.title', undefined, 'Morning hearing emails')}</CardTitle>
         <p className="mb-4 max-w-2xl text-sm text-ink-soft">
-          {t('studio.rem.intro', undefined, "Every morning at 7:30 (Pakistan time) each member of your chamber gets one email listing the hearings today and tomorrow, even if they never open the app. No hearings, no email.")}
+          {solo
+            ? t('studio.rem.introSolo', undefined, 'Every morning at 7:30 (Pakistan time) you get one email listing your hearings today and tomorrow, even if you never open the app. No hearings, no email.')
+            : t('studio.rem.intro', undefined, "Every morning at 7:30 (Pakistan time) each member of your chamber gets one email listing the hearings today and tomorrow, even if they never open the app. No hearings, no email.")}
         </p>
         <label className="flex items-center gap-3 text-sm font-medium">
           <input type="checkbox" className="h-4 w-4 accent-[var(--bronze)]" checked={on} onChange={(e) => setEmailReminders(e.target.checked)} aria-label={t('studio.rem.aria', undefined, 'Send morning hearing emails')} />
-          {t('studio.rem.label', undefined, 'Send morning hearing emails to the whole chamber')}
+          {solo ? t('studio.rem.labelSolo', undefined, 'Send me morning hearing emails') : t('studio.rem.label', undefined, 'Send morning hearing emails to the whole chamber')}
         </label>
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <button className={btn.ghost} disabled={!cloud || busy} onClick={() => void test()}>
             <Bell className="h-4 w-4" /> {busy ? t('studio.rem.sending', undefined, 'Sending…') : t('studio.rem.now', undefined, "Email me today's hearings now")}
           </button>
-          {!cloud && <span className="text-xs text-ink-soft">{t('studio.rem.needCloud', undefined, 'Available once you are signed in to your shared chamber.')}</span>}
+          {!cloud && <span className="text-xs text-ink-soft">{solo ? t('studio.rem.needCloudSolo', undefined, 'Available once you are signed in to your account.') : t('studio.rem.needCloud', undefined, 'Available once you are signed in to your shared chamber.')}</span>}
         </div>
       </Card>
-      <Notice>{t('studio.rem.note', undefined, 'Emails go to the address each person signed up with. They are sent from reminders@wakeelpropk.com.')}</Notice>
+      <Notice>
+        {solo
+          ? t('studio.rem.noteSolo', undefined, 'Emails go to the address you signed up with. They are sent from reminders@wakeelpropk.com.')
+          : t('studio.rem.note', undefined, 'Emails go to the address each person signed up with. They are sent from reminders@wakeelpropk.com.')}
+      </Notice>
     </div>
   );
 }
@@ -416,7 +423,8 @@ const stamp = (iso: string) =>
 function Safety() {
   const toast = useToast();
   const { t } = useLang();
-  const { cloud } = useRole();
+  const { cloud, plan } = useRole();
+  const solo = plan === 'solo';
   const [backups, setBackups] = useState<BackupRow[] | null>(null);
   const [activity, setActivity] = useState<ActivityRow[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -438,7 +446,14 @@ function Safety() {
     if (cloud) void load();
   }, [cloud, load]);
 
-  if (!cloud) return <Notice>{t('studio.safe.needCloud', undefined, 'Restore points and the activity log are available once you are signed in to your shared chamber.')}</Notice>;
+  if (!cloud)
+    return (
+      <Notice>
+        {solo
+          ? t('studio.safe.needCloudSolo', undefined, 'Restore points and the activity log are available once you are signed in to your account.')
+          : t('studio.safe.needCloud', undefined, 'Restore points and the activity log are available once you are signed in to your shared chamber.')}
+      </Notice>
+    );
 
   const saveNow = async () => {
     const id = getSyncStatus().chamberId;
@@ -455,7 +470,9 @@ function Safety() {
     }
   };
   const restore = async (b: BackupRow) => {
-    if (!window.confirm(t('studio.safe.confirm', { when: stamp(b.taken_at) }, 'Put your chamber back to ' + stamp(b.taken_at) + '?'))) return;
+    if (!window.confirm(solo
+          ? t('studio.safe.confirmSolo', { when: stamp(b.taken_at) }, 'Put your practice back to ' + stamp(b.taken_at) + '?')
+          : t('studio.safe.confirm', { when: stamp(b.taken_at) }, 'Put your chamber back to ' + stamp(b.taken_at) + '?'))) return;
     setBusy(b.id);
     try {
       await restoreBackup(b.id);
@@ -473,7 +490,9 @@ function Safety() {
       <Card>
         <CardTitle>{t('studio.safe.pointsTitle', undefined, 'Restore points')}</CardTitle>
         <p className="mb-4 max-w-2xl text-sm text-ink-soft">
-          {t('studio.safe.pointsIntro', undefined, 'Every night the chamber saves a copy of all its data, and keeps the last 40. If a case is deleted or something goes wrong, go back to an earlier copy here. Going back saves the current state first, so you can undo it too.')}
+          {solo
+            ? t('studio.safe.pointsIntroSolo', undefined, 'Every night a copy of all your data is saved, and the last 40 are kept. If a case is deleted or something goes wrong, go back to an earlier copy here. Going back saves the current state first, so you can undo it too.')
+            : t('studio.safe.pointsIntro', undefined, 'Every night the chamber saves a copy of all its data, and keeps the last 40. If a case is deleted or something goes wrong, go back to an earlier copy here. Going back saves the current state first, so you can undo it too.')}
         </p>
         <div className="mb-4 flex flex-wrap gap-2">
           <button className={btn.bronze} disabled={busy !== null} onClick={() => void saveNow()}>
@@ -510,7 +529,9 @@ function Safety() {
       </Card>
       <Card>
         <CardTitle>{t('studio.safe.activityTitle', undefined, 'Recent activity')}</CardTitle>
-        <p className="mb-4 text-sm text-ink-soft">{t('studio.safe.activityIntro', undefined, 'Who added, changed or removed what, newest first. Kept for 120 days.')}</p>
+        <p className="mb-4 text-sm text-ink-soft">{solo
+            ? t('studio.safe.activityIntroSolo', undefined, 'What was added, changed or removed, newest first. Kept for 120 days.')
+            : t('studio.safe.activityIntro', undefined, 'Who added, changed or removed what, newest first. Kept for 120 days.')}</p>
         {activity === null ? null : activity.length === 0 ? (
           <p className="text-sm text-ink-soft">{t('studio.safe.activityNone', undefined, 'No activity yet.')}</p>
         ) : (
@@ -535,6 +556,7 @@ function Safety() {
 function Files({ db }: { db: Snapshot }) {
   const toast = useToast();
   const { t } = useLang();
+  const solo = useRole().plan === 'solo';
   const { open, download } = useDocFile(toast);
   const used = storageUsed(db.docs);
   const pct = Math.min(100, Math.round((used / PLAN_BYTES) * 100));
@@ -547,7 +569,7 @@ function Files({ db }: { db: Snapshot }) {
         <CardTitle>{t('studio.files.storage', undefined, 'Storage')}</CardTitle>
         <div className="mb-2 flex items-baseline justify-between text-sm">
           <span>
-            <strong className="font-serif text-2xl">{formatBytes(used)}</strong> {t('studio.files.shared', undefined, 'shared with your chamber')}
+            <strong className="font-serif text-2xl">{formatBytes(used)}</strong> {solo ? t('studio.files.used', undefined, 'used') : t('studio.files.shared', undefined, 'shared with your chamber')}
           </span>
           <span className="text-ink-soft">{t('studio.files.of', { size: formatBytes(PLAN_BYTES) }, `of ${formatBytes(PLAN_BYTES)}`)}</span>
         </div>
@@ -602,7 +624,9 @@ function Files({ db }: { db: Snapshot }) {
                     className="rounded-lg p-1.5 text-ink-soft hover:bg-danger/10 hover:text-danger"
                     aria-label={t('studio.files.delete', { name: d.name }, `Delete ${d.name}`)}
                     onClick={async () => {
-                      if (!window.confirm(t('studio.files.confirm', { name: d.name }, `Delete "${d.name}" for everyone in your chamber? This cannot be undone.`))) return;
+                      if (!window.confirm(solo
+                          ? t('studio.files.confirmSolo', { name: d.name }, `Delete "${d.name}"? This cannot be undone.`)
+                          : t('studio.files.confirm', { name: d.name }, `Delete "${d.name}" for everyone in your chamber? This cannot be undone.`))) return;
                       await removeDocument(d);
                       toast.show(t('studio.files.deleted', undefined, 'File deleted'));
                     }}

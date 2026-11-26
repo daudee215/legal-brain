@@ -71,6 +71,7 @@ export const DICT = {
   'nav./app/drafting/': { en: 'Legal Drafting', ur: 'درخواست نویسی' },
   'nav./app/paper-book/': { en: 'Paper Book', ur: 'پیپر بک' },
   'nav./app/chamber/': { en: 'Chamber', ur: 'چیمبر' },
+  'nav.firm': { en: 'Firm', ur: 'فرم' },
   'nav./app/munshi/': { en: 'Munshi Mode', ur: 'منشی موڈ' },
   'nav./app/settings/': { en: 'Settings', ur: 'ترتیبات' },
 
@@ -116,6 +117,7 @@ export const DICT = {
   'account.signOut': { en: 'Sign out', ur: 'لاگ آؤٹ' },
   'account.settings': { en: 'Cloud sync & backup', ur: 'کلاؤڈ اور بیک اپ' },
   'account.chamber': { en: 'Chamber members', ur: 'چیمبر کے اراکین' },
+  'account.firm': { en: 'Firm members', ur: 'فرم کے اراکین' },
   'account.plan': { en: 'Your plan', ur: 'آپ کا پلان' },
   'plan.soloPractice': { en: 'Solo practice', ur: 'انفرادی پریکٹس' },
   'account.unsynced': {

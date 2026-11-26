@@ -33,7 +33,9 @@ describe('plans', () => {
     const chamber = navFor('senior', 'chamber').map((n) => n.href);
     expect(chamber).toContain('/app/chamber/');
     expect(chamber).toContain('/app/munshi/');
-    expect(navFor('senior', 'firm')).toEqual(navFor('senior', 'chamber'));
+    // A firm has the same pages; its team page is called Firm.
+    expect(navFor('senior', 'firm').map((n) => n.href)).toEqual(chamber);
+    expect(navFor('senior', 'firm').find((n) => n.href === '/app/chamber/')?.label).toBe('Firm');
   });
 });
 

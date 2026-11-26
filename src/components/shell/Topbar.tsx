@@ -9,7 +9,7 @@ import { getDb } from '../../lib/store';
 import { usePathname } from 'next/navigation';
 import { useLang } from '../../lib/i18n';
 import type { Role } from '../../types';
-import { NAV, isActive } from './nav';
+import { NAV, isActive, navLabelKey } from './nav';
 import { AppLockSettings } from './AppLockSettings';
 import { TwoStepSettings } from './TwoStepSettings';
 import { NotificationsMenu } from './Notifications';
@@ -18,7 +18,7 @@ import { useCloud } from './CloudProvider';
 import { useTheme } from './ThemeProvider';
 
 export function Topbar({ onMenu, onSearch }: { onMenu: () => void; onSearch: () => void }) {
-  const { role, setRole, member, cloud } = useRole();
+  const { role, setRole, member, cloud, plan: planNow } = useRole();
   const { resolved, toggle } = useTheme();
   const { lang, setLang, t } = useLang();
   const pathname = usePathname() ?? '/app/';
@@ -37,7 +37,7 @@ export function Topbar({ onMenu, onSearch }: { onMenu: () => void; onSearch: () 
       <p className="hidden min-w-0 items-center gap-2 text-sm xl:flex">
         <span className="text-ink-soft">{cloud ? getDb().chamber.name : 'Khan & Associates'}</span>
         <span className="text-line">/</span>
-        <span className="truncate font-medium text-ink">{current ? t(`nav.${current.href}`, undefined, current.label) : t('nav./app/')}</span>
+        <span className="truncate font-medium text-ink">{current ? t(navLabelKey(current.href, planNow), undefined, current.label) : t('nav./app/')}</span>
       </p>
       <button
         type="button"
@@ -177,7 +177,7 @@ function AccountMenu({ initials, name }: { initials: string; name: string }) {
           </div>
           <div className="my-1 border-t border-line" />
           <Link role="menuitem" href="/app/chamber/" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm text-ink hover:bg-line/50">
-            {plan === 'solo' ? t('account.plan', undefined, 'Your plan') : t('account.chamber')}
+            {plan === 'solo' ? t('account.plan', undefined, 'Your plan') : plan === 'firm' ? t('account.firm', undefined, 'Firm members') : t('account.chamber')}
           </Link>
           <Link role="menuitem" href="/app/settings/" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm text-ink hover:bg-line/50">
             {t('account.settings')}

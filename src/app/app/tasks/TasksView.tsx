@@ -108,9 +108,12 @@ function TaskItem({ t, today, cases, members, showAssignee, onMsg }: { t: Task; 
 
 /** Who is doing what, by when: one tab of the Deadlines & Tasks page. */
 export function TasksView() {
-  const { member } = useRole();
+  const { member, plan } = useRole();
+  // A solo advocate is the only person: tasks are grouped by due date, with nobody else to assign to.
+  const solo = plan === 'solo';
   const toast = useToast();
-  const [view, setView] = useState<View>('person');
+  const [picked, setView] = useState<View>('person');
+  const view: View = solo ? 'due' : picked;
   const [mine, setMine] = useState(false);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ title: '', assigneeId: '', caseId: '', due: '' });
@@ -159,33 +162,37 @@ export function TasksView() {
     <>
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <button className={btn.primary} onClick={() => setAdding((v) => !v)}>
-            {adding ? <X className="h-4 w-4" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />} {adding ? 'Close' : 'Add task'}
-          </button>
-        <div className="flex gap-1 rounded-xl border border-line bg-paper p-1 text-sm" role="tablist" aria-label="Group tasks">
-          {(
-            [
-              ['person', 'By person', Users],
-              ['due', 'By due date', CalendarDays],
-            ] as const
-          ).map(([id, label, Icon]) => (
-            <button
-              key={id}
-              role="tab"
-              aria-selected={view === id}
-              onClick={() => setView(id)}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition ${view === id ? 'bg-night text-ivory' : 'hover:bg-line/50'}`}
-            >
-              <Icon className="h-4 w-4" aria-hidden /> {label}
-            </button>
-          ))}
-        </div>
-        <button
-          aria-pressed={mine}
-          onClick={() => setMine((v) => !v)}
-          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition ${mine ? 'border-bronze bg-bronze/15 text-bronze' : 'border-line bg-paper hover:border-bronze/40'}`}
-        >
-          <UserRound className="h-4 w-4" aria-hidden /> Mine only
+          {adding ? <X className="h-4 w-4" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />} {adding ? 'Close' : 'Add task'}
         </button>
+        {!solo && (
+          <div className="flex gap-1 rounded-xl border border-line bg-paper p-1 text-sm" role="tablist" aria-label="Group tasks">
+            {(
+              [
+                ['person', 'By person', Users],
+                ['due', 'By due date', CalendarDays],
+              ] as const
+            ).map(([id, label, Icon]) => (
+              <button
+                key={id}
+                role="tab"
+                aria-selected={view === id}
+                onClick={() => setView(id)}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition ${view === id ? 'bg-night text-ivory' : 'hover:bg-line/50'}`}
+              >
+                <Icon className="h-4 w-4" aria-hidden /> {label}
+              </button>
+            ))}
+          </div>
+        )}
+        {!solo && (
+          <button
+            aria-pressed={mine}
+            onClick={() => setMine((v) => !v)}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition ${mine ? 'border-bronze bg-bronze/15 text-bronze' : 'border-line bg-paper hover:border-bronze/40'}`}
+          >
+            <UserRound className="h-4 w-4" aria-hidden /> Mine only
+          </button>
+        )}
         {overdueCount > 0 && (
           <span className="inline-flex items-center gap-1.5 text-sm font-medium text-danger">
             <AlertTriangle className="h-4 w-4" aria-hidden /> {overdueCount} overdue
@@ -201,17 +208,19 @@ export function TasksView() {
               What needs doing
               <input className={`${inputCls} mt-1`} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Apply for certified copy" required />
             </label>
-            <label className="text-xs text-ink-soft">
-              Assign to
-              <select className={`${inputCls} mt-1`} value={form.assigneeId || member.id} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}>
-                {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="text-xs text-ink-soft lg:col-span-2">
+            {!solo && (
+              <label className="text-xs text-ink-soft">
+                Assign to
+                <select className={`${inputCls} mt-1`} value={form.assigneeId || member.id} onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}>
+                  {members.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <label className={`text-xs text-ink-soft ${solo ? 'sm:col-span-1 lg:col-span-3' : 'lg:col-span-2'}`}>
               Case (optional)
               <select className={`${inputCls} mt-1`} value={form.caseId} onChange={(e) => setForm({ ...form, caseId: e.target.value })}>
                 <option value="">No case</option>
@@ -237,7 +246,10 @@ export function TasksView() {
       )}
 
       {tasks.length === 0 && !adding ? (
-        <EmptyState title="No tasks yet" body="Give your junior or munshi something to do — collect a copy, file a reply, call a client." />
+        <EmptyState
+          title="No tasks yet"
+          body={solo ? 'Note what needs doing — collect a copy, file a reply, call a client.' : 'Give your junior or munshi something to do — collect a copy, file a reply, call a client.'}
+        />
       ) : (
         <div className={`grid grid-cols-1 gap-4 ${view === 'person' ? 'md:grid-cols-2 xl:grid-cols-3' : 'md:grid-cols-2 xl:grid-cols-5'}`}>
           {columns.map((col) => (

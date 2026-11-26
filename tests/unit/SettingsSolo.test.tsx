@@ -33,3 +33,19 @@ describe('Settings', () => {
     expect(screen.getByRole('tab', { name: /Access rights/ })).toBeInTheDocument();
   });
 });
+
+describe('Solo wording inside the Studio', () => {
+  it('Files, Reminders and Safety talk to one person, not a chamber', async () => {
+    plan.current = 'solo';
+    const { fireEvent } = await import('@testing-library/react');
+    render(<SettingsPage />);
+    fireEvent.click(await screen.findByRole('tab', { name: /Files and storage/ }));
+    expect(await screen.findByText('used')).toBeInTheDocument();
+    expect(screen.queryByText(/shared with your chamber/)).toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: /Reminders/ }));
+    expect(screen.getByText('Send me morning hearing emails')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: /Safety/ }));
+    expect(screen.getByText(/signed in to your account/)).toBeInTheDocument();
+    expect(screen.queryByText(/chamber/i)).toBeNull();
+  });
+});

@@ -32,7 +32,7 @@ export default function SettingsPage() {
     }
   };
   const tabs: { id: Tab; label: string; icon: typeof Database }[] = [
-    { id: 'studio', label: solo ? t('studio.titleSolo', undefined, 'Your Studio') : t('studio.title', undefined, 'Chamber Studio'), icon: SlidersHorizontal },
+    { id: 'studio', label: solo ? t('studio.titleSolo', undefined, 'Your Studio') : plan === 'firm' ? t('studio.titleFirm', undefined, 'Firm Studio') : t('studio.title', undefined, 'Chamber Studio'), icon: SlidersHorizontal },
     { id: 'data', label: t('settings.data', undefined, 'Data & Backup'), icon: Database },
   ];
 

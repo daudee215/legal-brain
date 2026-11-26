@@ -255,7 +255,7 @@ function StatuteShowcase() {
 /* ---------- Who we serve ---------- */
 export function WhoWeServe() {
   const groups: [typeof Users, string, string][] = [
-    [UserRound, 'Independent advocates', 'Tools to organise an individual legal practice, its cases and clients.'],
+    [UserRound, 'Independent advocates & students', 'Tools to organise individual legal practice, cases and clients.'],
     [Users, 'Law chambers', 'A shared workspace for senior advocates, juniors and clerks.'],
     [Building2, 'Law firms', 'Organised resources and coordinated case management for legal teams.'],
     [GraduationCap, 'Legal researchers & students', 'Access to legal resources for learning and research, where supported.'],
