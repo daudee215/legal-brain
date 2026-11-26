@@ -74,7 +74,8 @@ export function CountUp({ to, suffix = '', prefix = '', duration = 1.4, classNam
 }
 
 /** Per-word headline reveal. */
-export function WordsReveal({ text, className, delay = 0 }: { text: string; className?: string; delay?: number }) {
+/** `wordClassName` goes on every word: gradient text (background-clip) must sit on the moving span itself, or iPhones show nothing. */
+export function WordsReveal({ text, className, wordClassName = '', delay = 0 }: { text: string; className?: string; wordClassName?: string; delay?: number }) {
   const reduce = useReducedMotion();
   const words = text.split(' ');
   return (
@@ -82,7 +83,7 @@ export function WordsReveal({ text, className, delay = 0 }: { text: string; clas
       {words.map((w, i) => (
         <span key={i} className="inline-block overflow-hidden pb-[0.08em] align-bottom" aria-hidden>
           <motion.span
-            className="inline-block"
+            className={`inline-block ${wordClassName}`}
             initial={reduce ? false : { y: '110%' }}
             animate={{ y: 0 }}
             transition={{ duration: 0.9, ease: EASE, delay: delay + i * 0.07 }}

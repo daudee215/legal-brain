@@ -27,7 +27,7 @@ export const assistantDemo: DemoQA[] = [
       { label: 'S. 115 CPC', href: '/app/laws/cpc-1908/#s-115' },
       { label: 'S. 12 Limitation Act', href: '/app/laws/limitation-1908/#s-12' },
       { label: 'Ghulam Rasool v. Muhammad Din (demo)', href: '/app/case-law/j10/' },
-      { label: 'Limitation Calculator', href: '/app/tools/' },
+      { label: 'Limitation Calculator', href: '/app/tasks/?tab=calculator' },
     ],
   },
   {

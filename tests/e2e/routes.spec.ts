@@ -23,7 +23,7 @@ test('clerk is blocked from the AI assistant', async ({ page }) => {
   await expect(page.getByText(/doesn.t have access/)).toBeVisible();
 });
 
-for (const path of ['/app/chamber/', '/app/settings/', '/app/studio/', '/app/precedents/']) {
+for (const path of ['/app/chamber/', '/app/settings/', '/app/precedents/']) {
   test(`clerk is blocked from ${path}`, async ({ page }) => {
     await page.goto('/app/');
     await page.getByLabel('Preview as', { exact: true }).selectOption('clerk');
@@ -33,7 +33,7 @@ for (const path of ['/app/chamber/', '/app/settings/', '/app/studio/', '/app/pre
 }
 
 test('the senior can pick a colour scheme and it applies across the app', async ({ page }) => {
-  await page.goto('/app/studio/');
+  await page.goto('/app/settings/');
   await page.getByRole('button', { name: /Emerald/ }).click();
   await expect(page.locator('html')).toHaveAttribute('data-accent', 'emerald');
   await page.goto('/app/');
@@ -47,7 +47,7 @@ test('assistant answers a suggested question with citations', async ({ page }) =
 });
 
 test('the senior can give one clerk their own rights, and the change can be undone', async ({ page }) => {
-  await page.goto('/app/studio/');
+  await page.goto('/app/settings/');
   await page.getByRole('tab', { name: 'Access rights' }).click();
   const row = page.getByRole('listitem').filter({ hasText: 'Clerk' }).first();
   await row.getByRole('button', { name: 'Set rights' }).click();
@@ -58,7 +58,7 @@ test('the senior can give one clerk their own rights, and the change can be undo
 });
 
 test('the reminders tab can switch morning emails on', async ({ page }) => {
-  await page.goto('/app/studio/');
+  await page.goto('/app/settings/');
   await page.getByRole('tab', { name: 'Reminders' }).click();
   const box = page.getByRole('checkbox', { name: 'Send morning hearing emails' });
   await box.check();
@@ -66,7 +66,7 @@ test('the reminders tab can switch morning emails on', async ({ page }) => {
 });
 
 test('the Safety tab explains it needs a shared chamber when running as a demo', async ({ page }) => {
-  await page.goto('/app/studio/');
+  await page.goto('/app/settings/');
   await page.getByRole('tab', { name: 'Safety' }).click();
   await expect(page.getByText(/available once you are signed in to your shared chamber/)).toBeVisible();
 });
@@ -90,7 +90,16 @@ test('Today can export hearings to the calendar and Documents can scan with the 
   await expect(page.getByRole('button', { name: /Take photo/ }).or(page.getByText(/Take photo/)).first()).toBeVisible();
 });
 
-test('Tools has the monthly practice report', async ({ page }) => {
-  await page.goto('/app/tools/');
+test('the Dashboard has the monthly practice report', async ({ page }) => {
+  await page.goto('/app/');
   await expect(page.getByText('Monthly practice report').first()).toBeVisible();
+});
+
+test('old Tools, Deadlines and Studio links land on their new pages', async ({ page }) => {
+  await page.goto('/app/tools/');
+  await expect(page.getByRole('tab', { name: 'Limitation calculator' })).toHaveAttribute('aria-selected', 'true');
+  await page.goto('/app/deadlines/');
+  await expect(page.getByRole('tab', { name: 'Limitation deadlines' })).toHaveAttribute('aria-selected', 'true');
+  await page.goto('/app/studio/');
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
 });

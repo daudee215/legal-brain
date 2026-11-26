@@ -60,8 +60,7 @@ export const DICT = {
   'nav./app/cases/': { en: 'Cases & Clients', ur: 'مقدمات اور موکل' },
   'nav./app/cause-list/': { en: 'Daily Cause List', ur: 'روزانہ کاز لسٹ' },
   'nav./app/diary/': { en: 'Digital Diary', ur: 'ڈائری' },
-  'nav./app/deadlines/': { en: 'Deadlines', ur: 'میعاد اور آخری تاریخیں' },
-  'nav./app/tasks/': { en: 'Tasks', ur: 'کام' },
+  'nav./app/tasks/': { en: 'Deadlines & Tasks', ur: 'میعاد اور کام' },
   'nav./app/documents/': { en: 'Documents', ur: 'کاغذات' },
   'nav./app/laws/': { en: 'Laws & Statutes', ur: 'قوانین' },
   'nav./app/case-law/': { en: 'Case Law', ur: 'نظائر (کیس لاء)' },
@@ -72,10 +71,8 @@ export const DICT = {
   'nav./app/drafting/': { en: 'Legal Drafting', ur: 'درخواست نویسی' },
   'nav./app/paper-book/': { en: 'Paper Book', ur: 'پیپر بک' },
   'nav./app/chamber/': { en: 'Chamber', ur: 'چیمبر' },
-  'nav./app/tools/': { en: 'Tools', ur: 'اوزار' },
   'nav./app/munshi/': { en: 'Munshi Mode', ur: 'منشی موڈ' },
-  'nav./app/studio/': { en: 'Chamber Studio', ur: 'چیمبر اسٹوڈیو' },
-  'nav./app/settings/': { en: 'Data & Backup', ur: 'ڈیٹا اور بیک اپ' },
+  'nav./app/settings/': { en: 'Settings', ur: 'ترتیبات' },
 
   // Sidebar chrome
   'shell.website': { en: 'Wakeel Pro website', ur: 'وکیل پرو ویب سائٹ' },

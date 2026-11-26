@@ -4,6 +4,7 @@
  */
 import type { Role } from '../../types';
 import type { Plan } from '../plans';
+import type { Position } from '../positions';
 import { supabase } from './client';
 import { flushSync, hasUnsyncedChanges, stopSync } from './sync';
 
@@ -41,9 +42,10 @@ export async function signIn(email: string, password: string) {
   if (error) throw error;
 }
 
-/** Email confirmation is off on the project, so a new account comes back signed in. */
-export async function signUp(name: string, email: string, password: string) {
-  const { data, error } = await supabase().auth.signUp({ email: email.trim(), password, options: { data: { name: name.trim() } } });
+/** Email confirmation is off on the project, so a new account comes back signed in. `position` (advocate, student…) is kept with the account. */
+export async function signUp(name: string, email: string, password: string, position?: Position) {
+  const meta = position ? { name: name.trim(), position } : { name: name.trim() };
+  const { data, error } = await supabase().auth.signUp({ email: email.trim(), password, options: { data: meta } });
   if (error) throw error;
   if (!data.session) throw new Error('Account created — please confirm your email, then log in.');
 }

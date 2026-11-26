@@ -1,4 +1,4 @@
--- Plans: Solo (1 person), Chamber (up to 10), Firm (up to 20). Same features, different team size.
+-- Plans: Solo (1 person), Chamber (3 people), Firm (10 people), the owner included. Same features, different team size.
 -- Mirrors src/lib/plans.ts — keep the seat numbers in step.
 -- Safe to run more than once. Run in the Supabase SQL editor after schema.sql.
 
@@ -9,7 +9,7 @@ exception when duplicate_object then null; end $$;
 
 create or replace function public.plan_seats(p_plan text)
 returns int language sql immutable as $$
-  select case p_plan when 'solo' then 1 when 'firm' then 20 else 10 end
+  select case p_plan when 'solo' then 1 when 'firm' then 10 else 3 end
 $$;
 
 -- Create a chamber (or solo practice, or firm) with the caller as its first senior member.

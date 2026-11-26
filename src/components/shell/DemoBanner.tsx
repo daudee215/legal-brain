@@ -27,7 +27,7 @@ export function DemoBanner() {
       <Sparkles className="h-4 w-4 shrink-0 text-bronze" aria-hidden />
       <p className="min-w-0 flex-1">
         {t('demo.text')}{' '}
-        <Link href="/app/settings/" className="font-medium text-bronze underline-offset-2 hover:underline">
+        <Link href="/app/settings/?tab=data" className="font-medium text-bronze underline-offset-2 hover:underline">
           {t('demo.start')}
         </Link>
         {cloudEnabled && (

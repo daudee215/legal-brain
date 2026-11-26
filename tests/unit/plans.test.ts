@@ -11,17 +11,17 @@ describe('plans', () => {
     expect(planOf(null)).toBe('chamber');
   });
 
-  it('seats: solo 1, chamber 10, firm 20 — and the server agrees', () => {
-    expect([PLANS.solo.seats, PLANS.chamber.seats, PLANS.firm.seats]).toEqual([1, 10, 20]);
+  it('seats: solo 1, chamber 3, firm 10 — and the server agrees', () => {
+    expect([PLANS.solo.seats, PLANS.chamber.seats, PLANS.firm.seats]).toEqual([1, 3, 10]);
     const sql = readFileSync('supabase/plans.sql', 'utf8');
-    expect(sql).toContain("when 'solo' then 1 when 'firm' then 20 else 10");
+    expect(sql).toContain("when 'solo' then 1 when 'firm' then 10 else 3");
   });
 
   it('refuses a plan smaller than the team', () => {
     expect(planTooSmall('solo', 1)).toBe('');
     expect(planTooSmall('solo', 3)).toMatch(/only you.*Remove 2/);
-    expect(planTooSmall('chamber', 12)).toMatch(/up to 10.*Remove 2/);
-    expect(planTooSmall('firm', 12)).toBe('');
+    expect(planTooSmall('chamber', 5)).toMatch(/up to 3.*Remove 2/);
+    expect(planTooSmall('firm', 10)).toBe('');
   });
 
   it('a solo practice has no team page or Munshi screen; a chamber has both', () => {
@@ -34,5 +34,18 @@ describe('plans', () => {
     expect(chamber).toContain('/app/chamber/');
     expect(chamber).toContain('/app/munshi/');
     expect(navFor('senior', 'firm')).toEqual(navFor('senior', 'chamber'));
+  });
+});
+
+describe('menu', () => {
+  it('Deadlines and Tasks are one page; Tools, Studio and Data & Backup sit under Settings', () => {
+    const hrefs = navFor('senior', 'chamber').map((n) => n.href);
+    expect(hrefs).toContain('/app/tasks/');
+    expect(hrefs).toContain('/app/settings/');
+    for (const gone of ['/app/deadlines/', '/app/tools/', '/app/studio/']) expect(hrefs).not.toContain(gone);
+    expect(navFor('senior', 'chamber').find((n) => n.href === '/app/tasks/')?.label).toBe('Deadlines & Tasks');
+    // Settings is senior only, as the Studio and Data & Backup were.
+    expect(navFor('junior', 'chamber').map((n) => n.href)).not.toContain('/app/settings/');
+    expect(navFor('senior', 'solo').map((n) => n.href)).toContain('/app/settings/');
   });
 });

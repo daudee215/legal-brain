@@ -180,7 +180,7 @@ test('the senior uploads a PDF on a case and it reaches chamber storage', async 
   expect(row?.storagePath).toMatch(/^[0-9a-f-]{36}\/doc_[^/]+-E2E_Order_[a-z0-9]+\.pdf$/);
   storagePath = row!.storagePath!;
   // Settings shows the space it takes.
-  await page.goto('/app/settings/');
+  await page.goto('/app/settings/?tab=data');
   await expect(page.getByTestId('storage-used')).toContainText(/Storage used: \d+ KB of 1 GB/);
 });
 

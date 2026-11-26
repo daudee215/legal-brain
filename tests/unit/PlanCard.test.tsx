@@ -4,8 +4,8 @@ import { PlanCard } from '../../src/app/app/chamber/PlanCard';
 
 describe('PlanCard', () => {
   it('shows places used and lets a senior move up', () => {
-    render(<PlanCard chamberId="c1" plan="chamber" members={10} senior />);
-    expect(screen.getByText('10 of 10 places used')).toBeInTheDocument();
+    render(<PlanCard chamberId="c1" plan="chamber" members={3} senior />);
+    expect(screen.getByText('3 of 3 places used')).toBeInTheDocument();
     expect(screen.getByText('Full')).toBeInTheDocument();
     fireEvent.click(screen.getByLabelText(/Firm/));
     expect(screen.getByRole('button', { name: 'Switch to Firm' })).toBeEnabled();

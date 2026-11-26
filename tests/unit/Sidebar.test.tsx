@@ -13,7 +13,7 @@ describe('Sidebar', () => {
         <Sidebar />
       </RoleProvider>,
     );
-    expect(NAV).toHaveLength(21);
+    expect(NAV).toHaveLength(18);
     for (const n of NAV) expect(screen.getByText(n.label)).toBeInTheDocument();
   });
   it('hides AI Assistant and Legal Drafting from a clerk', () => {

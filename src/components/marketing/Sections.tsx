@@ -6,11 +6,13 @@ import {
   Bell,
   BookOpen,
   Briefcase,
+  Building2,
   CalendarDays,
   Check,
   FilePen,
   FolderLock,
   Gavel,
+  GraduationCap,
   Library,
   Minus,
   Newspaper,
@@ -19,6 +21,7 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
+  UserRound,
   Users,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -193,19 +196,104 @@ export function ProductPreview() {
   );
 }
 
+/* ---------- Statute research: the first feature, shown large ---------- */
+function StatuteShowcase() {
+  const hits = [
+    ['Specific Relief Act, 1877', 's.42 — Discretion of court as to declaration of status or right'],
+    ['Specific Relief Act, 1877', 's.54 — Perpetual injunctions when granted'],
+  ];
+  return (
+    <Reveal className="mt-14">
+      <div className="relative overflow-hidden rounded-3xl bg-night p-6 text-ivory sm:p-10">
+        <BrandMark className="pointer-events-none absolute -bottom-16 -left-10 h-72 w-72 bg-bronze/[0.07]" />
+        <div className="relative grid items-center gap-10 lg:grid-cols-[1fr_1.15fr]">
+          <div>
+            <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-bronze-soft">
+              <BookOpen className="h-4 w-4" aria-hidden /> Laws &amp; statutes
+            </p>
+            <h3 className="mt-4 font-serif text-3xl font-bold leading-tight sm:text-4xl">
+              The exact section, <span className="text-bronze-soft">in seconds.</span>
+            </h3>
+            <p className="mt-4 max-w-md text-ivory/70">
+              Federal and provincial Acts, Rules and the Constitution, searchable to the section. Ask in plain words and the answer names the
+              section it relies on.
+            </p>
+            <Link href="/app/laws/" className="mt-6 inline-flex items-center gap-2 rounded-md bg-bronze px-5 py-3 text-sm font-medium text-ivory transition hover:-translate-y-0.5">
+              Try it in the demo <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-5" aria-hidden>
+            <div className="flex items-center gap-2 rounded-xl border border-bronze/40 bg-night px-4 py-3 text-sm">
+              <Search className="h-4 w-4 text-bronze-soft" />
+              <span className="text-ivory/85">Can my client sue for a declaration of title?</span>
+            </div>
+            <div className="mt-4 rounded-xl bg-white/[0.05] p-4 text-sm leading-relaxed text-ivory/80">
+              <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-bronze-soft">
+                <Sparkles className="h-3.5 w-3.5" /> Answer
+              </p>
+              A person entitled to a legal character, or to a right as to property, may sue for a declaration of that right. Where further relief
+              is available, it must be asked for in the same suit.
+            </div>
+            <ul className="mt-3 space-y-2">
+              {hits.map(([act, sec]) => (
+                <li key={sec} className="flex items-start gap-3 rounded-xl border border-white/10 px-4 py-3 text-sm">
+                  <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-bronze-soft" />
+                  <span>
+                    <span className="block font-medium text-ivory">{act}</span>
+                    <span className="block text-xs text-ivory/60">{sec}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </Reveal>
+  );
+}
+
+/* ---------- Who we serve ---------- */
+export function WhoWeServe() {
+  const groups: [typeof Users, string, string][] = [
+    [UserRound, 'Independent advocates', 'Tools to organise an individual legal practice, its cases and clients.'],
+    [Users, 'Law chambers', 'A shared workspace for senior advocates, juniors and clerks.'],
+    [Building2, 'Law firms', 'Organised resources and coordinated case management for legal teams.'],
+    [GraduationCap, 'Legal researchers & students', 'Access to legal resources for learning and research, where supported.'],
+  ];
+  return (
+    <section id="who" className="mx-auto max-w-7xl px-4 py-20 lg:px-8">
+      <Reveal className="mx-auto max-w-3xl text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-bronze">Who we serve</p>
+        <h2 className="mt-3 text-4xl font-bold sm:text-5xl">Built for everyone in practice</h2>
+      </Reveal>
+      <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {groups.map(([Icon, title, body], i) => (
+          <Reveal key={title} delay={i * 0.06}>
+            <div className="h-full rounded-2xl border border-line bg-paper p-6">
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-night text-bronze-soft">
+                <Icon className="h-5 w-5" />
+              </span>
+              <h3 className="mt-5 font-serif text-xl font-semibold">{title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-ink-soft">{body}</p>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /* ---------- Feature bento ---------- */
 const FEATURES = [
   { icon: CalendarDays, title: 'Daily cause lists', body: 'Which of your cases are fixed today — court, bench, room and serial number, grouped and ready.', span: 'lg:col-span-2', img: IMG.justiceTexture },
   { icon: Sparkles, title: 'AI legal assistant', body: 'Ask in plain language. Answers cite the exact section or judgment, drawn from your own documents.', span: '' },
   { icon: Briefcase, title: 'Case & client management', body: 'Every matter, hearing, order and fee in one timeline — table or board view.', span: '' },
   { icon: FilePen, title: 'Drafting in minutes', body: 'Bail petitions, plaints, writs, vakalatnamas — fill once, print a court-ready draft.', span: 'lg:col-span-2', img: IMG.signing },
-  { icon: BookOpen, title: 'Laws & statutes', body: 'Federal and provincial Acts, Rules and the Constitution, searchable to the section.', span: '' },
   { icon: Gavel, title: 'Case law database', body: 'Judgments from the Supreme Court, FCC and High Courts by issue, section or party.', span: '' },
   { icon: Bell, title: 'Alerts & news', body: 'Hearing reminders the night before, new judgments relevant to your matters.', span: '' },
   { icon: NotebookPen, title: 'Digital diary', body: 'Your court diary, notes and follow-ups — never lose a date again.', span: '' },
-  { icon: Library, title: 'Your law books', body: 'Upload books you own to a private shelf and search across every page.', span: '' },
+  { icon: Library, title: 'Law Books Library', body: 'Search through a digital library of law books, or upload your own.', span: '' },
   { icon: FolderLock, title: 'Secure documents', body: 'Pleadings, orders and evidence — private to your chamber, encrypted.', span: 'lg:col-span-2' },
-  { icon: Newspaper, title: 'Limitation & tools', body: 'Deadline calculator and more daily-practice tools.', span: '' },
 ];
 
 export function Bento() {
@@ -215,7 +303,8 @@ export function Bento() {
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-bronze">Everything in one place</p>
         <h2 className="mt-3 text-4xl font-bold sm:text-5xl">Ten tools. One login. Zero paper chasing.</h2>
       </Reveal>
-      <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <StatuteShowcase />
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {FEATURES.map(({ icon: Icon, title, body, span, img }, i) => (
           <Reveal key={title} delay={(i % 4) * 0.06} className={span}>
             <GlowCard className="group relative h-full overflow-hidden card-fx rounded-2xl border border-line bg-paper p-6 transition-transform duration-300 hover:-translate-y-1">
@@ -341,8 +430,8 @@ export function HowItWorks() {
 export function Pricing() {
   const plans = [
     { id: 'solo', name: 'Solo', tag: 'For individual advocates', cta: 'Start solo', feats: ['Just you — one private login', 'Unlimited cases & clients', 'Cause list, laws & case law', 'Drafting & AI assistant'] },
-    { id: 'chamber', name: 'Chamber', tag: 'For seniors with juniors & clerks', cta: 'Create your chamber', feats: ['Everything in Solo', 'Up to 10 members & roles', 'Invite links for juniors & clerks', 'Shared documents & diary'], featured: true },
-    { id: 'firm', name: 'Firm', tag: 'For multi-partner firms', cta: 'Set up your firm', feats: ['Everything in Chamber', 'Up to 20 members', 'Several senior partners', 'Data import & training'] },
+    { id: 'chamber', name: 'Chamber', tag: 'For seniors with juniors & clerks', cta: 'Create your chamber', feats: ['Everything in Solo', '3 people, you included', 'Invite links for juniors & clerks', 'Shared documents & diary'], featured: true },
+    { id: 'firm', name: 'Firm', tag: 'For multi-partner firms', cta: 'Set up your firm', feats: ['Everything in Chamber', '10 people, you included', 'Several senior partners', 'Data import & training'] },
   ];
   return (
     <section id="pricing" className="bg-paper/60 py-24">
@@ -461,7 +550,7 @@ export function Footer() {
   const cols: [string, [string, string][]][] = [
     ['Product', [['#features', 'Features'], ['#preview', 'Dashboard'], ['#pricing', 'Pricing'], ['/app/', 'Live demo']]],
     ['Chambers', [['#chambers', 'Roles'], ['/signup/', 'Create a chamber'], ['/login/', 'Log in']]],
-    ['Help', [['#faq', 'FAQ'], ['mailto:hello@wakeelpropk.com', 'Contact']]],
+    ['Contact us', [['mailto:hello@wakeelpropk.com', 'hello@wakeelpropk.com'], ['#faq', 'FAQ']]],
   ];
   return (
     <footer className="relative overflow-hidden border-t border-line bg-paper/60">

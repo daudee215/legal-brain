@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AuthCard } from '../../components/marketing/AuthCard';
 import { DemoNote, Field, FormError, NotConfigured } from '../../components/marketing/AuthBits';
-import { btn } from '../../components/ui';
+import { btn, inputCls } from '../../components/ui';
 import { chooseChamber, createChamber, currentUser, signOut, signUp } from '../../lib/cloud/chamber';
 import { cloudEnabled, friendlyError } from '../../lib/cloud/client';
 import { bringSummary } from '../../lib/cloud/storage';
 import { uploadLocal } from '../../lib/cloud/sync';
 import { isPlan, PLAN_IDS, PLANS, type Plan } from '../../lib/plans';
+import { POSITIONS, type Position } from '../../lib/positions';
 import { getDb, getMode } from '../../lib/store';
 
 const COPY: Record<Plan, { title: string; subtitle: string; button: string; busy: string }> = {
@@ -22,13 +23,13 @@ const COPY: Record<Plan, { title: string; subtitle: string; button: string; busy
   },
   chamber: {
     title: 'Create your chamber',
-    subtitle: 'One shared, private copy of your practice for you, your juniors and clerks — up to 10 people.',
+    subtitle: 'One shared, private copy of your practice for you, your juniors and clerks — 3 people including you.',
     button: 'Create account & chamber',
     busy: 'Creating your chamber…',
   },
   firm: {
     title: 'Set up your firm',
-    subtitle: 'One private workspace for partners, associates and staff — up to 20 people, each with their own login.',
+    subtitle: 'One private workspace for partners, associates and staff — 10 people including you, each with their own login.',
     button: 'Create account & firm',
     busy: 'Setting up your firm…',
   },
@@ -40,6 +41,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [chamber, setChamber] = useState('');
+  const [position, setPosition] = useState<Position | ''>('');
   const [plan, setPlan] = useState<Plan>('chamber');
   const [bring, setBring] = useState(false);
   const [mine, setMine] = useState<{ cases: number; files: number } | null>(null);
@@ -65,7 +67,7 @@ export default function SignupPage() {
     setErr('');
     let step = 'account';
     try {
-      await signUp(name, email, password);
+      await signUp(name, email, password, position || undefined);
       step = 'chamber';
       // A solo advocate's letterhead name is optional: their own name stands in.
       const id = await createChamber(chamber.trim() || `Adv. ${name.trim()}`, name, plan);
@@ -142,13 +144,26 @@ export default function SignupPage() {
                 >
                   {PLANS[p].name}
                   <span className={`block text-[11px] font-normal ${plan === p ? 'text-ivory/70' : 'text-ink-soft'}`}>
-                    {PLANS[p].seats === 1 ? 'Just you' : `Up to ${PLANS[p].seats}`}
+                    {PLANS[p].seats === 1 ? 'Just you' : `${PLANS[p].seats} people`}
                   </span>
                 </button>
               ))}
             </div>
           </fieldset>
           <Field label="Your full name" required maxLength={120} placeholder="Advocate's full name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} />
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium">Your position</span>
+            <select required className={inputCls} value={position} onChange={(e) => setPosition(e.target.value as Position)}>
+              <option value="" disabled>
+                Choose one
+              </option>
+              {POSITIONS.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <Field label="Email" type="email" required placeholder="you@chamber.pk" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           <Field
             label="Password"

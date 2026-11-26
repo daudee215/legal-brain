@@ -51,8 +51,9 @@ export function Hero() {
 
   return (
     <section ref={ref} className="grain relative overflow-hidden pt-28 sm:pt-32">
-      <div className="pointer-events-none absolute -left-40 top-20 h-96 w-96 rounded-full bg-bronze-soft/30 blur-3xl" aria-hidden />
-      <div className="pointer-events-none absolute -right-40 top-60 h-[28rem] w-[28rem] rounded-full bg-bronze/15 blur-3xl" aria-hidden />
+      {/* Soft glows drawn as gradients: a blur filter here gets clipped into a hard-edged box on iPhones */}
+      <div className="pointer-events-none absolute -left-40 top-20 h-96 w-96 bg-[radial-gradient(closest-side,rgba(224,187,138,0.35),transparent)]" aria-hidden />
+      <div className="pointer-events-none absolute -right-40 top-60 h-[28rem] w-[28rem] bg-[radial-gradient(closest-side,rgba(176,122,70,0.18),transparent)]" aria-hidden />
 
       <div className="relative mx-auto max-w-7xl px-4 text-center lg:px-8">
         <motion.p
@@ -72,7 +73,7 @@ export function Hero() {
           <WordsReveal text="Pakistan’s first unified platform" />{' '}
           {/* Two lines from tablet up; on phones the headline balances itself into even lines */}
           <br className="hidden sm:inline" />
-          <WordsReveal text="for legal knowledge and practice." className="bronze-text" delay={0.3} />
+          <WordsReveal text="for legal knowledge and practice." wordClassName="bronze-text" delay={0.3} />
         </h1>
 
         <motion.p

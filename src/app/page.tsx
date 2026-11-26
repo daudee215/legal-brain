@@ -1,6 +1,6 @@
 import { Hero } from '../components/marketing/Hero';
 import { MarketingNav } from '../components/marketing/Nav';
-import { Bento, Chambers, CourtsMarquee, CTA, FAQ, Footer, HowItWorks, Pricing, ProductPreview, Stats, Statement } from '../components/marketing/Sections';
+import { Bento, Chambers, CourtsMarquee, CTA, FAQ, Footer, HowItWorks, Pricing, ProductPreview, Stats, Statement, WhoWeServe } from '../components/marketing/Sections';
 
 export default function Landing() {
   return (
@@ -10,6 +10,7 @@ export default function Landing() {
         <Hero />
         <Statement />
         <Stats />
+        <WhoWeServe />
         <ProductPreview />
         <Bento />
         <CourtsMarquee />

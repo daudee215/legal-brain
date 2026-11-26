@@ -13,10 +13,12 @@ import {
   UpcomingList,
   WelcomeHero,
 } from '../../components/dashboard/widgets';
+import { MonthlyReport } from '../../components/dashboard/MonthlyReport';
 import { Stagger, StaggerItem } from '../../components/motion';
 import { useRole } from '../../components/shell/RoleProvider';
 import { Card, CardTitle } from '../../components/ui';
 import { Loading } from '../../components/ui/Loading';
+import { useToast } from '../../components/ui/Toast';
 import { useLang } from '../../lib/i18n';
 import { addDays, formatPk, pktHour, todayKey } from '../../lib/dates';
 import { nextCourtDay, remindersFor } from '../../lib/reminders';
@@ -27,6 +29,7 @@ import { useData } from '../../lib/useData';
 export default function DashboardPage() {
   const { t: tr } = useLang();
   const { member, role } = useRole();
+  const toast = useToast();
   const data = useData(async () => {
     const t = todayKey();
     const [today, week, stats, courts, load, fees, activity, cases, nextUp] = await Promise.all([
@@ -116,6 +119,9 @@ export default function DashboardPage() {
         <ActivityFeed items={activity.filter((a) => seeFees || a.kind !== 'payment').slice(0, 7)} />
         {seeFees ? <AttentionCard cases={cases} /> : null}
       </div>
+
+      <MonthlyReport onMsg={toast.show} className="max-w-3xl" />
+      {toast.node}
     </div>
   );
 }
