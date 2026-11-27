@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Badge, btn, Card, DemoBadge, EmptyState, inputCls, PageHeader } from '../../../components/ui';
 import { Loading } from '../../../components/ui/Loading';
-import { loadOfficialJudgments, officialHref, type OfficialJudgment } from '../../../lib/caselaw';
+import { LIBRARY_COURTS, libraryCourt, loadOfficialJudgments, officialHref, type OfficialJudgment } from '../../../lib/caselaw';
 import { formatPk } from '../../../lib/dates';
 import { snapshot, type Snapshot } from '../../../lib/repo';
 import { searchItems } from '../../../lib/search';
@@ -13,18 +13,22 @@ import { useData } from '../../../lib/useData';
 import type { Judgment } from '../../../types';
 
 const PAGE = 25;
-type Source = 'sc' | 'demo';
+type Source = 'all' | 'sc' | 'shc' | 'demo';
+const SOURCES: Source[] = ['all', 'sc', 'shc', 'demo'];
 
 function readParams() {
   try {
     const p = new URLSearchParams(window.location.search);
-    return { q: p.get('q') || '', law: p.get('law') || '', subject: p.get('subject') || '', source: (p.get('source') === 'demo' ? 'demo' : 'sc') as Source };
+    return { q: p.get('q') || '', law: p.get('law') || '', subject: p.get('subject') || '', source: (SOURCES.find((x) => x === p.get('source')) ?? 'all') as Source };
   } catch {
-    return { q: '', law: '', subject: '', source: 'sc' as Source };
+    return { q: '', law: '', subject: '', source: 'all' as Source };
   }
 }
 
-function JudgmentCard({ j, court, href, demo, dateKnown = true }: { j: Judgment; court?: string; href: string; demo?: boolean; dateKnown?: boolean }) {
+type Row = Judgment & Partial<Pick<OfficialJudgment, 'dateKnown' | 'citation' | 'outcome' | 'seat' | 'reported' | 'courtSummary'>>;
+
+function JudgmentCard({ j, court, href, demo }: { j: Row; court?: string; href: string; demo?: boolean }) {
+  const dateKnown = j.dateKnown ?? true;
   return (
     <Card>
       <div className="flex flex-wrap items-center gap-2 text-xs text-ink-soft">
@@ -36,6 +40,13 @@ function JudgmentCard({ j, court, href, demo, dateKnown = true }: { j: Judgment;
             <span>{dateKnown ? formatPk(j.date) : j.date.slice(0, 4)}</span>
           </>
         )}
+        {j.citation && (
+          <>
+            <span aria-hidden>·</span>
+            <span className="font-medium text-ink">{j.citation}</span>
+          </>
+        )}
+        {j.seat && <span>({j.seat})</span>}
         {demo && <DemoBadge text="Demo example" />}
       </div>
       <Link href={href} className="mt-2 block font-serif text-lg font-semibold hover:text-bronze">
@@ -43,6 +54,7 @@ function JudgmentCard({ j, court, href, demo, dateKnown = true }: { j: Judgment;
       </Link>
       {j.judges.length > 0 && <p className="mt-0.5 text-xs text-ink-soft">{j.judges.join(', ')}</p>}
       <p className="mt-2 font-reading text-sm text-ink-soft">{j.summary}</p>
+      {j.outcome && <p className="mt-2 text-xs text-ink-soft">Result: <span className="font-medium text-ink">{j.outcome}</span></p>}
       {j.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {j.tags.map((t) => (
@@ -59,7 +71,7 @@ function JudgmentCard({ j, court, href, demo, dateKnown = true }: { j: Judgment;
 function CaseLawPageBody({ db }: { db: Snapshot }) {
   const [official, setOfficial] = useState<OfficialJudgment[] | null>(null);
   const [failed, setFailed] = useState(false);
-  const [source, setSource] = useState<Source>('sc');
+  const [source, setSource] = useState<Source>('all');
   const [q, setQ] = useState('');
   const [year, setYear] = useState('');
   const [subject, setSubject] = useState('');
@@ -80,7 +92,11 @@ function CaseLawPageBody({ db }: { db: Snapshot }) {
   // A fresh search starts from the top of the list again.
   useEffect(() => setShown(PAGE), [q, year, subject, law, source]);
 
-  const list = useMemo<(Judgment & { dateKnown?: boolean })[]>(() => (source === 'sc' ? (official ?? []) : db.judgments), [source, official, db.judgments]);
+  const list = useMemo<Row[]>(
+    () => (source === 'demo' ? db.judgments : (official ?? []).filter((j) => source === 'all' || j.courtId === source)),
+    [source, official, db.judgments],
+  );
+  const count = (c: string) => (official ?? []).filter((j) => j.courtId === c).length;
   const years = useMemo(() => [...new Set(list.map((j) => j.date.slice(0, 4)).filter(Boolean))].sort().reverse(), [list]);
   const subjects = useMemo(() => {
     const n = new Map<string, number>();
@@ -94,13 +110,14 @@ function CaseLawPageBody({ db }: { db: Snapshot }) {
           .filter((j) => (!year || j.date.startsWith(year)) && (!subject || j.tags.includes(subject)) && (!law || j.statutesCited.includes(law)))
           .sort((a, b) => (a.date < b.date ? 1 : -1)),
         q,
-        (j) => [j.title, j.caseNo, j.summary, ...j.tags, ...j.judges],
+        (j) => [j.title, j.caseNo, j.summary, j.citation ?? '', j.seat ?? '', j.outcome ?? '', ...j.tags, ...j.judges],
       ),
     [q, year, subject, law, list],
   );
   const lawName = law ? db.statutes.find((s) => s.id === law)?.title : '';
   const courtName = (id: string) => db.courts.find((c) => c.id === id)?.shortName ?? id.toUpperCase();
-  const tabCls = (on: boolean) => `rounded-lg px-4 py-2 text-sm font-semibold transition ${on ? 'bg-night text-ivory' : 'text-ink hover:bg-line/50'}`;
+  const fmt = (n: number) => n.toLocaleString('en-US');
+  const tabCls = (on: boolean) => `shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm sm:px-4 font-semibold transition ${on ? 'bg-night text-ivory' : 'text-ink hover:bg-line/50'}`;
 
   return (
     <>
@@ -108,14 +125,20 @@ function CaseLawPageBody({ db }: { db: Snapshot }) {
         title="Case Law"
         subtitle={
           official
-            ? `${official.length.toLocaleString()} Supreme Court of Pakistan judgments, from the Court's own website.`
-            : 'Supreme Court of Pakistan judgments, from the Court’s own website.'
+            ? `${fmt(official.length)} judgments of the Supreme Court and the Sindh High Court, from the courts’ own websites.`
+            : 'Judgments of the Supreme Court and the Sindh High Court, from the courts’ own websites.'
         }
       />
-      <div role="tablist" aria-label="Judgments" className="mb-4 flex flex-wrap gap-2 border-b border-line pb-3">
-        <button role="tab" aria-selected={source === 'sc'} className={tabCls(source === 'sc')} onClick={() => setSource('sc')}>
-          Supreme Court{official ? ` (${official.length.toLocaleString()})` : ''}
+      <div role="tablist" aria-label="Judgments" className="-mx-4 mb-4 flex gap-1.5 overflow-x-auto border-b border-line px-4 pb-3 sm:mx-0 sm:flex-wrap sm:gap-2 sm:px-0">
+        <button role="tab" aria-selected={source === 'all'} className={tabCls(source === 'all')} onClick={() => setSource('all')}>
+          All courts{official ? ` (${fmt(official.length)})` : ''}
         </button>
+        {LIBRARY_COURTS.map((c) => (
+          <button key={c.id} role="tab" aria-selected={source === c.id} className={tabCls(source === c.id)} onClick={() => setSource(c.id)}>
+            {c.short}
+            {official ? ` (${fmt(count(c.id))})` : ''}
+          </button>
+        ))}
         <button role="tab" aria-selected={source === 'demo'} className={tabCls(source === 'demo')} onClick={() => setSource('demo')}>
           Demo examples ({db.judgments.length})
         </button>
@@ -151,16 +174,16 @@ function CaseLawPageBody({ db }: { db: Snapshot }) {
           </button>
         </p>
       )}
-      {source === 'sc' && !official && !failed ? (
+      {source !== 'demo' && !official && !failed ? (
         <Loading />
-      ) : source === 'sc' && failed ? (
+      ) : source !== 'demo' && failed ? (
         <EmptyState title="Couldn’t load the judgments" body="Check your internet connection and open this page again." />
       ) : rows.length === 0 ? (
         <EmptyState title="No judgments match" body="Try different words, or clear the subject and year filters." />
       ) : (
         <>
           <p className="mb-3 text-xs text-ink-soft" aria-live="polite">
-            {rows.length.toLocaleString()} {rows.length === 1 ? 'judgment' : 'judgments'}
+            {rows.length.toLocaleString('en-US')} {rows.length === 1 ? 'judgment' : 'judgments'}
           </p>
           <div className="space-y-4">
             {rows.slice(0, shown).map((j) => (
@@ -168,28 +191,32 @@ function CaseLawPageBody({ db }: { db: Snapshot }) {
                 key={j.id}
                 j={j}
                 court={courtName(j.courtId)}
-                href={source === 'sc' ? officialHref(j.id) : `/app/case-law/${j.id}/`}
+                href={source === 'demo' ? `/app/case-law/${j.id}/` : officialHref(j.id)}
                 demo={source === 'demo'}
-                dateKnown={j.dateKnown ?? true}
               />
             ))}
           </div>
           {rows.length > shown && (
             <div className="mt-6 text-center">
               <button className={btn.ghost} onClick={() => setShown((n) => n + PAGE)}>
-                Show more ({(rows.length - shown).toLocaleString()} left)
+                Show more ({(rows.length - shown).toLocaleString('en-US')} left)
               </button>
             </div>
           )}
         </>
       )}
       <p className="mt-8 text-xs text-ink-soft">
-        Judgments are public documents published by the Supreme Court of Pakistan{' '}
-        <a href="https://www.supremecourt.gov.pk/judgements/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 underline">
-          on its website <ExternalLink className="h-3 w-3" aria-hidden />
-        </a>
-        . Text was taken from the Court&rsquo;s PDFs and may contain conversion errors — check the original before citing. Search covers parties, case numbers, bench,
-        subjects and the opening of each judgment. Reported law journals (PLD, SCMR etc.) are not included; they belong to their publishers.
+        Judgments are public documents published by the courts on their own websites:{' '}
+        {LIBRARY_COURTS.map((c, i) => (
+          <span key={c.id}>
+            {i > 0 && ' and '}
+            <a href={c.site} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 underline">
+              {libraryCourt(c.id)?.name} <ExternalLink className="h-3 w-3" aria-hidden />
+            </a>
+          </span>
+        ))}
+        . Text was taken from the courts&rsquo; PDFs and may contain conversion errors — check the original before citing. Search covers parties, case numbers,
+        citations, bench, subjects and the summary of each judgment. Reported law journals (PLD, SCMR etc.) are not included; they belong to their publishers.
       </p>
     </>
   );

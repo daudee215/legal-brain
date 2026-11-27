@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Badge, btn, Card, EmptyState, inputCls } from '../../../../components/ui';
 import { Loading } from '../../../../components/ui/Loading';
-import { citationLine, loadJudgmentText, loadOfficialJudgments, type JudgmentText, type OfficialJudgment } from '../../../../lib/caselaw';
+import { citationLine, libraryCourt, loadJudgmentText, loadOfficialJudgments, type JudgmentText, type OfficialJudgment } from '../../../../lib/caselaw';
 import { formatPk } from '../../../../lib/dates';
 import { listStatutes } from '../../../../lib/repo';
 import { useData } from '../../../../lib/useData';
@@ -29,7 +29,7 @@ function Highlight({ text, find }: { text: string; find: string }) {
   return <>{out}</>;
 }
 
-/** One Supreme Court judgment, read from the library: /app/case-law/read/?id=sc-… */
+/** One judgment from the library: /app/case-law/read/?id=sc-… or ?id=shc-… */
 export default function ReadJudgmentPage() {
   const [id, setId] = useState<string | null>(null);
   const [state, setState] = useState<{ j?: OfficialJudgment; text?: JudgmentText | null; failed?: boolean } | null>(null);
@@ -68,6 +68,9 @@ export default function ReadJudgmentPage() {
   if (!j || !text) return <EmptyState title="Judgment not found" action={<Link href="/app/case-law/" className={btn.ghost}>All judgments</Link>} />;
 
   const cited = (statutes ?? []).filter((s) => j.statutesCited.includes(s.id));
+  const court = libraryCourt(j.courtId);
+  const original = j.courtId === 'sc' ? 'Supreme Court website' : `Original on the ${court?.short ?? 'court'} website`;
+  const noBody = text.body.length === 0;
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(citationLine(j));
@@ -85,11 +88,23 @@ export default function ReadJudgmentPage() {
       </Link>
       <div>
         <div className="mb-2 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
-          <Badge tone="ink">Supreme Court of Pakistan</Badge>
+          <Badge tone="ink">{court?.name}</Badge>
+          {j.seat && <span>{j.seat} bench</span>}
           {j.caseNo && j.caseNo.toLowerCase() !== j.title.toLowerCase() && <span>{j.caseNo}</span>}
+          {j.citation && <span className="font-medium text-ink">{j.citation}</span>}
+          {j.reported && <Badge tone="bronze">Approved for reporting</Badge>}
         </div>
         <h1 className="text-2xl font-bold sm:text-3xl">{j.title}</h1>
-        <p className="mt-1 text-ink-soft">{j.date ? (j.dateKnown ? `Decided ${formatPk(j.date)}` : `Year ${j.date.slice(0, 4)}`) : ''}</p>
+        <p className="mt-1 text-ink-soft">
+          {j.date ? (j.dateKnown ? `Decided ${formatPk(j.date)}` : `Year ${j.date.slice(0, 4)}`) : ''}
+          {j.outcome ? `${j.date ? ' · ' : ''}${j.outcome}` : ''}
+        </p>
+        {j.courtSummary && (
+          <p className="mt-3 max-w-3xl rounded-lg border-l-4 border-bronze/60 bg-bronze/5 px-4 py-3 font-reading text-[0.98rem] leading-relaxed">
+            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-soft">The court&rsquo;s summary</span>
+            {j.summary}
+          </p>
+        )}
         <div className="mt-4 flex flex-wrap gap-2 print:hidden">
           <button className={btn.ghost} onClick={copy}>
             {copied ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />} {copied ? 'Copied' : 'Copy citation'}
@@ -98,7 +113,7 @@ export default function ReadJudgmentPage() {
             <Printer className="h-4 w-4" aria-hidden /> Print
           </button>
           <a className={btn.ghost} href={j.source} target="_blank" rel="noreferrer">
-            <ExternalLink className="h-4 w-4" aria-hidden /> Supreme Court website
+            <ExternalLink className="h-4 w-4" aria-hidden /> {original}
           </a>
         </div>
       </div>
@@ -118,7 +133,7 @@ export default function ReadJudgmentPage() {
             )}
           </div>
           <Card>
-            <details className="group mb-5 border-b border-line pb-4" open={!!needle && text.header.some((l) => l.toLowerCase().includes(needle)) ? true : undefined}>
+            <details className="group mb-5 border-b border-line pb-4" open={noBody || (!!needle && text.header.some((l) => l.toLowerCase().includes(needle))) ? true : undefined}>
               <summary className="cursor-pointer text-sm font-medium text-ink-soft hover:text-ink">Court heading, parties &amp; counsel</summary>
               <div className="mt-3 text-center text-xs leading-relaxed text-ink-soft">
                 {text.header.map((l, i) => (
@@ -172,7 +187,7 @@ export default function ReadJudgmentPage() {
             </Card>
           )}
           <p className="text-xs text-ink-soft">
-            Text taken from the Supreme Court&rsquo;s published PDF ({j.file}). Conversion can drop or join words — verify against the original before citing.
+            Text taken from the {court?.name}&rsquo;s published {j.file.endsWith('.doc') ? 'document' : 'PDF'} ({j.file.replace(/\.doc$/, '')}). Conversion can drop or join words — verify against the original before citing.
           </p>
         </aside>
       </div>

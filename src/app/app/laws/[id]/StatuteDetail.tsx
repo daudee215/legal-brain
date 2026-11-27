@@ -65,7 +65,7 @@ export function StatuteDetail({ id }: { id: string }) {
           ))}
           {sc.length > 0 && (
             <Card>
-              <h2 className="mb-1 text-lg font-semibold">Supreme Court judgments citing this law</h2>
+              <h2 className="mb-1 text-lg font-semibold">Judgments citing this law</h2>
               <p className="mb-3 text-xs text-ink-soft">Latest {Math.min(5, sc.length)} of {sc.length.toLocaleString()}</p>
               <ul className="space-y-2 text-sm">
                 {sc.slice(0, 5).map((j) => (

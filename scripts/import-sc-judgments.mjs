@@ -162,7 +162,7 @@ function subjects(caseNo, text) {
   if (hits(/\bpre-?emption\b/)) t.push('Pre-emption');
   if (hits(/\bspecific performance\b/)) t.push('Specific performance');
   if (hits(/\bcondonation of delay|barred by time|time-barred/)) t.push('Limitation');
-  if (hits(/\bkhula|dissolution of marriage|\bdower\b|\bmaintenance\b.*\bwife|\bcustody\b/)) t.push('Family');
+  if (hits(/\bkhula|dissolution of marriage|\bdower\b|\bmaintenance allowance|custody of (the )?minor|guardian and wards/)) t.push('Family');
   if (hits(/\belection\b/)) t.push('Elections');
   if (hits(/\bejectment|\btenant\b|\blandlord\b/)) t.push('Rent');
   if (hits(/\bland acquisition|compensation for (the )?land/)) t.push('Land acquisition');
@@ -189,7 +189,9 @@ function reflow(lines) {
       prev = '';
       continue;
     }
-    const newPara = !cur || (/^\d{1,3}\.$/.test(cur) ? false : /[.:;?"”)]$/.test(prev) && prev.length < typical * 0.8);
+    const ended = /[.:;?"”)]$/.test(prev);
+    // "2. The facts…" on a fresh line after a finished sentence starts paragraph 2, however long the line before.
+    const newPara = !cur || (/^\d{1,3}\.$/.test(cur) ? false : ended && (prev.length < typical * 0.8 || /^\d{1,3}\.\s+[A-Z“"]/.test(l)));
     if (newPara && cur) {
       paras.push(cur);
       cur = l;
@@ -197,7 +199,7 @@ function reflow(lines) {
     prev = l;
   }
   if (cur) paras.push(cur);
-  return paras.map((p) => fixSpaces(p.replace(/(^|\s)-\s*:\s*\d{1,3}\s*:\s*-(?=\s|$)/g, ' '))).filter(Boolean);
+  return paras.map((p) => fixSpaces(p.replace(/(^|\s)-\s*:\s*\d{1,3}\s*:\s*-(?=\s|$)/g, ' ')).replace(/^[=_]+\s*/, '')).filter(Boolean);
 }
 
 function idFrom(details, used) {
@@ -241,27 +243,8 @@ async function main() {
     const fy = +(file.match(/_(\d{4})\b/)?.[1] || 0);
     const year = date ? +date.slice(0, 4) : fy >= 1947 && fy <= 2026 ? fy : 0;
     const title = parties(lines) || titleCase(caseNo);
-    // Body starts at JUDGMENT / ORDER heading (or the author line), else after the header block.
-    // Headings are in capitals ("JUDGMENT", "O R D E R"); a wrapped line reading "judgment" is not one.
-    const HEADINGS = new Set(['JUDGMENT', 'JUDGEMENT', 'ORDER', 'SHORTORDER', 'FINALORDER']);
-    let start = lines.findIndex((l, i) => i > 3 && l === l.toUpperCase() && HEADINGS.has(l.replace(/[^A-Z]/g, '')));
-    if (start < 0) {
-      const author = lines.findIndex((l, i) => i > 3 && i < 150 && /^[A-Z][A-Za-z .'-]{5,60},\s*(H?CJ|ACJ|J)\s*\.?\s*[-–—:]/.test(l));
-      if (author > 0) start = author - 1;
-    }
-    if (start < 0) {
-      const heard = lines.findIndex((l, i) => i < 150 && /^Date of (hearing|decision)/i.test(l));
-      if (heard >= 0) start = /\d{4}/.test(lines[heard]) ? heard : heard + 1;
-    }
-    if (start < 0) start = Math.min(24, lines.length - 1);
-    const header = lines.slice(0, start + 1);
-    const body = reflow(lines.slice(start + 1));
-    const opening = body.find((p) => p.length > 160) || body[0] || '';
-    let summary = opening
-      .replace(/^\d{1,2}\.\d{1,2}\.\d{4}\s+(JUDGMENT|ORDER)\s+/i, '')
-      .replace(/^[A-Za-z .'-]{4,60},\s*(H?CJ|ACJ|J)\s*\.?\s*[-–—:.]*\s*/, '')
-      .replace(/^[-–—:.\s]+/, '');
-    summary = (/^[a-z]/.test(summary) ? '…' : '') + (summary.length > 360 ? summary.slice(0, 360).replace(/\s\S*$/, '') + '…' : summary);
+    const { header, body } = splitJudgment(lines);
+    const summary = openingSummary(body);
     const laws = LAWS.filter(([, , re]) => re.test(text));
     const words = text.split(/\s+/).length;
     index.push({
@@ -289,7 +272,46 @@ async function main() {
   console.log(`imported ${index.length}, skipped ${skipped} (short or duplicate); missing: date ${noDate}, bench ${noBench}, parties ${noParties}`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+/** Split a judgment's lines into the heading block (court, bench, parties, counsel) and the reflowed body. */
+export function splitJudgment(lines, { paragraphs = false } = {}) {
+  // Body starts at JUDGMENT / ORDER heading (or the author line), else after the header block.
+  // Headings are in capitals ("JUDGMENT", "O R D E R"); a wrapped line reading "judgment" is not one.
+  const HEADINGS = new Set(['JUDGMENT', 'JUDGEMENT', 'ORDER', 'SHORTORDER', 'FINALORDER']);
+  let start = lines.findIndex((l, i) => i > 3 && l === l.toUpperCase() && HEADINGS.has(l.replace(/[^A-Z]/g, '')));
+  if (start < 0) {
+    const author = lines.findIndex((l, i) => i > 3 && i < 150 && /^[A-Z][A-Za-z .'-]{5,60},\s*(H?CJ|ACJ|J)\s*\.?\s*[-–—:]/.test(l));
+    if (author > 0) start = author - 1;
+  }
+  if (start < 0) {
+    const heard = lines.findIndex((l, i) => i < 150 && /^Date of (hearing|decision)/i.test(l));
+    if (heard >= 0) start = /\d{4}/.test(lines[heard]) ? heard : heard + 1;
+  }
+  if (start < 0) {
+    // Order sheets: the order follows the list of who appeared ("Mr. X, advocate for the applicant.").
+    let appeared = -1;
+    lines.slice(0, 30).forEach((l, i) => {
+      const narrative = /^(After|In|The|Learned|It|This|Heard|On|At|Through|By)\b/.test(l) || /^[a-z]/.test(l);
+      if (!narrative && /\b(advocate|counsel|A\.?A\.?G|D\.?A\.?G|Prosecutor|for the (applicant|petitioner|appellant|respondent)s?)\b/i.test(l) && l.length < 110) appeared = i;
+    });
+    start = appeared >= 0 ? appeared : Math.min(lines.length > 40 ? 24 : 8, lines.length - 1);
+  }
+  return { header: lines.slice(0, start + 1), body: paragraphs ? lines.slice(start + 1) : reflow(lines.slice(start + 1)) };
+}
+
+/** The opening of the judgment, without the author's name, as a short summary. */
+export function openingSummary(body) {
+  const opening = body.find((p) => p.length > 160) || body[0] || '';
+  const s = opening
+    .replace(/^\d{1,2}\.\d{1,2}\.\d{4}\s+(JUDGMENT|ORDER)\s+/i, '')
+    .replace(/^[A-Za-z .'-]{4,60},\s*(H?CJ|ACJ|J)\s*\.?\s*[-–—:.]*\s*/, '')
+    .replace(/^[-–—:.\s]+/, '');
+  return (/^[a-z]/.test(s) ? '…' : '') + (s.length > 360 ? s.slice(0, 360).replace(/\s\S*$/, '') + '…' : s);
+}
+
+export { fixSpaces, LAWS, parseDate, subjects, titleCase };
+
+if (process.argv[1]?.endsWith('import-sc-judgments.mjs'))
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
