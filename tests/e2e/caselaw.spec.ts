@@ -76,3 +76,17 @@ for (const fixture of [
     await expect(page.locator('.font-reading p').first()).toBeVisible();
   });
 }
+
+test('a judgment from Pakistan Case Law retains its citation, court and source', async ({ page }) => {
+  await page.goto('/app/case-law/?source=lhc');
+  await page.getByLabel('Search judgments').fill('2025 PCrLJ 233');
+  const link = page.getByRole('link', { name: 'Nasira Ashfaq v. Director General Safe Cities Authority, Punjab' });
+  await expect(link).toBeVisible();
+  await link.click();
+  await expect(page).toHaveURL(/id=pcl-235254$/);
+  await expect(page.getByRole('heading', { name: 'Nasira Ashfaq v. Director General Safe Cities Authority, Punjab' })).toBeVisible();
+  await expect(page.getByText('Lahore High Court', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Read on Pakistan Case Law' })).toHaveAttribute('href', /pakistancaselaw\.com\/case\/235254\//);
+  await expect(page.getByText('Personal contact numbers have been redacted.')).toBeVisible();
+  await expect(page.getByText('[contact number redacted]', { exact: false }).first()).toBeVisible();
+});

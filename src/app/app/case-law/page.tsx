@@ -25,7 +25,7 @@ function readParams() {
   }
 }
 
-type Row = Judgment & Partial<Pick<OfficialJudgment, 'dateKnown' | 'citation' | 'outcome' | 'seat' | 'reported' | 'courtSummary'>>;
+type Row = Judgment & Partial<Pick<OfficialJudgment, 'dateKnown' | 'citation' | 'outcome' | 'seat' | 'reported' | 'courtSummary' | 'sourceName'>>;
 
 function JudgmentCard({ j, court, href, demo }: { j: Row; court?: string; href: string; demo?: boolean }) {
   const dateKnown = j.dateKnown ?? true;
@@ -47,6 +47,7 @@ function JudgmentCard({ j, court, href, demo }: { j: Row; court?: string; href: 
           </>
         )}
         {j.seat && <span>({j.seat})</span>}
+        {j.sourceName && <Badge tone="ink">{j.sourceName}</Badge>}
         {demo && <DemoBadge text="Demo example" />}
       </div>
       <Link href={href} className="mt-2 block font-serif text-lg font-semibold hover:text-bronze">
@@ -125,8 +126,8 @@ function CaseLawPageBody({ db }: { db: Snapshot }) {
         title="Case Law"
         subtitle={
           official
-            ? `${fmt(official.length)} judgments from Pakistan’s Supreme Court and High Courts, sourced from the courts’ own websites.`
-            : 'Judgments from Pakistan’s Supreme Court and High Courts, sourced from the courts’ own websites.'
+            ? `${fmt(official.length)} judgments from Pakistan’s Supreme Court and High Courts.`
+            : 'Judgments from Pakistan’s Supreme Court and High Courts.'
         }
       />
       <div role="tablist" aria-label="Judgments" className="-mx-4 mb-4 flex gap-1.5 overflow-x-auto border-b border-line px-4 pb-3 sm:mx-0 sm:flex-wrap sm:gap-2 sm:px-0">
@@ -206,17 +207,20 @@ function CaseLawPageBody({ db }: { db: Snapshot }) {
         </>
       )}
       <p className="mt-8 text-xs text-ink-soft">
-        Judgments are public documents published by the courts on their own websites:{' '}
-        {LIBRARY_COURTS.map((c, i) => (
+        Sources include{' '}
+        {LIBRARY_COURTS.map((c) => (
           <span key={c.id}>
-            {i > 0 && ' and '}
             <a href={c.site} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 underline">
               {libraryCourt(c.id)?.name} <ExternalLink className="h-3 w-3" aria-hidden />
             </a>
+            {', '}
           </span>
         ))}
-        . Text was taken from the courts&rsquo; PDFs and may contain conversion errors — check the original before citing. Search covers parties, case numbers,
-        citations, bench, subjects and the summary of each judgment. Reported law journals (PLD, SCMR etc.) are not included; they belong to their publishers.
+        and{' '}
+        <a href="https://pakistancaselaw.com/search" target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 underline">
+          Pakistan Case Law <ExternalLink className="h-3 w-3" aria-hidden />
+        </a>
+        . Check the source before citing. Search covers parties, case numbers, citations, bench, subjects and summaries.
       </p>
     </>
   );

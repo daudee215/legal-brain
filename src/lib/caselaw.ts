@@ -1,6 +1,6 @@
 /**
- * Real judgments shipped as static files (public/caselaw/<court>/), built by scripts/import-*-judgments.mjs.
- * Each court has one light index file; a judgment's full text is fetched only when it is opened.
+ * Judgments shipped as static files, grouped by court or source.
+ * The browser fetches the light indexes first and loads the full text when a reader opens.
  */
 import type { Judgment } from '../types';
 
@@ -8,8 +8,12 @@ export interface OfficialJudgment extends Judgment {
   /** false when the decision date could not be read and only the year is known */
   dateKnown: boolean;
   words: number;
-  /** the court's page or PDF for this judgment (or its judgments page) */
+  /** the source page or original court PDF for this judgment */
   source: string;
+  /** attribution for judgments collected from a published library */
+  sourceName?: 'Pakistan Case Law';
+  /** personal contact numbers were removed from the reader text */
+  redacted?: boolean;
   /** the court's PDF file name */
   file: string;
   /** neutral citation(s) given by the court, e.g. "2025 SHC KHI 266" */
@@ -42,6 +46,9 @@ export const LIBRARY_COURTS = [
 ] as const;
 export type LibraryCourtId = (typeof LIBRARY_COURTS)[number]['id'];
 
+const PAKISTAN_CASE_LAW_FOLDER = 'pakistancaselaw';
+const PAKISTAN_CASE_LAW_ID = /^pcl-\d+$/;
+
 let indexPromise: Promise<OfficialJudgment[]> | null = null;
 
 async function loadCourt(court: string): Promise<OfficialJudgment[]> {
@@ -53,7 +60,10 @@ async function loadCourt(court: string): Promise<OfficialJudgment[]> {
 /** Every judgment in the library, newest first (fetched once per page load). */
 export function loadOfficialJudgments(): Promise<OfficialJudgment[]> {
   if (!indexPromise) {
-    indexPromise = Promise.all(LIBRARY_COURTS.map((c) => loadCourt(c.id)))
+    indexPromise = Promise.all([
+      ...LIBRARY_COURTS.map((c) => loadCourt(c.id)),
+      loadCourt(PAKISTAN_CASE_LAW_FOLDER),
+    ])
       .then((lists) => lists.flat().sort((a, b) => (a.date < b.date ? 1 : -1)))
       .catch((e) => {
         indexPromise = null; // let the next visit try again
@@ -65,13 +75,14 @@ export function loadOfficialJudgments(): Promise<OfficialJudgment[]> {
 
 const ID_RE = new RegExp(`^(${LIBRARY_COURTS.map((court) => court.id).join('|')})-[a-z0-9-]+$`);
 
-export const isOfficialId = (id: string) => ID_RE.test(id);
+export const isOfficialId = (id: string) => ID_RE.test(id) || PAKISTAN_CASE_LAW_ID.test(id);
 export const courtOfId = (id: string) => id.slice(0, id.indexOf('-'));
 export const libraryCourt = (id: string) => LIBRARY_COURTS.find((c) => c.id === id);
 
 export async function loadJudgmentText(id: string): Promise<JudgmentText | null> {
   if (!isOfficialId(id)) return null;
-  const r = await fetch(`/caselaw/${courtOfId(id)}/${id}.json`);
+  const folder = PAKISTAN_CASE_LAW_ID.test(id) ? PAKISTAN_CASE_LAW_FOLDER : courtOfId(id);
+  const r = await fetch(`/caselaw/${folder}/${id}.json`);
   if (!r.ok) return null;
   return (await r.json()) as JudgmentText;
 }

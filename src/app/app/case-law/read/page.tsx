@@ -69,7 +69,11 @@ export default function ReadJudgmentPage() {
 
   const cited = (statutes ?? []).filter((s) => j.statutesCited.includes(s.id));
   const court = libraryCourt(j.courtId);
-  const original = j.courtId === 'sc' ? 'Supreme Court website' : `Original on the ${court?.short ?? 'court'} website`;
+  const sourceLabel = j.sourceName
+    ? `Read on ${j.sourceName}`
+    : j.courtId === 'sc'
+      ? 'Supreme Court website'
+      : `Original on the ${court?.short ?? 'court'} website`;
   const noBody = text.body.length === 0;
   const copy = async () => {
     try {
@@ -93,6 +97,7 @@ export default function ReadJudgmentPage() {
           {j.caseNo && j.caseNo.toLowerCase() !== j.title.toLowerCase() && <span>{j.caseNo}</span>}
           {j.citation && <span className="font-medium text-ink">{j.citation}</span>}
           {j.reported && <Badge tone="bronze">Approved for reporting</Badge>}
+          {j.sourceName && <Badge tone="ink">{j.sourceName}</Badge>}
         </div>
         <h1 className="text-2xl font-bold sm:text-3xl">{j.title}</h1>
         <p className="mt-1 text-ink-soft">
@@ -113,7 +118,7 @@ export default function ReadJudgmentPage() {
             <Printer className="h-4 w-4" aria-hidden /> Print
           </button>
           <a className={btn.ghost} href={j.source} target="_blank" rel="noreferrer">
-            <ExternalLink className="h-4 w-4" aria-hidden /> {original}
+            <ExternalLink className="h-4 w-4" aria-hidden /> {sourceLabel}
           </a>
         </div>
       </div>
@@ -133,6 +138,7 @@ export default function ReadJudgmentPage() {
             )}
           </div>
           <Card>
+            {j.redacted && <p className="mb-4 text-xs text-ink-soft">Personal contact numbers have been redacted.</p>}
             <details className="group mb-5 border-b border-line pb-4" open={noBody || (!!needle && text.header.some((l) => l.toLowerCase().includes(needle))) ? true : undefined}>
               <summary className="cursor-pointer text-sm font-medium text-ink-soft hover:text-ink">Court heading, parties &amp; counsel</summary>
               <div className="mt-3 text-center text-xs leading-relaxed text-ink-soft">
