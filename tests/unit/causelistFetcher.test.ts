@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { parseCaseNo } from '../../src/lib/causeList';
 import { ihcBody, ihcDate, parseIhcResponse } from '../../scripts/causelists/adapters/ihc.mjs';
 import { parsePhcPages, parseResultPage, phcCaseNo } from '../../scripts/causelists/adapters/phc.mjs';
+import { parseLhc } from '../../scripts/causelists/adapters/pakistan-only.mjs';
 import { parseShcHtml, shcDate } from '../../scripts/causelists/adapters/shc.mjs';
 import { nextCourtDay, pktToday, robotsAllows, targetDays } from '../../scripts/causelists/lib/common.mjs';
 import { mergeFrom, pruneAndIndex, writeDay } from '../../scripts/causelists/lib/output.mjs';
@@ -75,6 +76,25 @@ describe('PHC adapter (real PDF text runs, trimmed)', () => {
     expect(phcCaseNo('Cr.A 153- P/2023(8400 gm chars)(Criminal Appeal)')).toBe('Cr.A 153-P/2023');
     expect(phcCaseNo('W.P 14912/2026 (Criminal-Superdari) (288415)')).toBe('W.P 14912/2026');
     expect(phcCaseNo('(Criminal Revision)')).toBeNull();
+  });
+});
+
+describe('Lahore High Court adapter (real response, trimmed)', () => {
+  it('normalises the bench, room and serial and expands abbreviated case years', () => {
+    const entries = parseLhc(fx('lhc-2026-11-27.html'), '2026-11-27');
+    expect(entries).toHaveLength(3);
+    expect(entries[1]).toEqual({
+      bench: 'Mr. Justice Faisal Zaman Khan',
+      courtRoom: '5',
+      srNo: 2,
+      caseNo: 'Writ Petition 69725/2026',
+      title: 'Shehnaz Akhtar v. Secretary Specialized Healthcare & Medical Education etc',
+      stage: 'FC',
+    });
+    expect(entries[2]).toMatchObject({ srNo: 2, caseNo: 'CM/1/69725/26' });
+    expect(parseCaseNo(entries[1].caseNo)).toMatchObject({ family: 'wp', number: '69725', year: '2026' });
+    expect(JSON.stringify(entries)).not.toMatch(/Advocate A|Advocate B/);
+    expect(parseLhc(fx('lhc-2026-11-27.html'), '2026-11-30')).toEqual([]);
   });
 });
 

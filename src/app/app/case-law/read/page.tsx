@@ -29,7 +29,7 @@ function Highlight({ text, find }: { text: string; find: string }) {
   return <>{out}</>;
 }
 
-/** One judgment from the library: /app/case-law/read/?id=sc-… or ?id=shc-… */
+/** One judgment from the official library, identified by the court-prefixed id. */
 export default function ReadJudgmentPage() {
   const [id, setId] = useState<string | null>(null);
   const [state, setState] = useState<{ j?: OfficialJudgment; text?: JudgmentText | null; failed?: boolean } | null>(null);

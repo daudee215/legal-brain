@@ -36,6 +36,9 @@ export interface JudgmentText {
 export const LIBRARY_COURTS = [
   { id: 'sc', name: 'Supreme Court of Pakistan', short: 'Supreme Court', site: 'https://www.supremecourt.gov.pk/judgements/' },
   { id: 'shc', name: 'Sindh High Court', short: 'Sindh High Court', site: 'https://caselaw.shc.gov.pk/caselaw/public/home' },
+  { id: 'lhc', name: 'Lahore High Court', short: 'Lahore High Court', site: 'https://lhc.gov.pk/reported_judgments' },
+  { id: 'ihc', name: 'Islamabad High Court', short: 'Islamabad High Court', site: 'https://mis.ihc.gov.pk/frmJgmnt?jgs=1' },
+  { id: 'phc', name: 'Peshawar High Court', short: 'Peshawar High Court', site: 'https://www.peshawarhighcourt.gov.pk/PHCCMS/reportedJudgments.php' },
 ] as const;
 export type LibraryCourtId = (typeof LIBRARY_COURTS)[number]['id'];
 
@@ -60,7 +63,7 @@ export function loadOfficialJudgments(): Promise<OfficialJudgment[]> {
   return indexPromise;
 }
 
-const ID_RE = /^(sc|shc)-[a-z0-9-]+$/;
+const ID_RE = new RegExp(`^(${LIBRARY_COURTS.map((court) => court.id).join('|')})-[a-z0-9-]+$`);
 
 export const isOfficialId = (id: string) => ID_RE.test(id);
 export const courtOfId = (id: string) => id.slice(0, id.indexOf('-'));

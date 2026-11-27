@@ -88,7 +88,7 @@ function judgesOf(bench) {
     .map((x) => (x.startsWith('Justice') ? x : `Justice ${x}`));
 }
 
-async function pdfText(file, getDocument) {
+export async function pdfText(file, getDocument) {
   const data = new Uint8Array(fs.readFileSync(file));
   const doc = await getDocument({ data, useSystemFonts: true, verbosity: 0, isEvalSupported: false }).promise;
   const lines = [];
@@ -220,7 +220,7 @@ async function main() {
   );
 }
 
-main().catch((e) => {
+if (process.argv[1]?.endsWith('import-shc-judgments.mjs')) main().catch((e) => {
   console.error(e);
   process.exit(1);
 });

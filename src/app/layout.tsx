@@ -1,12 +1,31 @@
 import type { Metadata, Viewport } from 'next';
-import { Cormorant_Garamond, Inter, Source_Serif_4 } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 
-const inter = Inter({ variable: '--font-inter', subsets: ['latin'] });
-/** Display serif for headings — the engraved, law-firm look. */
-const display = Cormorant_Garamond({ variable: '--font-display', subsets: ['latin'], weight: ['500', '600', '700'], style: ['normal', 'italic'] });
-/** Reading serif for statutes, judgments and drafts — built for long text on screens. */
-const reading = Source_Serif_4({ variable: '--font-reading-face', subsets: ['latin'], weight: ['400', '600'], style: ['normal', 'italic'] });
+const inter = localFont({
+  src: './fonts/inter.woff2',
+  variable: '--font-inter',
+  weight: '100 900',
+  display: 'swap',
+});
+const display = localFont({
+  src: [
+    { path: './fonts/cormorant-garamond.woff2', weight: '500 700', style: 'normal' },
+    { path: './fonts/cormorant-garamond-italic.woff2', weight: '500 700', style: 'italic' },
+  ],
+  variable: '--font-display',
+  adjustFontFallback: 'Times New Roman',
+  display: 'swap',
+});
+const reading = localFont({
+  src: [
+    { path: './fonts/source-serif-4.woff2', weight: '400 600', style: 'normal' },
+    { path: './fonts/source-serif-4-italic.woff2', weight: '400 600', style: 'italic' },
+  ],
+  variable: '--font-reading-face',
+  adjustFontFallback: 'Times New Roman',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Wakeel Pro — Practice dashboard for Pakistani lawyers',

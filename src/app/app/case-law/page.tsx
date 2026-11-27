@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Badge, btn, Card, DemoBadge, EmptyState, inputCls, PageHeader } from '../../../components/ui';
 import { Loading } from '../../../components/ui/Loading';
-import { LIBRARY_COURTS, libraryCourt, loadOfficialJudgments, officialHref, type OfficialJudgment } from '../../../lib/caselaw';
+import { LIBRARY_COURTS, libraryCourt, loadOfficialJudgments, officialHref, type LibraryCourtId, type OfficialJudgment } from '../../../lib/caselaw';
 import { formatPk } from '../../../lib/dates';
 import { snapshot, type Snapshot } from '../../../lib/repo';
 import { searchItems } from '../../../lib/search';
@@ -13,8 +13,8 @@ import { useData } from '../../../lib/useData';
 import type { Judgment } from '../../../types';
 
 const PAGE = 25;
-type Source = 'all' | 'sc' | 'shc' | 'demo';
-const SOURCES: Source[] = ['all', 'sc', 'shc', 'demo'];
+type Source = 'all' | LibraryCourtId | 'demo';
+const SOURCES: Source[] = ['all', ...LIBRARY_COURTS.map((court) => court.id), 'demo'];
 
 function readParams() {
   try {
@@ -125,8 +125,8 @@ function CaseLawPageBody({ db }: { db: Snapshot }) {
         title="Case Law"
         subtitle={
           official
-            ? `${fmt(official.length)} judgments of the Supreme Court and the Sindh High Court, from the courts’ own websites.`
-            : 'Judgments of the Supreme Court and the Sindh High Court, from the courts’ own websites.'
+            ? `${fmt(official.length)} judgments from Pakistan’s Supreme Court and High Courts, sourced from the courts’ own websites.`
+            : 'Judgments from Pakistan’s Supreme Court and High Courts, sourced from the courts’ own websites.'
         }
       />
       <div role="tablist" aria-label="Judgments" className="-mx-4 mb-4 flex gap-1.5 overflow-x-auto border-b border-line px-4 pb-3 sm:mx-0 sm:flex-wrap sm:gap-2 sm:px-0">

@@ -308,7 +308,7 @@ export function openingSummary(body) {
   return (/^[a-z]/.test(s) ? '…' : '') + (s.length > 360 ? s.slice(0, 360).replace(/\s\S*$/, '') + '…' : s);
 }
 
-export { fixSpaces, LAWS, parseDate, subjects, titleCase };
+export { bench, caseNumber, fixSpaces, LAWS, parseDate, parties, subjects, titleCase };
 
 if (process.argv[1]?.endsWith('import-sc-judgments.mjs'))
   main().catch((e) => {

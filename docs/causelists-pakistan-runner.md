@@ -12,9 +12,7 @@ You need one of these:
   (around 6:30 am). An office desktop is ideal.
 - **Or a cheap Pakistani VPS** (any Pakistani hosting company's smallest Linux or Windows server, 1 GB RAM is enough).
 
-> Status: the Lahore / Punjab adapters are still a scaffold (see the TODO in
-> `scripts/causelists/adapters/pakistan-only.mjs`). Someone must finish them from a Pakistani connection first.
-> Setting up the runner now is still useful: the job will run and simply report "adapter not finished yet".
+The Lahore High Court adapter reads the regular, supplementary and urgent lists for the principal seat and all three benches. The public Punjab district form requires a CAPTCHA for each lookup. Use the app’s Cause List screen to import a court PDF for a district case.
 
 ---
 

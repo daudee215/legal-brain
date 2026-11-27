@@ -55,3 +55,24 @@ test('the demo examples are still one tab away', async ({ page }) => {
   await page.getByRole('tab', { name: /Demo examples/ }).click();
   await expect(page.getByText('Crl. Petition 101/2026')).toBeVisible();
 });
+
+for (const fixture of [
+  { court: 'Lahore High Court', search: '2026 LHC 9206', id: 'lhc-20269206', source: /^https:\/\/sys\.lhc\.gov\.pk\/appjudgments\/2026LHC9206\.pdf$/ },
+  { court: 'Islamabad High Court', search: 'Chaudhary Bashir Ahmed 3352-2026', id: 'ihc-288469', source: /^https:\/\/mis\.ihc\.gov\.pk\/frmRdJgmnt\?/ },
+  { court: 'Peshawar High Court', search: '2026 PHC 7585', id: 'phc-5164110715759692572', source: /^https:\/\/www\.peshawarhighcourt\.gov\.pk\/PHCCMS\/judgments\// },
+]) {
+  test(`a ${fixture.court} judgment can be found and opened from its court tab`, async ({ page }) => {
+    await page.goto('/app/case-law/');
+    const tab = page.getByRole('tab', { name: new RegExp(`^${fixture.court} \\([1-9][\\d,]*\\)$`) });
+    await tab.click();
+    await expect(tab).toHaveAttribute('aria-selected', 'true');
+    await page.getByLabel('Search judgments').fill(fixture.search);
+    const link = page.locator(`a[href="/app/case-law/read/?id=${fixture.id}"]`);
+    await expect(link).toBeVisible();
+    const title = (await link.innerText()).trim();
+    await link.click();
+    await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: `Original on the ${fixture.court} website` })).toHaveAttribute('href', fixture.source);
+    await expect(page.locator('.font-reading p').first()).toBeVisible();
+  });
+}
